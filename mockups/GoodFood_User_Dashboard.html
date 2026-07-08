@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SalvaBag</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --cream: #FBF7F0;
+    --green: #1A6B3A;
+    --green-dark: #134d29;
+    --green-deep: #0E3A22;
+    --terracotta: #C77B45;
+    --terracotta-dark: #a8632f;
+    --charcoal: #23231F;
+    --sage: #E4EDE3;
+    --sage-line: #D3E0D1;
+    --muted: #6B6B62;
+    --white: #FFFFFF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: #FFFFFF;
+    font-family: 'Inter', sans-serif;
+    color: var(--charcoal);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px 80px;
+  }
+
+  /* Phone frame */
+  .phone {
+    width: 360px;
+    height: 740px;
+    background: var(--cream);
+    border-radius: 32px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.22);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .screen {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    overflow-y: auto;
+    background: var(--cream);
+  }
+
+  .statusbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 22px 2px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .header {
+    padding: 8px 20px 12px;
+  }
+
+  .greeting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+
+  .greeting {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.15;
+  }
+
+  .greeting span { color: var(--terracotta-dark); }
+
+  .location-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .profile-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--sage);
+    border: 1.5px solid var(--sage-line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+
+  /* blob-mask category icons */
+  .cat-row-new {
+    display: flex;
+    gap: 16px;
+    padding: 6px 20px 18px;
+    overflow-x: auto;
+  }
+
+  .cat-item-new {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .blob-mask {
+    width: 58px;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 25px;
+    background: var(--sage);
+    border-radius: 42% 58% 65% 35% / 45% 45% 55% 55%;
+  }
+
+  .cat-item-new.active .blob-mask {
+    background: var(--green);
+    border-radius: 58% 42% 35% 65% / 55% 55% 45% 45%;
+  }
+
+  .cat-item-new span {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .cat-item-new.active span {
+    color: var(--green-dark);
+    font-weight: 700;
+  }
+
+  .section-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 4px 20px 9px;
+  }
+
+  /* spotlight card with circular cutout */
+  .spotlight-wrap {
+    margin: 0 20px 18px;
+    position: relative;
+    border-radius: 22px;
+    overflow: hidden;
+    background: var(--green);
+    height: 180px;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+
+  .spotlight-wrap:active { transform: scale(0.98); }
+
+  .spotlight-tag {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    background: var(--white);
+    color: var(--green-dark);
+    font-size: 10px;
+    font-weight: 800;
+    padding: 5px 11px;
+    border-radius: 20px;
+    z-index: 3;
+    letter-spacing: 0.3px;
+  }
+
+  .spotlight-cutout {
+    position: absolute;
+    top: 28px;
+    right: 20px;
+    width: 114px;
+    height: 114px;
+    border-radius: 48% 52% 53% 47% / 44% 47% 53% 56%;
+    background: #FCEFE3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    box-shadow: 0 0 0 5px rgba(255,255,255,0.18);
+  }
+
+  .spotlight-text {
+    position: absolute;
+    left: 16px;
+    bottom: 16px;
+    z-index: 3;
+    max-width: 160px;
+  }
+
+  .spotlight-text .name {
+    font-family: 'Fraunces', serif;
+    font-size: 17.5px;
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.2;
+  }
+
+  .spotlight-text .shop {
+    font-size: 11px;
+    color: #C9E4D2;
+    margin-top: 3px;
+  }
+
+  .spotlight-text .price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    margin-top: 9px;
+  }
+
+  .spotlight-text .price-old {
+    font-size: 11px;
+    color: #8FBC9D;
+    text-decoration: line-through;
+  }
+
+  .spotlight-text .price-now {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--white);
+  }
+
+  .spotlight-deco-1 {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    top: -20px;
+    left: -20px;
+  }
+
+  .spotlight-deco-2 {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    bottom: -10px;
+    right: 110px;
+  }
+
+  /* secondary cards, blob thumbnails */
+  .card-list-new { padding: 0 20px 24px; display: flex; flex-direction: column; gap: 13px; }
+
+  .bag-card-new {
+    background: var(--white);
+    border-radius: 16px;
+    border: 1.5px solid var(--sage-line);
+    overflow: hidden;
+    display: flex;
+    padding: 11px;
+    gap: 13px;
+    align-items: center;
+  }
+
+  .bag-thumb-new {
+    width: 66px;
+    height: 66px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 27px;
+    background: #E9F1E6;
+    border-radius: 38% 62% 56% 44% / 50% 42% 58% 50%;
+  }
+
+  .bag-info-new { flex: 1; }
+
+  .bag-name-new {
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .bag-shop-new {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .bag-price-row-new {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 8px;
+  }
+
+  .price-new-new {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .timer-new {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--green-dark);
+    background: var(--sage);
+    padding: 3px 7px;
+    border-radius: 6px;
+  }
+
+  /* ===================== DETAIL SCREEN ===================== */
+
+  .detail-screen {
+    transform: translateX(100%);
+    transition: transform 0.32s cubic-bezier(.22,.68,0,1);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
+  }
+
+  .detail-screen.open { transform: translateX(0); }
+
+  .detail-scroll {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .detail-hero {
+    height: 220px;
+    position: relative;
+    background: var(--green);
+    overflow: hidden;
+  }
+
+  .detail-hero-deco-1 {
+    position: absolute;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    top: -60px;
+    left: -50px;
+  }
+
+  .detail-hero-deco-2 {
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    bottom: -30px;
+    right: -20px;
+  }
+
+  .detail-hero-cutout {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 168px;
+    height: 168px;
+    border-radius: 48% 52% 53% 47% / 44% 47% 53% 56%;
+    background: #FCEFE3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 72px;
+    box-shadow: 0 0 0 7px rgba(255,255,255,0.18);
+  }
+
+  .detail-back-btn {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 5;
+    font-size: 16px;
+  }
+
+  .detail-tag {
+    position: absolute;
+    top: 22px;
+    right: 18px;
+    background: var(--white);
+    color: var(--green-dark);
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 6px 12px;
+    border-radius: 20px;
+    z-index: 5;
+  }
+
+  .detail-body {
+    padding: 20px 20px 130px;
+  }
+
+  .detail-title {
+    font-family: 'Fraunces', serif;
+    font-size: 23px;
+    font-weight: 700;
+    line-height: 1.18;
+  }
+
+  .detail-shop-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 5px;
+  }
+
+  .detail-shop-name {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .detail-rating {
+    font-size: 13px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .detail-timer-strip {
+    margin-top: 16px;
+    background: var(--sage);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .detail-timer-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    color: var(--white);
+  }
+
+  .detail-timer-text b {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 800;
+    color: var(--green-dark);
+  }
+
+  .detail-timer-text span {
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  .detail-section { margin-top: 22px; }
+
+  .detail-section-title {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .detail-desc {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--muted);
+  }
+
+  .contents-list {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .contents-item {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    background: var(--white);
+    border: 1.5px solid var(--sage-line);
+    border-radius: 14px;
+    padding: 11px 14px;
+    font-size: 13px;
+  }
+
+  .contents-blob {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    background: var(--sage);
+    border-radius: 42% 58% 65% 35% / 45% 45% 55% 55%;
+  }
+
+  .contents-label { flex: 1; font-weight: 500; }
+
+  .contents-tag {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--green-dark);
+    background: var(--sage);
+    padding: 3px 9px;
+    border-radius: 6px;
+  }
+
+  .pickup-info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--white);
+    border: 1.5px solid var(--sage-line);
+    border-radius: 14px;
+    padding: 14px;
+  }
+
+  .pickup-info-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: var(--sage);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+
+  .pickup-info-title { font-size: 13px; font-weight: 700; }
+
+  .pickup-info-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+
+  /* sticky checkout bar */
+  .checkout-bar {
+    background: var(--white);
+    border-top: 1px solid var(--sage-line);
+    padding: 16px 20px 22px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+
+  .qty-stepper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--sage);
+    border-radius: 12px;
+    padding: 8px 11px;
+  }
+
+  .qty-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--white);
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--green-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .qty-value { font-size: 15px; font-weight: 800; min-width: 14px; text-align: center; }
+
+  .checkout-cta {
+    flex: 1;
+    background: var(--green);
+    color: var(--white);
+    border: none;
+    border-radius: 14px;
+    padding: 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .checkout-cta .cta-total {
+    font-family: 'Fraunces', serif;
+    font-size: 16px;
+  }
+
+  /* ===================== PAYMENT DISCLOSURE ===================== */
+
+  .payment-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    background: var(--sage);
+    border-radius: 14px;
+    padding: 12px 13px;
+    margin-top: 12px;
+    font-size: 11.5px;
+    color: var(--green-dark);
+    line-height: 1.5;
+  }
+
+  .payment-note b { font-weight: 800; }
+
+  .friend-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--white);
+    border: 1.5px solid var(--sage-line);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-top: 10px;
+  }
+
+  .friend-row-text {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
+  .friend-link-btn {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--green-dark);
+    background: var(--sage);
+    border: none;
+    padding: 7px 12px;
+    border-radius: 20px;
+  }
+
+  /* ===================== CONFIRMATION MODAL ===================== */
+
+  .confirm-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(35,35,31,0.5);
+    display: flex;
+    align-items: flex-end;
+    z-index: 40;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .confirm-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .confirm-sheet {
+    background: var(--white);
+    border-radius: 26px 26px 0 0;
+    padding: 28px 22px 26px;
+    width: 100%;
+    transform: translateY(20px);
+    transition: transform 0.25s ease;
+  }
+
+  .confirm-overlay.show .confirm-sheet {
+    transform: translateY(0);
+  }
+
+  .confirm-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--sage);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    font-size: 24px;
+  }
+
+  .confirm-title {
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .confirm-sub {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.55;
+    margin-bottom: 16px;
+  }
+
+  .confirm-detail-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    background: var(--sage);
+    border-radius: 14px;
+    padding: 12px 13px;
+    margin-bottom: 10px;
+    font-size: 12.5px;
+    color: var(--green-dark);
+    line-height: 1.5;
+  }
+
+  .confirm-friend-btn {
+    width: 100%;
+    background: var(--white);
+    border: 1.5px solid var(--sage-line);
+    color: var(--charcoal);
+    font-weight: 700;
+    font-size: 13px;
+    padding: 13px;
+    border-radius: 14px;
+    margin-bottom: 10px;
+  }
+
+  .confirm-close {
+    width: 100%;
+    background: var(--green);
+    color: var(--white);
+    border: none;
+    border-radius: 14px;
+    padding: 14px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="phone">
+
+    <!-- ===================== BROWSE SCREEN ===================== -->
+    <div class="screen" id="browseScreen">
+
+      <div class="statusbar">
+        <span>9:41</span>
+        <span>●●●●</span>
+      </div>
+
+      <div class="header">
+        <div class="greeting-row">
+          <div>
+            <div class="greeting">Oi, Carla 👋<br><span>A comida boa</span> te espera</div>
+            <div class="location-pill">📍 Bom Fim, Porto Alegre</div>
+          </div>
+          <div class="profile-btn">👤</div>
+        </div>
+      </div>
+
+      <div class="cat-row-new">
+        <div class="cat-item-new active">
+          <div class="blob-mask" style="color:#fff;">✨</div>
+          <span>Tudo</span>
+        </div>
+        <div class="cat-item-new">
+          <div class="blob-mask">🥖</div>
+          <span>Padaria</span>
+        </div>
+        <div class="cat-item-new">
+          <div class="blob-mask">🍽️</div>
+          <span>Refeição</span>
+        </div>
+        <div class="cat-item-new">
+          <div class="blob-mask">🥦</div>
+          <span>Mercado</span>
+        </div>
+      </div>
+
+      <div class="section-label">⏰ Acabando agora</div>
+
+      <div class="spotlight-wrap" onclick="openDetail()">
+        <div class="spotlight-deco-1"></div>
+        <div class="spotlight-deco-2"></div>
+        <div class="spotlight-tag">38% off · última unidade</div>
+        <div class="spotlight-cutout">🥐</div>
+        <div class="spotlight-text">
+          <div class="name">Sacola Surpresa Doce</div>
+          <div class="shop">Domenica Casa de Pães · 450m</div>
+          <div class="price-row">
+            <span class="price-old">R$45</span>
+            <span class="price-now">R$ 27,90</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label">🛍️ Disponível hoje</div>
+
+      <div class="card-list-new">
+        <div class="bag-card-new">
+          <div class="bag-thumb-new">🥗</div>
+          <div class="bag-info-new">
+            <div class="bag-name-new">Sacola Almoço do Dia</div>
+            <div class="bag-shop-new">Madrecita Bistrô</div>
+            <div class="bag-price-row-new">
+              <span class="timer-new">32 min</span>
+              <span class="price-new-new">R$ 24,90</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bag-card-new">
+          <div class="bag-thumb-new" style="background:#F2E8DC;">🍞</div>
+          <div class="bag-info-new">
+            <div class="bag-name-new">Sacola Mista Pães</div>
+            <div class="bag-shop-new">Panificadora Estrela</div>
+            <div class="bag-price-row-new">
+              <span class="timer-new">até 19h</span>
+              <span class="price-new-new">R$ 21,90</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bag-card-new">
+          <div class="bag-thumb-new" style="background:#E7EEF5;">🧀</div>
+          <div class="bag-info-new">
+            <div class="bag-name-new">Sacola Frios e Laticínios</div>
+            <div class="bag-shop-new">Mercado Zaffari Moinhos</div>
+            <div class="bag-price-row-new">
+              <span class="timer-new">até 21h</span>
+              <span class="price-new-new">R$ 34,90</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===================== DETAIL SCREEN ===================== -->
+    <div class="screen detail-screen" id="detailScreen">
+      <div class="detail-scroll">
+      <div class="detail-hero">
+        <div class="detail-hero-deco-1"></div>
+        <div class="detail-hero-deco-2"></div>
+        <div class="detail-back-btn" onclick="closeDetail()">←</div>
+        <div class="detail-tag">38% off</div>
+        <div class="detail-hero-cutout">🥐</div>
+      </div>
+
+      <div class="detail-body">
+        <div class="detail-title">Sacola Surpresa Doce</div>
+        <div class="detail-shop-row">
+          <div class="detail-shop-name">Domenica Casa de Pães · 450m</div>
+          <div class="detail-rating">★ 4.8</div>
+        </div>
+
+        <div class="detail-timer-strip">
+          <div class="detail-timer-icon">⏰</div>
+          <div class="detail-timer-text">
+            <b>Retirar entre 18h40 e 19h00</b>
+            <span>Restam 18 minutos para o início da retirada</span>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">Sobre esta sacola</div>
+          <div class="detail-desc">
+            Uma seleção surpresa dos pães, croissants e doces que sobraram do dia na Domenica Casa de Pães.
+            Tudo preparado nas últimas 24 horas — só não vendemos tudo antes do fechamento, e por isso o
+            desconto é tão grande.
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">O que pode vir na sacola</div>
+          <div class="contents-list">
+            <div class="contents-item">
+              <span class="contents-blob">🥐</span>
+              <span class="contents-label">Croissants amanteigados</span>
+              <span class="contents-tag">Provável</span>
+            </div>
+            <div class="contents-item">
+              <span class="contents-blob">🍞</span>
+              <span class="contents-label">Pão de fermentação natural</span>
+              <span class="contents-tag">Provável</span>
+            </div>
+            <div class="contents-item">
+              <span class="contents-blob">🧁</span>
+              <span class="contents-label">Mini bolos ou muffins</span>
+              <span class="contents-tag">Possível</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <div class="detail-section-title">Retirada</div>
+          <div class="pickup-info-row">
+            <div class="pickup-info-icon">📍</div>
+            <div>
+              <div class="pickup-info-title">Rua Padre Chagas, 314 — Bom Fim</div>
+              <div class="pickup-info-sub">Retire no balcão e mostre o código do pedido.</div>
+            </div>
+          </div>
+
+          <div class="payment-note">
+            💳 <span>Você não é cobrado agora. O valor fica <b>reservado</b> e só é cobrado na retirada — ou ao final da janela, caso não compareça. <b>Cancelamento grátis até 17h00.</b></span>
+          </div>
+
+          <div class="friend-row">
+            <div class="friend-row-text">🤝 Não vai poder vir?</div>
+            <button class="friend-link-btn">Pedir para um amigo retirar</button>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div class="checkout-bar">
+        <div class="qty-stepper">
+          <button class="qty-btn">−</button>
+          <span class="qty-value">1</span>
+          <button class="qty-btn">+</button>
+        </div>
+        <button class="checkout-cta" onclick="showConfirm()">
+          <span>Reservar sacola</span>
+          <span class="cta-total">R$ 27,90</span>
+        </button>
+      </div>
+
+      <!-- ===================== CONFIRMATION MODAL ===================== -->
+      <div class="confirm-overlay" id="confirmOverlay">
+        <div class="confirm-sheet">
+          <div class="confirm-icon">✅</div>
+          <div class="confirm-title">Sacola reservada!</div>
+          <div class="confirm-sub">Domenica Casa de Pães · Retirada entre 18h40 e 19h00</div>
+
+          <div class="confirm-detail-row">
+            💳 <span>Nenhum valor foi cobrado ainda. <b>R$ 27,90</b> serão cobrados na retirada, ou ao final da janela se você não comparecer.</span>
+          </div>
+          <div class="confirm-detail-row">
+            ⏳ <span>Você pode cancelar sem custo <b>até 17h00</b>, direto pelo app.</span>
+          </div>
+
+          <button class="confirm-friend-btn">🤝 Pedir para um amigo retirar</button>
+          <button class="confirm-close" onclick="closeConfirm()">Entendi</button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function openDetail() {
+    document.getElementById('detailScreen').classList.add('open');
+  }
+  function closeDetail() {
+    document.getElementById('detailScreen').classList.remove('open');
+  }
+  function showConfirm() {
+    document.getElementById('confirmOverlay').classList.add('show');
+  }
+  function closeConfirm() {
+    document.getElementById('confirmOverlay').classList.remove('show');
+  }
+</script>
+
+</body>
+</html>

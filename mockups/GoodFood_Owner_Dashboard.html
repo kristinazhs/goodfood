@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SalvaBag — Painel do Parceiro</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --cream: #FBF7F0;
+    --green: #1A6B3A;
+    --green-dark: #134d29;
+    --green-deep: #0E3A22;
+    --terracotta: #C77B45;
+    --terracotta-dark: #a8632f;
+    --charcoal: #23231F;
+    --sage: #E4EDE3;
+    --sage-line: #D3E0D1;
+    --muted: #6B6B62;
+    --white: #FFFFFF;
+    --amber: #B8860B;
+    --amber-bg: #FAF1DC;
+    --red: #B23A2E;
+    --red-bg: #FCEAE8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: #FFFFFF;
+    font-family: 'Inter', sans-serif;
+    color: var(--charcoal);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px 80px;
+  }
+
+  .phone {
+    width: 360px;
+    height: 740px;
+    background: var(--cream);
+    border-radius: 32px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.22);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .screen {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    overflow-y: auto;
+    background: var(--cream);
+  }
+
+  .statusbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 22px 2px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .header {
+    padding: 8px 20px 16px;
+  }
+
+  .greeting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .greeting {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.15;
+  }
+
+  .greeting span { color: var(--terracotta-dark); }
+
+  .shop-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .profile-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--sage);
+    border: 1.5px solid var(--sage-line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+
+  /* ============ Summary stats row ============ */
+  .stats-row {
+    display: flex;
+    gap: 12px;
+  }
+
+  .stat-card {
+    flex: 1;
+    background: var(--green);
+    border-radius: 16px;
+    padding: 14px 14px 13px;
+    position: relative;
+    overflow: visible;
+  }
+
+  .stat-card-deco {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    top: -20px;
+    right: -20px;
+    z-index: 0;
+    clip-path: inset(0 round 16px);
+  }
+
+  .info-btn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.22);
+    color: var(--white);
+    border: none;
+    font-size: 10px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 4;
+    cursor: pointer;
+    font-style: italic;
+    font-family: 'Fraunces', serif;
+  }
+
+  .info-popover {
+    position: absolute;
+    top: 32px;
+    left: 10px;
+    width: 200px;
+    background: var(--charcoal);
+    color: var(--white);
+    font-size: 11px;
+    line-height: 1.5;
+    padding: 10px 12px;
+    border-radius: 12px;
+    z-index: 50;
+    opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition: all 0.15s ease;
+    font-weight: 500;
+  }
+
+  .info-popover.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .info-popover::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 14px;
+    width: 10px;
+    height: 10px;
+    background: var(--charcoal);
+    transform: rotate(45deg);
+  }
+
+  .stat-value {
+    font-family: 'Fraunces', serif;
+    font-size: 21px;
+    font-weight: 700;
+    color: var(--white);
+    position: relative;
+    z-index: 2;
+  }
+
+  .stat-label {
+    font-size: 10.5px;
+    color: #C9E4D2;
+    margin-top: 2px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .stat-card.alt {
+    background: var(--white);
+    border: 1.5px solid var(--sage-line);
+  }
+
+  .stat-card.alt .stat-value { color: var(--charcoal); }
+  .stat-card.alt .stat-label { color: var(--muted); }
+
+  /* ============ Section label ============ */
+  .section-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 20px 10px;
+  }
+
+  .section-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+
+  .add-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--green);
+    color: var(--white);
+    border: none;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
+    padding: 0;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* ============ Sacola management cards ============ */
+  .sacola-list { padding: 0 20px 24px; display: flex; flex-direction: column; gap: 13px; }
+
+  .sacola-card {
+    background: var(--white);
+    border-radius: 18px;
+    border: 1.5px solid var(--sage-line);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+
+  .sacola-card:active { transform: scale(0.98); }
+
+  .sacola-top {
+    display: flex;
+    padding: 13px 14px 0;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .sacola-thumb {
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 23px;
+    background: var(--sage);
+    border-radius: 38% 62% 56% 44% / 50% 42% 58% 50%;
+  }
+
+  .sacola-info { flex: 1; min-width: 0; }
+
+  .sacola-name-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .sacola-name {
+    font-family: 'Fraunces', serif;
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .sacola-price {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .sacola-pickup {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+  }
+
+  /* status count plaques — four states shown together per card */
+  .status-plaques {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .status-plaque {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    padding: 5px 2px 4px;
+    gap: 1px;
+  }
+
+  .status-plaque .plaque-num {
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .status-plaque .plaque-label {
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+    line-height: 1;
+  }
+
+  .status-plaque.zero {
+    opacity: 0.32;
+  }
+
+  .status-plaque.ativa { background: var(--sage); }
+  .status-plaque.ativa .plaque-num,
+  .status-plaque.ativa .plaque-label { color: var(--green-dark); }
+
+  .status-plaque.reservada { background: #E5EEF8; }
+  .status-plaque.reservada .plaque-num,
+  .status-plaque.reservada .plaque-label { color: #1D5A96; }
+
+  .status-plaque.retirada { background: #EFEDE6; }
+  .status-plaque.retirada .plaque-num,
+  .status-plaque.retirada .plaque-label { color: var(--muted); }
+
+  .status-plaque.nao-retirada { background: var(--red-bg); }
+  .status-plaque.nao-retirada .plaque-num,
+  .status-plaque.nao-retirada .plaque-label { color: var(--red); }
+
+  /* reservation row, no bar */
+  .sacola-bottom {
+    padding: 12px 14px 14px;
+  }
+
+  .reservation-label {
+    font-size: 11.5px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .reservation-label b {
+    color: var(--charcoal);
+    font-weight: 800;
+  }
+
+  /* meta row: revenue + edit */
+  .sacola-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+
+  .sacola-revenue {
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+
+  .sacola-revenue b {
+    color: var(--green-dark);
+    font-weight: 800;
+    font-size: 12.5px;
+  }
+
+  .edit-btn {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--green-dark);
+    background: var(--sage);
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: none;
+  }
+
+  .edit-btn.alert {
+    color: var(--red);
+    background: var(--red-bg);
+  }
+
+  /* bottom nav */
+  .bottom-nav {
+    position: sticky;
+    bottom: 0;
+    background: var(--white);
+    border-top: 1px solid var(--sage-line);
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 8px 16px;
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #B5B5A8;
+  }
+
+  .nav-item.active { color: var(--green); }
+
+  .nav-icon {
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  /* ===================== PERFORMANCE SCREEN ===================== */
+
+  .perf-screen {
+    transform: translateX(100%);
+    transition: transform 0.32s cubic-bezier(.22,.68,0,1);
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
+  }
+
+  .perf-screen.open { transform: translateX(0); }
+
+  .perf-scroll {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .perf-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px 6px;
+  }
+
+  .perf-back-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--sage);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .perf-title {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .perf-period-row {
+    display: flex;
+    gap: 8px;
+    padding: 12px 20px 6px;
+  }
+
+  .period-chip {
+    flex: 1;
+    padding: 8px 0;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1.5px solid var(--sage-line);
+    background: var(--white);
+    color: var(--muted);
+  }
+
+  .period-chip.active {
+    background: var(--green);
+    border-color: var(--green);
+    color: var(--white);
+  }
+
+  .perf-hero {
+    margin: 14px 20px 0;
+    background: var(--green);
+    border-radius: 20px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .perf-hero-deco-1 {
+    position: absolute;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    top: -40px;
+    right: -30px;
+  }
+
+  .perf-hero-deco-2 {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    bottom: -30px;
+    left: -20px;
+  }
+
+  .perf-hero-label {
+    font-size: 11.5px;
+    color: #C9E4D2;
+    position: relative;
+    z-index: 2;
+  }
+
+  .perf-hero-value {
+    font-family: 'Fraunces', serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--white);
+    margin-top: 4px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .perf-hero-trend {
+    font-size: 12px;
+    font-weight: 700;
+    color: #BFE3CC;
+    margin-top: 6px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .chart-card {
+    margin: 16px 20px 0;
+    background: var(--white);
+    border: 1.5px solid var(--sage-line);
+    border-radius: 18px;
+    padding: 16px;
+  }
+
+  .chart-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+  }
+
+  .chart-title {
+    font-family: 'Fraunces', serif;
+    font-size: 14.5px;
+    font-weight: 600;
+  }
+
+  .chart-subtitle {
+    font-size: 10.5px;
+    color: var(--muted);
+  }
+
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 90px;
+  }
+
+  .bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .bar {
+    width: 100%;
+    background: var(--sage);
+    border-radius: 5px 5px 2px 2px;
+    min-height: 4px;
+  }
+
+  .bar.full { background: var(--green); }
+
+  .bar-label {
+    font-size: 9.5px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .perf-stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 16px 20px 0;
+  }
+
+  .perf-stat-card {
+    background: var(--white);
+    border: 1.5px solid var(--sage-line);
+    border-radius: 14px;
+    padding: 13px 14px;
+  }
+
+  .perf-stat-value {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .perf-stat-label {
+    font-size: 10.5px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .impact-card-big {
+    margin: 0 20px;
+    background: var(--sage);
+    border-radius: 16px;
+    padding: 16px;
+  }
+
+  .impact-row-big {
+    display: flex;
+  }
+
+  .impact-item-big {
+    flex: 1;
+    text-align: center;
+  }
+
+  .impact-num-big {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--green-dark);
+  }
+
+  .impact-label-big {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 3px;
+    line-height: 1.3;
+  }
+
+  .top-sacola-card {
+    margin: 0 20px;
+    background: var(--white);
+    border: 1.5px solid var(--sage-line);
+    border-radius: 16px;
+    padding: 13px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .top-badge {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .encourage-card {
+    margin: 16px 20px 24px;
+    background: var(--amber-bg);
+    border-radius: 16px;
+    padding: 14px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .encourage-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: #8a6a14;
+    line-height: 1.3;
+  }
+
+  .encourage-sub {
+    font-size: 11.5px;
+    color: #9a7d2e;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="phone">
+
+    <div class="screen">
+
+      <div class="statusbar">
+        <span>9:41</span>
+        <span>●●●●</span>
+      </div>
+
+      <div class="header">
+        <div class="greeting-row">
+          <div>
+            <div class="greeting">Oi, Marcos 👋<br><span>Suas sacolas</span> de hoje</div>
+            <div class="shop-pill">🥖 Domenica Casa de Pães</div>
+          </div>
+          <div class="profile-btn">👤</div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-card-deco"></div>
+            <button class="info-btn" onclick="toggleInfo(event)" aria-label="O que conta como faturado">i</button>
+            <div class="info-popover" id="infoPopover">
+              💡 Conta apenas sacolas <b>retiradas</b> ou <b>não retiradas</b> (cobradas). Reservas em andamento aparecem só depois da retirada.
+            </div>
+            <div class="stat-value">R$ 124</div>
+            <div class="stat-label">faturado hoje</div>
+          </div>
+          <div class="stat-card alt">
+            <div class="stat-value">5</div>
+            <div class="stat-label">sacolas vendidas</div>
+          </div>
+          <div class="stat-card alt">
+            <div class="stat-value">7kg</div>
+            <div class="stat-label">comida resgatada</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label-row">
+        <span class="section-label">Suas sacolas</span>
+        <button class="add-btn" aria-label="Adicionar sacola">+</button>
+      </div>
+
+      <div class="sacola-list">
+
+        <!-- Sacola 1: Surpresa Doce -->
+        <div class="sacola-card">
+          <div class="sacola-top">
+            <div class="sacola-thumb">🥐</div>
+            <div class="sacola-info">
+              <div class="sacola-name-row">
+                <div class="sacola-name">Sacola Surpresa Doce</div>
+                <div class="sacola-price">R$ 27,90</div>
+              </div>
+              <div class="sacola-pickup">Retirada 18h40 – 19h00</div>
+            </div>
+          </div>
+          <div class="sacola-bottom">
+            <div class="status-plaques">
+              <div class="status-plaque ativa"><span class="plaque-num">1</span><span class="plaque-label">Ativa</span></div>
+              <div class="status-plaque reservada"><span class="plaque-num">2</span><span class="plaque-label">Reserv.</span></div>
+              <div class="status-plaque retirada"><span class="plaque-num">1</span><span class="plaque-label">Retirada</span></div>
+              <div class="status-plaque nao-retirada zero"><span class="plaque-num">0</span><span class="plaque-label">N/ Ret.</span></div>
+            </div>
+            <div class="sacola-meta-row" style="margin-top:10px;">
+              <span class="sacola-revenue"><b>R$ 27,90</b> nesta sacola</span>
+              <button class="edit-btn">Ver detalhes</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sacola 2: Confeitaria -->
+        <div class="sacola-card">
+          <div class="sacola-top">
+            <div class="sacola-thumb" style="background:#E9F1E6;">🧁</div>
+            <div class="sacola-info">
+              <div class="sacola-name-row">
+                <div class="sacola-name">Sacola Confeitaria</div>
+                <div class="sacola-price">R$ 24,90</div>
+              </div>
+              <div class="sacola-pickup">Retirada 19h30 – 20h00</div>
+            </div>
+          </div>
+          <div class="sacola-bottom">
+            <div class="status-plaques">
+              <div class="status-plaque ativa"><span class="plaque-num">5</span><span class="plaque-label">Ativa</span></div>
+              <div class="status-plaque reservada"><span class="plaque-num">1</span><span class="plaque-label">Reserv.</span></div>
+              <div class="status-plaque retirada zero"><span class="plaque-num">0</span><span class="plaque-label">Retirada</span></div>
+              <div class="status-plaque nao-retirada zero"><span class="plaque-num">0</span><span class="plaque-label">N/ Ret.</span></div>
+            </div>
+            <div class="sacola-meta-row" style="margin-top:10px;">
+              <span class="sacola-revenue"><b>R$ 0</b> nesta sacola</span>
+              <button class="edit-btn">Ver detalhes</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sacola 3: Mista Pães -->
+        <div class="sacola-card">
+          <div class="sacola-top">
+            <div class="sacola-thumb" style="background:#F2E8DC;">🍞</div>
+            <div class="sacola-info">
+              <div class="sacola-name-row">
+                <div class="sacola-name">Sacola Mista Pães</div>
+                <div class="sacola-price">R$ 21,90</div>
+              </div>
+              <div class="sacola-pickup">Retirada até 19h00</div>
+            </div>
+          </div>
+          <div class="sacola-bottom">
+            <div class="status-plaques">
+              <div class="status-plaque ativa"><span class="plaque-num">3</span><span class="plaque-label">Ativa</span></div>
+              <div class="status-plaque reservada"><span class="plaque-num">4</span><span class="plaque-label">Reserv.</span></div>
+              <div class="status-plaque retirada"><span class="plaque-num">1</span><span class="plaque-label">Retirada</span></div>
+              <div class="status-plaque nao-retirada zero"><span class="plaque-num">0</span><span class="plaque-label">N/ Ret.</span></div>
+            </div>
+            <div class="sacola-meta-row" style="margin-top:10px;">
+              <span class="sacola-revenue"><b>R$ 21,90</b> nesta sacola</span>
+              <button class="edit-btn">Ver detalhes</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sacola 4: Manhã -->
+        <div class="sacola-card">
+          <div class="sacola-top">
+            <div class="sacola-thumb" style="background:#F0EAE2;">🥖</div>
+            <div class="sacola-info">
+              <div class="sacola-name-row">
+                <div class="sacola-name">Sacola Manhã</div>
+                <div class="sacola-price">R$ 19,90</div>
+              </div>
+              <div class="sacola-pickup">Retirada concluída às 11h12</div>
+            </div>
+          </div>
+          <div class="sacola-bottom">
+            <div class="status-plaques">
+              <div class="status-plaque ativa zero"><span class="plaque-num">0</span><span class="plaque-label">Ativa</span></div>
+              <div class="status-plaque reservada zero"><span class="plaque-num">0</span><span class="plaque-label">Reserv.</span></div>
+              <div class="status-plaque retirada"><span class="plaque-num">5</span><span class="plaque-label">Retirada</span></div>
+              <div class="status-plaque nao-retirada zero"><span class="plaque-num">0</span><span class="plaque-label">N/ Ret.</span></div>
+            </div>
+            <div class="sacola-meta-row" style="margin-top:10px;">
+              <span class="sacola-revenue"><b>R$ 99,50</b> nesta sacola</span>
+              <button class="edit-btn">Ver detalhes</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sacola 5: Salgados -->
+        <div class="sacola-card">
+          <div class="sacola-top">
+            <div class="sacola-thumb" style="background:#F0EAE2;">🥗</div>
+            <div class="sacola-info">
+              <div class="sacola-name-row">
+                <div class="sacola-name">Sacola Salgados</div>
+                <div class="sacola-price">R$ 22,90</div>
+              </div>
+              <div class="sacola-pickup">Janela encerrada às 14h00</div>
+            </div>
+          </div>
+          <div class="sacola-bottom">
+            <div class="status-plaques">
+              <div class="status-plaque ativa zero"><span class="plaque-num">0</span><span class="plaque-label">Ativa</span></div>
+              <div class="status-plaque reservada zero"><span class="plaque-num">0</span><span class="plaque-label">Reserv.</span></div>
+              <div class="status-plaque retirada"><span class="plaque-num">2</span><span class="plaque-label">Retirada</span></div>
+              <div class="status-plaque nao-retirada"><span class="plaque-num">1</span><span class="plaque-label">N/ Ret.</span></div>
+            </div>
+            <div class="sacola-meta-row" style="margin-top:10px;">
+              <span class="sacola-revenue"><b>R$ 68,70</b> nesta sacola</span>
+              <button class="edit-btn alert">Resolver</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item active">
+          <span class="nav-icon">🛍️</span>
+          Sacolas
+        </div>
+        <div class="nav-item" onclick="openPerformance()" style="cursor:pointer;">
+          <span class="nav-icon">📊</span>
+          Desempenho
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">💬</span>
+          Avaliações
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          Loja
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ===================== PERFORMANCE SCREEN ===================== -->
+    <div class="screen perf-screen" id="perfScreen">
+      <div class="perf-scroll">
+
+        <div class="statusbar">
+          <span>9:41</span>
+          <span>●●●●</span>
+        </div>
+
+        <div class="perf-header">
+          <div class="perf-back-btn" onclick="closePerformance()">←</div>
+          <div class="perf-title">Desempenho</div>
+          <div style="width:38px;"></div>
+        </div>
+
+        <div class="perf-period-row">
+          <button class="period-chip active">7 dias</button>
+          <button class="period-chip">30 dias</button>
+          <button class="period-chip">Total</button>
+        </div>
+
+        <!-- Hero revenue card -->
+        <div class="perf-hero">
+          <div class="perf-hero-deco-1"></div>
+          <div class="perf-hero-deco-2"></div>
+          <div class="perf-hero-label">Faturado nos últimos 7 dias</div>
+          <div class="perf-hero-value">R$ 1.342,60</div>
+          <div class="perf-hero-trend">↑ 18% vs. semana anterior</div>
+        </div>
+
+        <!-- Mini bar chart -->
+        <div class="chart-card">
+          <div class="chart-title-row">
+            <span class="chart-title">Vendas por dia</span>
+            <span class="chart-subtitle">sacolas vendidas</span>
+          </div>
+          <div class="bar-chart">
+            <div class="bar-col"><div class="bar" style="height:38%;"></div><span class="bar-label">Seg</span></div>
+            <div class="bar-col"><div class="bar" style="height:52%;"></div><span class="bar-label">Ter</span></div>
+            <div class="bar-col"><div class="bar" style="height:30%;"></div><span class="bar-label">Qua</span></div>
+            <div class="bar-col"><div class="bar" style="height:65%;"></div><span class="bar-label">Qui</span></div>
+            <div class="bar-col"><div class="bar" style="height:58%;"></div><span class="bar-label">Sex</span></div>
+            <div class="bar-col"><div class="bar full" style="height:100%;"></div><span class="bar-label">Sáb</span></div>
+            <div class="bar-col"><div class="bar" style="height:72%;"></div><span class="bar-label">Dom</span></div>
+          </div>
+        </div>
+
+        <!-- Stat grid -->
+        <div class="perf-stat-grid">
+          <div class="perf-stat-card">
+            <div class="perf-stat-value">61</div>
+            <div class="perf-stat-label">sacolas vendidas</div>
+          </div>
+          <div class="perf-stat-card">
+            <div class="perf-stat-value">R$ 22,01</div>
+            <div class="perf-stat-label">ticket médio</div>
+          </div>
+          <div class="perf-stat-card">
+            <div class="perf-stat-value">4,8 ★</div>
+            <div class="perf-stat-label">avaliação média</div>
+          </div>
+          <div class="perf-stat-card">
+            <div class="perf-stat-value">94%</div>
+            <div class="perf-stat-label">taxa de retirada</div>
+          </div>
+        </div>
+
+        <!-- Impact card -->
+        <div class="section-label" style="padding:18px 20px 10px;">Seu impacto total</div>
+        <div class="impact-card-big">
+          <div class="impact-row-big">
+            <div class="impact-item-big">
+              <div class="impact-num-big">84kg</div>
+              <div class="impact-label-big">comida resgatada</div>
+            </div>
+            <div class="impact-item-big">
+              <div class="impact-num-big">312</div>
+              <div class="impact-label-big">sacolas no total</div>
+            </div>
+            <div class="impact-item-big">
+              <div class="impact-num-big">201kg</div>
+              <div class="impact-label-big">CO₂ evitado</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top sacola -->
+        <div class="section-label" style="padding:18px 20px 10px;">Mais vendida da semana</div>
+        <div class="top-sacola-card">
+          <div class="sacola-thumb" style="width:50px; height:50px; font-size:21px;">🥐</div>
+          <div style="flex:1;">
+            <div class="sacola-name" style="font-size:14px;">Sacola Surpresa Doce</div>
+            <div class="reservation-label">22 vendidas · R$ 613,80 gerados</div>
+          </div>
+          <div class="top-badge">🏆</div>
+        </div>
+
+        <!-- Encouragement note -->
+        <div class="encourage-card">
+          <span style="font-size:18px;">🌱</span>
+          <div>
+            <div class="encourage-title">Você está entre os 15% melhores parceiros do RS</div>
+            <div class="encourage-sub">Continue assim — sua nota e taxa de retirada estão acima da média da plataforma.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function toggleInfo(e) {
+    e.stopPropagation();
+    document.getElementById('infoPopover').classList.toggle('show');
+  }
+  document.addEventListener('click', function() {
+    document.getElementById('infoPopover').classList.remove('show');
+  });
+
+  function openPerformance() {
+    document.getElementById('perfScreen').classList.add('open');
+  }
+  function closePerformance() {
+    document.getElementById('perfScreen').classList.remove('open');
+  }
+</script>
+
+</body>
+</html>

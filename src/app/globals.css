@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cream: #fbf7f0;
+  --color-brand: #1a6b3a;
+  --color-brand-dark: #134d29;
+  --color-brand-deep: #0e3a22;
+  --color-terracotta: #c77b45;
+  --color-terracotta-dark: #a8632f;
+  --color-charcoal: #23231f;
+  --color-sage: #e4ede3;
+  --color-sage-line: #d3e0d1;
+  --color-muted: #6b6b62;
+  --color-mint: #c9e4d2;
+  --color-amber-ink: #b8860b;
+  --color-amber-bg: #faf1dc;
+  --color-alert: #b23a2e;
+  --color-alert-bg: #fceae8;
+}
+
+@theme inline {
+  --font-sans: var(--font-inter), sans-serif;
+  --font-display: var(--font-fraunces), serif;
+}
+
+/* Always reserve the scrollbar track so the centered app column never
+   shifts horizontally when navigating between tall (scrolling) and short
+   (non-scrolling) pages — e.g. landing → login. */
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* organic blob shapes from the mockups */
+.blob-a {
+  border-radius: 42% 58% 65% 35% / 45% 45% 55% 55%;
+}
+.blob-a-active {
+  border-radius: 58% 42% 35% 65% / 55% 55% 45% 45%;
+}
+.blob-b {
+  border-radius: 38% 62% 56% 44% / 50% 42% 58% 50%;
+}
+.blob-c {
+  border-radius: 48% 52% 53% 47% / 44% 47% 53% 56%;
+}
