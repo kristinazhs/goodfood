@@ -2,10 +2,12 @@ export function Field({
   label,
   type = "text",
   placeholder,
+  defaultValue,
 }: {
   label: string;
   type?: string;
   placeholder?: string;
+  defaultValue?: string;
 }) {
   return (
     <label className="block">
@@ -13,6 +15,7 @@ export function Field({
       <input
         type={type}
         placeholder={placeholder}
+        defaultValue={defaultValue}
         className="w-full rounded-[14px] border-[1.5px] border-sage-line bg-white px-4 py-3 text-sm outline-none placeholder:text-[#B5B5A8] focus:border-brand"
       />
     </label>
@@ -22,9 +25,11 @@ export function Field({
 export function TextArea({
   label,
   placeholder,
+  defaultValue,
 }: {
   label: string;
   placeholder?: string;
+  defaultValue?: string;
 }) {
   return (
     <label className="block">
@@ -32,6 +37,7 @@ export function TextArea({
       <textarea
         rows={3}
         placeholder={placeholder}
+        defaultValue={defaultValue}
         className="w-full resize-none rounded-[14px] border-[1.5px] border-sage-line bg-white px-4 py-3 text-sm outline-none placeholder:text-[#B5B5A8] focus:border-brand"
       />
     </label>

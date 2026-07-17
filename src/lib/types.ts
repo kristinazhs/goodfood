@@ -42,6 +42,20 @@ export interface SacolaLoja {
   alerta?: boolean;
 }
 
+// pedido recebido pelo estabelecimento (visão do painel)
+export interface PedidoLoja {
+  id: string;
+  codigo: string;
+  cliente: string;
+  nomeSacola: string;
+  emoji: string;
+  data: string;
+  janela: string;
+  qtd: number;
+  total: number;
+  status: "reservado" | "retirado" | "nao_retirado";
+}
+
 export interface Pedido {
   id: string;
   codigo: string;
