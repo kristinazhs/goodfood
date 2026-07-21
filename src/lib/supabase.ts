@@ -1,17 +1,19 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Creates a Supabase client for reading public catalog data on the server.
-// Uses the public ("anon"/publishable) key from .env.local — safe to use
-// because Row Level Security decides what each request is allowed to see.
+// The Supabase project URL is public — it appears in every browser request
+// to the database — so we keep it as a constant, with an optional env
+// override. The KEY still comes from the environment (it's the credential).
+// Row Level Security is what actually decides what each request may see.
+const SUPABASE_URL = "https://kvfwnzhajqlbypozdadg.supabase.co";
+
 export function createSupabaseClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!url || !key) {
+  if (!key) {
     throw new Error(
-      "Faltam as variáveis do Supabase. Verifique NEXT_PUBLIC_SUPABASE_URL e " +
-        "NEXT_PUBLIC_SUPABASE_ANON_KEY no arquivo .env.local (local) ou nas " +
-        "Environment Variables da Vercel (produção).",
+      "Falta a variável NEXT_PUBLIC_SUPABASE_ANON_KEY. Defina-a no arquivo " +
+        ".env.local (local) e nas Environment Variables da Vercel (produção).",
     );
   }
 
