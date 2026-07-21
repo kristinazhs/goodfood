@@ -3,12 +3,15 @@ import { BagCard } from "@/components/consumidor/bag-card";
 import { CategoryRow } from "@/components/consumidor/category-row";
 import { SpotlightCard } from "@/components/consumidor/spotlight-card";
 import { BottomNav } from "@/components/ui/bottom-nav";
-import { sacolas } from "@/lib/mock-data";
 import { navConsumidor } from "@/lib/nav";
+import { getSacolasDisponiveis } from "@/lib/sacolas";
 
-export default function ConsumidorHome() {
-  const destaque = sacolas.find((s) => s.destaque)!;
-  const demais = sacolas.filter((s) => !s.destaque);
+export const dynamic = "force-dynamic";
+
+export default async function ConsumidorHome() {
+  const sacolas = await getSacolasDisponiveis();
+  const destaque = sacolas.find((s) => s.destaque) ?? sacolas[0];
+  const demais = sacolas.filter((s) => s !== destaque);
 
   return (
     <>
@@ -38,19 +41,29 @@ export default function ConsumidorHome() {
 
         <CategoryRow />
 
-        <div className="px-5 pb-[9px] pt-1 text-[11.5px] font-bold uppercase tracking-[0.6px] text-muted">
-          ⏰ Acabando agora
-        </div>
-        <SpotlightCard sacola={destaque} />
+        {sacolas.length === 0 ? (
+          <div className="px-5 py-16 text-center text-sm text-muted">
+            Nenhuma sacola disponível agora.
+            <br />
+            Volte mais tarde 🌙
+          </div>
+        ) : (
+          <>
+            <div className="px-5 pb-[9px] pt-1 text-[11.5px] font-bold uppercase tracking-[0.6px] text-muted">
+              ⏰ Acabando agora
+            </div>
+            {destaque && <SpotlightCard sacola={destaque} />}
 
-        <div className="px-5 pb-[9px] text-[11.5px] font-bold uppercase tracking-[0.6px] text-muted">
-          🛍️ Disponível hoje
-        </div>
-        <div className="flex flex-col gap-[13px] px-5 pb-6">
-          {demais.map((s) => (
-            <BagCard key={s.id} sacola={s} />
-          ))}
-        </div>
+            <div className="px-5 pb-[9px] text-[11.5px] font-bold uppercase tracking-[0.6px] text-muted">
+              🛍️ Disponível hoje
+            </div>
+            <div className="flex flex-col gap-[13px] px-5 pb-6">
+              {demais.map((s) => (
+                <BagCard key={s.id} sacola={s} />
+              ))}
+            </div>
+          </>
+        )}
       </main>
       <BottomNav items={navConsumidor} />
     </>

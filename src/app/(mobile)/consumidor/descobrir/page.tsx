@@ -1,9 +1,13 @@
 import { MapView } from "@/components/consumidor/map-view";
 import { BottomNav } from "@/components/ui/bottom-nav";
-import { sacolas } from "@/lib/mock-data";
 import { navConsumidor } from "@/lib/nav";
+import { getSacolasDisponiveis } from "@/lib/sacolas";
 
-export default function Descobrir() {
+export const dynamic = "force-dynamic";
+
+export default async function Descobrir() {
+  const sacolas = await getSacolasDisponiveis();
+
   return (
     <>
       <main className="flex flex-1 flex-col overflow-hidden">
@@ -16,7 +20,13 @@ export default function Descobrir() {
           </p>
         </div>
 
-        <MapView sacolas={sacolas} />
+        {sacolas.length === 0 ? (
+          <div className="flex flex-1 items-center justify-center px-5 text-center text-sm text-muted">
+            Nenhuma sacola disponível agora.
+          </div>
+        ) : (
+          <MapView sacolas={sacolas} />
+        )}
       </main>
       <BottomNav items={navConsumidor} />
     </>

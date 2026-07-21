@@ -5,14 +5,17 @@ import { useState } from "react";
 import { brl } from "@/lib/format";
 import type { Sacola } from "@/lib/types";
 
-export function MapView({ sacolas }: { sacolas: Sacola[] }) {
-  const posicoes: Record<string, { top: string; left: string }> = {
-    "surpresa-doce": { top: "28%", left: "46%" },
-    "almoco-do-dia": { top: "54%", left: "24%" },
-    "mista-paes": { top: "20%", left: "72%" },
-    "frios-laticinios": { top: "68%", left: "62%" },
-  };
+// Fixed pin spots on the dummy map; sacolas are placed by order.
+const posicoes: { top: string; left: string }[] = [
+  { top: "28%", left: "46%" },
+  { top: "54%", left: "24%" },
+  { top: "20%", left: "72%" },
+  { top: "68%", left: "62%" },
+  { top: "40%", left: "80%" },
+  { top: "76%", left: "34%" },
+];
 
+export function MapView({ sacolas }: { sacolas: Sacola[] }) {
   const [selecionada, setSelecionada] = useState<Sacola>(sacolas[0]);
 
   return (
@@ -60,9 +63,8 @@ export function MapView({ sacolas }: { sacolas: Sacola[] }) {
       </div>
 
       {/* sacola pins */}
-      {sacolas.map((s) => {
-        const pos = posicoes[s.id];
-        if (!pos) return null;
+      {sacolas.map((s, i) => {
+        const pos = posicoes[i % posicoes.length];
         const ativa = selecionada.id === s.id;
         return (
           <button

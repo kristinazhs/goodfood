@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ReserveBar } from "@/components/consumidor/reserve-bar";
-import { getSacola } from "@/lib/mock-data";
+import { getSacolaPorId } from "@/lib/sacolas";
 
 export default async function SacolaDetalhe({
   params,
@@ -9,7 +9,7 @@ export default async function SacolaDetalhe({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const sacola = getSacola(id);
+  const sacola = await getSacolaPorId(id);
   if (!sacola) notFound();
 
   return (

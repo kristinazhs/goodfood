@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { PagamentoClient } from "@/components/consumidor/pagamento-client";
 import { BackButton } from "@/components/ui/back-button";
-import { getSacola, sacolas } from "@/lib/mock-data";
+import { getSacolaPorId } from "@/lib/sacolas";
 
 export default async function Pagamento({
   searchParams,
@@ -9,7 +9,7 @@ export default async function Pagamento({
   searchParams: Promise<{ sacola?: string; qtd?: string }>;
 }) {
   const { sacola: sacolaId, qtd: qtdParam } = await searchParams;
-  const sacola = getSacola(sacolaId ?? "") ?? sacolas[0];
+  const sacola = await getSacolaPorId(sacolaId ?? "");
   if (!sacola) notFound();
   const qtd = Math.max(1, Number(qtdParam) || 1);
 
