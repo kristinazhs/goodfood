@@ -72,7 +72,7 @@ export function SacolaLojaCard({ sacola }: { sacola: SacolaLoja }) {
             nesta sacola
           </span>
           <Link
-            href="/parceiro/desempenho"
+            href={`/parceiro/sacolas/${sacola.id}`}
             className={`rounded-full px-3 py-1.5 text-[11px] font-bold ${
               sacola.alerta
                 ? "bg-alert-bg text-alert"

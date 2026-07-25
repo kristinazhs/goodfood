@@ -94,3 +94,27 @@ export async function publicarSacola(
 
   redirect("/parceiro");
 }
+
+// --- Fulfillment (RLS lets the listing's owner update its orders) ----------
+
+export async function marcarRetirada(formData: FormData) {
+  const orderId = String(formData.get("orderId") ?? "");
+  const listingId = String(formData.get("listingId") ?? "");
+  const supabase = await createSupabaseServerClient();
+  await supabase
+    .from("orders")
+    .update({ status: "retirado", picked_up_at: new Date().toISOString() })
+    .eq("id", orderId);
+  redirect(`/parceiro/sacolas/${listingId}`);
+}
+
+export async function marcarNaoRetirada(formData: FormData) {
+  const orderId = String(formData.get("orderId") ?? "");
+  const listingId = String(formData.get("listingId") ?? "");
+  const supabase = await createSupabaseServerClient();
+  await supabase
+    .from("orders")
+    .update({ status: "nao_retirado" })
+    .eq("id", orderId);
+  redirect(`/parceiro/sacolas/${listingId}`);
+}
