@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { brl } from "@/lib/format";
-import { getPedido, getSacola, pedidos } from "@/lib/mock-data";
+import { getPedidoDetalhe } from "@/lib/pedidos";
+
+export const dynamic = "force-dynamic";
 
 const qrMatrix = [
   "111011101",
@@ -34,8 +37,8 @@ export default async function PedidoConfirmacao({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const pedido = getPedido(id) ?? pedidos[0];
-  const sacola = getSacola(pedido.sacolaId);
+  const pedido = await getPedidoDetalhe(id);
+  if (!pedido) notFound();
 
   return (
     <main className="flex-1 px-5 pb-8">
@@ -47,7 +50,7 @@ export default async function PedidoConfirmacao({
           Pedido confirmado!
         </h1>
         <p className="mt-1.5 text-[13px] text-muted">
-          {pedido.loja} · Retirada entre {sacola?.janela ?? "18h40 – 19h00"}
+          {pedido.loja} · Retirada entre {pedido.janela}
         </p>
       </div>
 
@@ -69,7 +72,7 @@ export default async function PedidoConfirmacao({
       <div className="mt-4 flex items-center gap-[13px] rounded-2xl border-[1.5px] border-sage-line bg-white p-[11px]">
         <span
           className="blob-b flex h-[54px] w-[54px] shrink-0 items-center justify-center text-[23px]"
-          style={{ background: sacola?.corThumb ?? "#E4EDE3" }}
+          style={{ background: pedido.corThumb }}
         >
           {pedido.emoji}
         </span>
@@ -86,22 +89,20 @@ export default async function PedidoConfirmacao({
         </span>
       </div>
 
-      <div className="mt-4 flex items-start gap-3 rounded-[14px] border-[1.5px] border-sage-line bg-white p-3.5">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-sage text-base">
-          📍
-        </span>
-        <div className="flex-1">
-          <div className="text-[13px] font-bold">
-            {sacola?.endereco ?? "Rua Padre Chagas, 314 — Bom Fim"}
+      {pedido.endereco && (
+        <div className="mt-4 flex items-start gap-3 rounded-[14px] border-[1.5px] border-sage-line bg-white p-3.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-sage text-base">
+            📍
+          </span>
+          <div className="flex-1">
+            <div className="text-[13px] font-bold">{pedido.endereco}</div>
+            <div className="mt-[3px] text-xs text-muted">{pedido.loja}</div>
           </div>
-          <div className="mt-[3px] text-xs text-muted">
-            {pedido.loja}
-          </div>
+          <button className="rounded-full bg-sage px-3 py-[7px] text-[11.5px] font-bold text-brand-dark">
+            Como chegar
+          </button>
         </div>
-        <button className="rounded-full bg-sage px-3 py-[7px] text-[11.5px] font-bold text-brand-dark">
-          Como chegar
-        </button>
-      </div>
+      )}
 
       <div className="mt-3 flex items-start gap-[9px] rounded-[14px] bg-sage px-[13px] py-3 text-[11.5px] leading-[1.5] text-brand-dark">
         💳{" "}
@@ -116,10 +117,10 @@ export default async function PedidoConfirmacao({
       </button>
 
       <Link
-        href="/consumidor"
+        href="/consumidor/pedidos"
         className="mt-2.5 block w-full rounded-[14px] bg-brand p-3.5 text-center text-sm font-bold text-white"
       >
-        Voltar ao início
+        Ver meus pedidos
       </Link>
     </main>
   );

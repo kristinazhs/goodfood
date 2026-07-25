@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useActionState, useState } from "react";
 import { brl } from "@/lib/format";
+import { reservar, type ReservaState } from "@/lib/pedido-actions";
 import type { Sacola } from "@/lib/types";
 
 const metodos = [
@@ -17,9 +17,11 @@ export function PagamentoClient({
   sacola: Sacola;
   qtd: number;
 }) {
-  const router = useRouter();
   const [metodo, setMetodo] = useState<"pix" | "cartao">("pix");
-  const [confirmado, setConfirmado] = useState(false);
+  const [state, action, pending] = useActionState<ReservaState, FormData>(
+    reservar,
+    {},
+  );
   const total = sacola.preco * qtd;
 
   return (
@@ -35,6 +37,7 @@ export function PagamentoClient({
             return (
               <button
                 key={m.id}
+                type="button"
                 onClick={() => setMetodo(m.id)}
                 className={`flex items-center gap-3 rounded-[14px] border-[1.5px] bg-white p-3.5 text-left ${
                   ativo ? "border-brand" : "border-sage-line"
@@ -78,63 +81,28 @@ export function PagamentoClient({
           </span>
           <span className="font-display text-lg font-bold">{brl(total)}</span>
         </div>
+
+        {state.error && (
+          <p className="mt-3 rounded-[10px] bg-alert-bg px-3 py-2 text-[12.5px] font-semibold text-alert">
+            {state.error}
+          </p>
+        )}
       </div>
 
-      <div className="sticky bottom-0 z-10 border-t border-sage-line bg-white px-5 pb-[22px] pt-4">
-        <button
-          onClick={() => setConfirmado(true)}
-          className="w-full rounded-[14px] bg-brand p-4 text-[15px] font-bold text-white"
-        >
-          Confirmar reserva
-        </button>
-      </div>
-
-      {/* confirmation bottom-sheet (from the mockup) */}
-      <div
-        className={`fixed inset-0 z-40 mx-auto flex w-full max-w-[430px] items-end bg-charcoal/50 transition-opacity duration-250 ${
-          confirmado ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
+      <form
+        action={action}
+        className="sticky bottom-0 z-10 border-t border-sage-line bg-white px-5 pb-[22px] pt-4"
       >
-        <div
-          className={`w-full rounded-t-[26px] bg-white px-[22px] pb-[26px] pt-7 transition-transform duration-250 ${
-            confirmado ? "translate-y-0" : "translate-y-5"
-          }`}
+        <input type="hidden" name="bagId" value={sacola.id} />
+        <input type="hidden" name="qtd" value={qtd} />
+        <button
+          type="submit"
+          disabled={pending}
+          className="w-full rounded-[14px] bg-brand p-4 text-[15px] font-bold text-white disabled:opacity-60"
         >
-          <div className="mb-3.5 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-sage text-2xl">
-            ✅
-          </div>
-          <div className="mb-2 font-display text-[19px] font-bold">
-            Sacola reservada!
-          </div>
-          <div className="mb-4 text-[13px] leading-[1.55] text-muted">
-            {sacola.loja} · Retirada entre {sacola.janela}
-          </div>
-
-          <div className="mb-2.5 flex items-start gap-[9px] rounded-[14px] bg-sage px-[13px] py-3 text-[12.5px] leading-[1.5] text-brand-dark">
-            💳{" "}
-            <span>
-              Nenhum valor foi cobrado ainda. <b>{brl(total)}</b> serão cobrados
-              na retirada, ou ao final da janela se você não comparecer.
-            </span>
-          </div>
-          <div className="mb-2.5 flex items-start gap-[9px] rounded-[14px] bg-sage px-[13px] py-3 text-[12.5px] leading-[1.5] text-brand-dark">
-            ⏳{" "}
-            <span>
-              Você pode cancelar sem custo <b>até 17h00</b>, direto pelo app.
-            </span>
-          </div>
-
-          <button className="mb-2.5 w-full rounded-[14px] border-[1.5px] border-sage-line bg-white p-[13px] text-[13px] font-bold text-charcoal">
-            🤝 Pedir para um amigo retirar
-          </button>
-          <button
-            onClick={() => router.push("/consumidor/pedido/4827")}
-            className="w-full rounded-[14px] bg-brand p-3.5 text-sm font-bold text-white"
-          >
-            Entendi
-          </button>
-        </div>
-      </div>
+          {pending ? "Reservando…" : "Confirmar reserva"}
+        </button>
+      </form>
     </>
   );
 }
