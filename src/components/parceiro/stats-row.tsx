@@ -1,8 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { brl } from "@/lib/format";
 
-export function StatsRow() {
+export function StatsRow({
+  faturado,
+  vendidas,
+  resgatada,
+}: {
+  faturado: number;
+  vendidas: number;
+  resgatada: number;
+}) {
   const [infoAberto, setInfoAberto] = useState(false);
 
   useEffect(() => {
@@ -37,7 +46,7 @@ export function StatsRow() {
           (cobradas). Reservas em andamento aparecem só depois da retirada.
         </div>
         <div className="relative z-[2] font-display text-[21px] font-bold text-white">
-          R$ 124
+          {brl(faturado)}
         </div>
         <div className="relative z-[2] mt-0.5 text-[10.5px] text-mint">
           faturado hoje
@@ -45,12 +54,12 @@ export function StatsRow() {
       </div>
 
       <div className="flex-1 rounded-2xl border-[1.5px] border-sage-line bg-white px-3.5 pb-[13px] pt-3.5">
-        <div className="font-display text-[21px] font-bold">5</div>
+        <div className="font-display text-[21px] font-bold">{vendidas}</div>
         <div className="mt-0.5 text-[10.5px] text-muted">sacolas vendidas</div>
       </div>
 
       <div className="flex-1 rounded-2xl border-[1.5px] border-sage-line bg-white px-3.5 pb-[13px] pt-3.5">
-        <div className="font-display text-[21px] font-bold">7kg</div>
+        <div className="font-display text-[21px] font-bold">{resgatada}kg</div>
         <div className="mt-0.5 text-[10.5px] text-muted">comida resgatada</div>
       </div>
     </div>

@@ -2,10 +2,14 @@ import Link from "next/link";
 import { SacolaLojaCard } from "@/components/parceiro/sacola-loja-card";
 import { StatsRow } from "@/components/parceiro/stats-row";
 import { BottomNav } from "@/components/ui/bottom-nav";
-import { sacolasLoja } from "@/lib/mock-data";
 import { navParceiro } from "@/lib/nav";
+import { getPainelParceiro } from "@/lib/parceiro";
 
-export default function ParceiroDashboard() {
+export const dynamic = "force-dynamic";
+
+export default async function ParceiroDashboard() {
+  const { establishment, sacolas, stats } = await getPainelParceiro();
+
   return (
     <>
       <main className="flex-1">
@@ -13,13 +17,15 @@ export default function ParceiroDashboard() {
           <div className="mb-4 flex items-start justify-between">
             <div>
               <div className="font-display text-[22px] font-semibold leading-[1.15]">
-                Oi, Marcos 👋
+                Olá 👋
                 <br />
                 <span className="text-terracotta-dark">Suas sacolas</span> de
                 hoje
               </div>
               <div className="mt-1.5 flex items-center gap-[5px] text-xs text-muted">
-                🥖 Domenica Casa de Pães
+                {establishment
+                  ? `${establishment.emoji} ${establishment.nome}`
+                  : "Seu estabelecimento"}
               </div>
             </div>
             <Link
@@ -31,7 +37,11 @@ export default function ParceiroDashboard() {
             </Link>
           </div>
 
-          <StatsRow />
+          <StatsRow
+            faturado={stats.faturado}
+            vendidas={stats.vendidas}
+            resgatada={stats.resgatada}
+          />
         </div>
 
         <div className="flex items-center justify-between px-5 pb-2.5 pt-1">
@@ -47,11 +57,19 @@ export default function ParceiroDashboard() {
           </Link>
         </div>
 
-        <div className="flex flex-col gap-[13px] px-5 pb-6">
-          {sacolasLoja.map((s) => (
-            <SacolaLojaCard key={s.id} sacola={s} />
-          ))}
-        </div>
+        {sacolas.length === 0 ? (
+          <div className="px-5 py-12 text-center text-sm leading-[1.5] text-muted">
+            Você ainda não publicou sacolas hoje.
+            <br />
+            Toque no <b className="text-brand-dark">+</b> para criar a primeira 🥐
+          </div>
+        ) : (
+          <div className="flex flex-col gap-[13px] px-5 pb-6">
+            {sacolas.map((s) => (
+              <SacolaLojaCard key={s.id} sacola={s} />
+            ))}
+          </div>
+        )}
       </main>
       <BottomNav items={navParceiro} />
     </>

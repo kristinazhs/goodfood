@@ -46,7 +46,8 @@ export default async function SacolaDetalhe({
           </h1>
           <div className="mt-[5px] flex items-start justify-between">
             <span className="text-[13px] text-muted">
-              {sacola.loja} · {sacola.distancia}
+              {sacola.loja}
+              {sacola.distancia ? ` · ${sacola.distancia}` : ""}
             </span>
             <span className="shrink-0 text-[13px] font-extrabold">
               ★ {sacola.avaliacao.toFixed(1).replace(".", ",")}
@@ -76,27 +77,29 @@ export default async function SacolaDetalhe({
             </p>
           </section>
 
-          <section className="mt-[22px]">
-            <h2 className="mb-2.5 font-display text-base font-semibold">
-              O que pode vir na sacola
-            </h2>
-            <div className="flex flex-col gap-[9px]">
-              {sacola.conteudos.map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center gap-[11px] rounded-[14px] border-[1.5px] border-sage-line bg-white px-3.5 py-[11px] text-[13px]"
-                >
-                  <span className="blob-a flex h-9 w-9 shrink-0 items-center justify-center bg-sage text-base">
-                    {item.emoji}
-                  </span>
-                  <span className="flex-1 font-medium">{item.label}</span>
-                  <span className="rounded-md bg-sage px-[9px] py-[3px] text-[10.5px] font-bold text-brand-dark">
-                    {item.tag}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
+          {sacola.conteudos.length > 0 && (
+            <section className="mt-[22px]">
+              <h2 className="mb-2.5 font-display text-base font-semibold">
+                O que pode vir na sacola
+              </h2>
+              <div className="flex flex-col gap-[9px]">
+                {sacola.conteudos.map((item) => (
+                  <div
+                    key={item.label}
+                    className="flex items-center gap-[11px] rounded-[14px] border-[1.5px] border-sage-line bg-white px-3.5 py-[11px] text-[13px]"
+                  >
+                    <span className="blob-a flex h-9 w-9 shrink-0 items-center justify-center bg-sage text-base">
+                      {item.emoji}
+                    </span>
+                    <span className="flex-1 font-medium">{item.label}</span>
+                    <span className="rounded-md bg-sage px-[9px] py-[3px] text-[10.5px] font-bold text-brand-dark">
+                      {item.tag}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section className="mt-[22px]">
             <h2 className="mb-2.5 font-display text-base font-semibold">

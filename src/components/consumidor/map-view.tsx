@@ -122,7 +122,8 @@ export function MapView({ sacolas }: { sacolas: Sacola[] }) {
               {selecionada.nome}
             </span>
             <span className="mt-0.5 block truncate text-[11px] text-muted">
-              {selecionada.loja} · {selecionada.distancia}
+              {selecionada.loja}
+              {selecionada.distancia ? ` · ${selecionada.distancia}` : ""}
             </span>
             <span className="mt-1.5 flex items-center gap-1.5">
               <span className="rounded-md bg-sage px-[7px] py-[3px] text-[10px] font-bold text-brand-dark">

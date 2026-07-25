@@ -30,7 +30,8 @@ export function SpotlightCard({ sacola }: { sacola: Sacola }) {
           {sacola.nome}
         </span>
         <span className="mt-[3px] block text-[11px] text-mint">
-          {sacola.loja} · {sacola.distancia}
+          {sacola.loja}
+          {sacola.distancia ? ` · ${sacola.distancia}` : ""}
         </span>
         <span className="mt-[9px] flex items-baseline gap-[7px]">
           <span className="text-[11px] text-[#8FBC9D] line-through">
