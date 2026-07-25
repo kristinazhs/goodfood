@@ -3,13 +3,18 @@ import { BagCard } from "@/components/consumidor/bag-card";
 import { CategoryRow } from "@/components/consumidor/category-row";
 import { SpotlightCard } from "@/components/consumidor/spotlight-card";
 import { BottomNav } from "@/components/ui/bottom-nav";
+import { getCurrentProfile } from "@/lib/auth";
 import { navConsumidor } from "@/lib/nav";
 import { getSacolasDisponiveis } from "@/lib/sacolas";
 
 export const dynamic = "force-dynamic";
 
 export default async function ConsumidorHome() {
-  const sacolas = await getSacolasDisponiveis();
+  const [sacolas, sessao] = await Promise.all([
+    getSacolasDisponiveis(),
+    getCurrentProfile(),
+  ]);
+  const primeiroNome = sessao?.profile?.nome?.split(" ")[0] ?? null;
   const destaque = sacolas.find((s) => s.destaque) ?? sacolas[0];
   const demais = sacolas.filter((s) => s !== destaque);
 
@@ -20,7 +25,7 @@ export default async function ConsumidorHome() {
           <div className="flex items-start justify-between">
             <div>
               <div className="font-display text-[22px] font-semibold leading-[1.15]">
-                Oi, Carla 👋
+                {primeiroNome ? `Oi, ${primeiroNome} 👋` : "Oi 👋"}
                 <br />
                 <span className="text-terracotta-dark">A comida boa</span> te
                 espera
