@@ -6,15 +6,29 @@ import { BottomNav } from "@/components/ui/bottom-nav";
 import { getCurrentProfile } from "@/lib/auth";
 import { navConsumidor } from "@/lib/nav";
 import { getSacolasDisponiveis } from "@/lib/sacolas";
+import type { CategoriaId } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function ConsumidorHome() {
-  const [sacolas, sessao] = await Promise.all([
+const CATEGORIAS: CategoriaId[] = ["tudo", "padaria", "refeicao", "mercado"];
+
+export default async function ConsumidorHome({
+  searchParams,
+}: {
+  searchParams: Promise<{ cat?: string }>;
+}) {
+  const [{ cat: catParam }, todas, sessao] = await Promise.all([
+    searchParams,
     getSacolasDisponiveis(),
     getCurrentProfile(),
   ]);
+  const cat: CategoriaId = CATEGORIAS.includes(catParam as CategoriaId)
+    ? (catParam as CategoriaId)
+    : "tudo";
+
   const primeiroNome = sessao?.profile?.nome?.split(" ")[0] ?? null;
+  const sacolas =
+    cat === "tudo" ? todas : todas.filter((s) => s.categoria === cat);
   const destaque = sacolas.find((s) => s.destaque) ?? sacolas[0];
   const demais = sacolas.filter((s) => s !== destaque);
 
@@ -44,11 +58,13 @@ export default async function ConsumidorHome() {
           </div>
         </div>
 
-        <CategoryRow />
+        <CategoryRow active={cat} />
 
         {sacolas.length === 0 ? (
           <div className="px-5 py-16 text-center text-sm text-muted">
-            Nenhuma sacola disponível agora.
+            {cat === "tudo"
+              ? "Nenhuma sacola disponível agora."
+              : "Nenhuma sacola nesta categoria agora."}
             <br />
             Volte mais tarde 🌙
           </div>

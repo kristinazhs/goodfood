@@ -135,3 +135,26 @@ export async function signOut() {
   await supabase.auth.signOut();
   redirect("/");
 }
+
+export async function atualizarPerfil(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const nome = String(formData.get("nome") ?? "").trim();
+  const telefone = String(formData.get("telefone") ?? "").trim();
+  if (!nome) return { error: "Informe seu nome." };
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/consumidor/entrar");
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ nome, telefone: telefone || null })
+    .eq("id", user.id);
+  if (error) return { error: "Não foi possível salvar. Tente novamente." };
+
+  redirect("/consumidor/perfil");
+}
