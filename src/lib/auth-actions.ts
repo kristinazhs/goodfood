@@ -61,6 +61,75 @@ export async function signUpConsumer(
   redirect("/consumidor");
 }
 
+export async function signInEstablishment(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const email = String(formData.get("email") ?? "").trim();
+  const senha = String(formData.get("senha") ?? "");
+  if (!email || !senha) return { error: "Preencha e-mail e senha." };
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password: senha,
+  });
+  if (error) return { error: traduzErro(error.message) };
+
+  if (data.user?.user_metadata?.role !== "establishment") {
+    await supabase.auth.signOut();
+    return {
+      error: "Esta conta não é de um estabelecimento. Use a entrada de consumidor.",
+    };
+  }
+
+  redirect("/parceiro");
+}
+
+export async function signUpEstablishment(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const nome = String(formData.get("nome") ?? "").trim(); // nome do negócio
+  const cnpj = String(formData.get("cnpj") ?? "").trim();
+  const endereco = String(formData.get("endereco") ?? "").trim();
+  const categoria = String(formData.get("categoria") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
+  const telefone = String(formData.get("telefone") ?? "").trim();
+  const senha = String(formData.get("senha") ?? "");
+
+  if (!nome) return { error: "Informe o nome do negócio." };
+  if (!email) return { error: "Informe o e-mail." };
+  if (senha.length < 8)
+    return { error: "A senha precisa ter ao menos 8 caracteres." };
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password: senha,
+    options: { data: { role: "establishment", nome, telefone } },
+  });
+  if (error) return { error: traduzErro(error.message) };
+
+  // Create the establishment record, owned by the just-created account.
+  // (The signup session is active here, so RLS owner_id = auth.uid() passes.)
+  const userId = data.user?.id;
+  if (userId) {
+    const { error: estErr } = await supabase.from("establishments").insert({
+      owner_id: userId,
+      nome,
+      cnpj: cnpj || null,
+      categoria: categoria || null,
+      endereco: endereco || null,
+    });
+    if (estErr) {
+      return { error: "Conta criada, mas falhou ao salvar os dados do negócio: " + estErr.message };
+    }
+  }
+
+  redirect("/parceiro");
+}
+
 export async function signOut() {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();

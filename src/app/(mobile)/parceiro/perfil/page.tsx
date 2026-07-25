@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { BottomNav } from "@/components/ui/bottom-nav";
+import { signOut } from "@/lib/auth-actions";
 import { navParceiro } from "@/lib/nav";
 
 const secoes = [
@@ -66,12 +66,14 @@ export default function PerfilParceiro() {
         </div>
 
         <div className="px-5 pb-6 pt-5">
-          <Link
-            href="/"
-            className="block w-full rounded-[14px] border-[1.5px] border-sage-line bg-white p-[13px] text-center text-[13px] font-bold text-alert"
-          >
-            Sair da conta
-          </Link>
+          <form action={signOut}>
+            <button
+              type="submit"
+              className="w-full rounded-[14px] border-[1.5px] border-sage-line bg-white p-[13px] text-center text-[13px] font-bold text-alert"
+            >
+              Sair da conta
+            </button>
+          </form>
         </div>
       </main>
       <BottomNav items={navParceiro} />

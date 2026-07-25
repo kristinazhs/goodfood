@@ -26,7 +26,45 @@ export async function updateSession(request: NextRequest) {
   });
 
   // IMPORTANT: don't run code between creating the client and this call.
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const path = request.nextUrl.pathname;
+  const role = user?.user_metadata?.role as string | undefined;
+
+  // --- Owner area: only logged-in establishments may enter ---------------
+  const parceiroAuthPage =
+    path === "/parceiro/entrar" || path === "/parceiro/cadastro";
+  const inParceiroArea = path === "/parceiro" || path.startsWith("/parceiro/");
+  if (inParceiroArea && !parceiroAuthPage) {
+    if (!user) return redirectTo(request, response, "/parceiro/entrar");
+    if (role !== "establishment") return redirectTo(request, response, "/consumidor");
+  }
+
+  // --- Consumer actions that require an account --------------------------
+  const consumerProtected = [
+    "/consumidor/checkout",
+    "/consumidor/pagamento",
+    "/consumidor/pedidos",
+  ];
+  if (consumerProtected.some((p) => path.startsWith(p)) && !user) {
+    return redirectTo(request, response, "/consumidor/entrar");
+  }
 
   return response;
+}
+
+// Redirect while preserving any auth cookies refreshed above.
+function redirectTo(
+  request: NextRequest,
+  current: NextResponse,
+  pathname: string,
+) {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  url.search = "";
+  const res = NextResponse.redirect(url);
+  current.cookies.getAll().forEach((cookie) => res.cookies.set(cookie));
+  return res;
 }
