@@ -20,6 +20,8 @@ interface EstablishmentRow {
   nome: string;
   endereco: string | null;
   bairro: string | null;
+  lat: number | null;
+  lng: number | null;
 }
 
 interface ListingRow {
@@ -102,6 +104,8 @@ function toSacola(
     descricao: bag.descricao ?? "",
     conteudos: bag.conteudos ?? [],
     categoria: (bag.categoria as Exclude<CategoriaId, "tudo">) ?? "padaria",
+    lat: est.lat ?? null,
+    lng: est.lng ?? null,
   };
 }
 
@@ -113,7 +117,7 @@ export async function getSacolasDisponiveis(): Promise<Sacola[]> {
     .select(
       `id, janela_inicio, janela_fim, quantidade_disponivel, quantidade_total, status,
        bag:bags!inner ( id, nome, descricao, categoria, preco, preco_original, emoji, cor_thumb, conteudos ),
-       establishment:establishments!inner ( nome, endereco, bairro )`,
+       establishment:establishments!inner ( nome, endereco, bairro, lat, lng )`,
     )
     .eq("status", "ativa")
     .gt("quantidade_disponivel", 0)

@@ -48,3 +48,44 @@ body {
 .blob-c {
   border-radius: 48% 52% 53% 47% / 44% 47% 53% 56%;
 }
+
+/* Leaflet price pins (Descobrir map) */
+.mv-pin-wrap {
+  background: transparent;
+  border: none;
+}
+.mv-pin {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px 5px 5px;
+  border-radius: 999px;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  color: #134d29;
+  background: #ffffff;
+  border: 2px solid #ffffff;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+  transform: translate(-50%, calc(-100% - 6px));
+}
+.mv-pin-active {
+  color: #ffffff;
+  background: #1a6b3a;
+  border-color: #134d29;
+}
+.mv-pin-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e4ede3;
+  font-size: 13px;
+}
+.mv-pin-active .mv-pin-emoji {
+  background: rgba(255, 255, 255, 0.25);
+}

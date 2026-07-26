@@ -25,6 +25,8 @@ export interface Sacola {
   conteudos: ConteudoSacola[];
   categoria: Exclude<CategoriaId, "tudo">;
   destaque?: boolean;
+  lat?: number | null;
+  lng?: number | null;
 }
 
 export interface SacolaLoja {
