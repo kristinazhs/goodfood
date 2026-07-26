@@ -121,6 +121,7 @@ export async function getSacolasDisponiveis(): Promise<Sacola[]> {
     )
     .eq("status", "ativa")
     .gt("quantidade_disponivel", 0)
+    .gt("janela_fim", new Date().toISOString()) // hide sacolas past their pickup window
     .order("janela_fim", { ascending: true });
 
   if (error) throw error;
