@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { geocodarEndereco } from "./geocode";
 import { createSupabaseServerClient } from "./supabase-server";
 
 export type AuthState = { error?: string };
@@ -115,12 +116,16 @@ export async function signUpEstablishment(
   // (The signup session is active here, so RLS owner_id = auth.uid() passes.)
   const userId = data.user?.id;
   if (userId) {
+    // Turn the address into map coordinates (best-effort; null if it fails).
+    const geo = endereco ? await geocodarEndereco(endereco) : null;
     const { error: estErr } = await supabase.from("establishments").insert({
       owner_id: userId,
       nome,
       cnpj: cnpj || null,
       categoria: categoria || null,
       endereco: endereco || null,
+      lat: geo?.lat ?? null,
+      lng: geo?.lng ?? null,
     });
     if (estErr) {
       return { error: "Conta criada, mas falhou ao salvar os dados do negócio: " + estErr.message };
