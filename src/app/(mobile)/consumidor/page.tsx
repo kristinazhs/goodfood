@@ -92,14 +92,18 @@ export default async function ConsumidorHome({
               </>
             )}
 
-            <div className="px-5 pb-2.5 pt-[22px] text-xs font-extrabold uppercase leading-none tracking-[0.7px] text-muted">
-              Disponível hoje · {demais.length}
-            </div>
-            <div className="flex flex-col gap-3 px-5 pb-[18px]">
-              {demais.map((s) => (
-                <BagCard key={s.id} sacola={s} />
-              ))}
-            </div>
+            {demais.length > 0 && (
+              <>
+                <div className="px-5 pb-2.5 pt-[22px] text-xs font-extrabold uppercase leading-none tracking-[0.7px] text-muted">
+                  Disponível hoje · {demais.length}
+                </div>
+                <div className="flex flex-col gap-3 px-5 pb-[18px]">
+                  {demais.map((s) => (
+                    <BagCard key={s.id} sacola={s} />
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
       </main>

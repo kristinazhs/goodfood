@@ -39,9 +39,9 @@ export function SpotlightCard({ sacola }: { sacola: Sacola }) {
           <div className="truncate font-display text-[17px] font-semibold leading-[1.2] text-white">
             {sacola.nome}
           </div>
+          {/* see BagCard — distance slot stays empty until it's a real distance */}
           <div className="mt-1 truncate text-[12.5px] font-medium leading-[1.3] text-mint">
             {sacola.loja}
-            {sacola.distancia ? ` · ${sacola.distancia}` : ""}
           </div>
           <div className="mt-[9px] inline-flex h-[27px] items-center gap-1.5 whitespace-nowrap rounded-lg bg-white/[0.14] px-2.5 text-xs font-bold leading-none text-white">
             <IconClock />
