@@ -19,6 +19,12 @@ export interface Sacola {
   janela: string;
   janelaNota: string;
   timer: string;
+  /** Units on the shelf right now (drives the stock plaque on the card). */
+  disponivel: number;
+  /** How many were published today — "resta 1 de 8 hoje". */
+  total: number;
+  /** ISO end of the pickup window; null when there's no active listing. */
+  janelaFim: string | null;
   avaliacao: number;
   endereco: string;
   descricao: string;

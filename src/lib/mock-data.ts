@@ -14,6 +14,9 @@ export const sacolas: Sacola[] = [
     janela: "18h40 – 19h00",
     janelaNota: "Restam 18 minutos para o início da retirada",
     timer: "18 min",
+    disponivel: 1,
+    total: 8,
+    janelaFim: null,
     avaliacao: 4.8,
     endereco: "Rua Padre Chagas, 314 — Bom Fim",
     descricao:
@@ -39,6 +42,9 @@ export const sacolas: Sacola[] = [
     janela: "14h30 – 15h00",
     janelaNota: "Restam 32 minutos para o fim da retirada",
     timer: "32 min",
+    disponivel: 5,
+    total: 6,
+    janelaFim: null,
     avaliacao: 4.7,
     endereco: "Rua Fernandes Vieira, 512 — Bom Fim",
     descricao:
@@ -63,6 +69,9 @@ export const sacolas: Sacola[] = [
     janela: "18h00 – 19h00",
     janelaNota: "Retirada disponível até 19h00",
     timer: "até 19h",
+    disponivel: 3,
+    total: 6,
+    janelaFim: null,
     avaliacao: 4.6,
     endereco: "Av. Osvaldo Aranha, 890 — Bom Fim",
     descricao:
@@ -87,6 +96,9 @@ export const sacolas: Sacola[] = [
     janela: "20h00 – 21h00",
     janelaNota: "Retirada disponível até 21h00",
     timer: "até 21h",
+    disponivel: 2,
+    total: 5,
+    janelaFim: null,
     avaliacao: 4.5,
     endereco: "Rua 24 de Outubro, 1300 — Moinhos de Vento",
     descricao:

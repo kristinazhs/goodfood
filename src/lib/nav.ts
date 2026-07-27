@@ -1,21 +1,26 @@
+import type { NavIconKey } from "@/components/ui/icons";
+
 export interface NavItem {
   href: string;
+  /** Emoji — still used by the desktop sidebars (/painel, /admin). */
   icon: string;
+  /** Stroke icon for the mobile bottom nav; falls back to `icon` when absent. */
+  iconKey?: NavIconKey;
   label: string;
 }
 
 export const navConsumidor: NavItem[] = [
-  { href: "/consumidor", icon: "🛍️", label: "Início" },
-  { href: "/consumidor/descobrir", icon: "🗺️", label: "Descobrir" },
-  { href: "/consumidor/pedidos", icon: "🧾", label: "Pedidos" },
-  { href: "/consumidor/perfil", icon: "👤", label: "Perfil" },
+  { href: "/consumidor", icon: "🛍️", iconKey: "home", label: "Início" },
+  { href: "/consumidor/descobrir", icon: "🗺️", iconKey: "pin", label: "Descobrir" },
+  { href: "/consumidor/pedidos", icon: "🧾", iconKey: "list", label: "Pedidos" },
+  { href: "/consumidor/perfil", icon: "👤", iconKey: "user", label: "Perfil" },
 ];
 
 export const navParceiro: NavItem[] = [
-  { href: "/parceiro", icon: "🛍️", label: "Sacolas" },
-  { href: "/parceiro/desempenho", icon: "📊", label: "Desempenho" },
-  { href: "/parceiro/avaliacoes", icon: "💬", label: "Avaliações" },
-  { href: "/parceiro/perfil", icon: "⚙️", label: "Loja" },
+  { href: "/parceiro", icon: "🛍️", iconKey: "home", label: "Sacolas" },
+  { href: "/parceiro/desempenho", icon: "📊", iconKey: "chart", label: "Desempenho" },
+  { href: "/parceiro/avaliacoes", icon: "💬", iconKey: "star", label: "Avaliações" },
+  { href: "/parceiro/perfil", icon: "⚙️", iconKey: "store", label: "Loja" },
 ];
 
 // desktop — painel do parceiro

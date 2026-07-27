@@ -5,7 +5,7 @@ import { SpotlightCard } from "@/components/consumidor/spotlight-card";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { getCurrentProfile } from "@/lib/auth";
 import { navConsumidor } from "@/lib/nav";
-import { getSacolasDisponiveis } from "@/lib/sacolas";
+import { escolherDestaque, getSacolasDisponiveis } from "@/lib/sacolas";
 import type { CategoriaId } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -29,8 +29,11 @@ export default async function ConsumidorHome({
   const primeiroNome = sessao?.profile?.nome?.split(" ")[0] ?? null;
   const sacolas =
     cat === "tudo" ? todas : todas.filter((s) => s.categoria === cat);
-  const destaque = sacolas.find((s) => s.destaque) ?? sacolas[0];
-  const demais = sacolas.filter((s) => s !== destaque);
+  // No spotlight unless a real rule fires — see escolherDestaque in sacolas.ts.
+  const destaque = escolherDestaque(sacolas);
+  const demais = destaque
+    ? sacolas.filter((s) => s !== destaque.sacola)
+    : sacolas;
 
   return (
     <>
@@ -44,7 +47,7 @@ export default async function ConsumidorHome({
                 <span className="text-terracotta-dark">A comida boa</span> te
                 espera
               </div>
-              <div className="mt-1.5 flex items-center gap-[5px] text-xs text-muted">
+              <div className="mt-1.5 flex items-center gap-[5px] text-[13px] font-medium text-muted">
                 📍 Bom Fim, Porto Alegre
               </div>
             </div>
@@ -70,15 +73,29 @@ export default async function ConsumidorHome({
           </div>
         ) : (
           <>
-            <div className="px-5 pb-[9px] pt-1 text-[11.5px] font-bold uppercase tracking-[0.6px] text-muted">
-              ⏰ Acabando agora
-            </div>
-            {destaque && <SpotlightCard sacola={destaque} />}
+            {destaque && (
+              <>
+                <div className="flex items-center justify-between px-5 pb-2.5 pt-5">
+                  <div className="flex items-center gap-2">
+                    <span className="h-[9px] w-[9px] animate-pulse rounded-full bg-terracotta" />
+                    <span className="text-xs font-extrabold uppercase leading-none tracking-[0.7px] text-terracotta-dark">
+                      {destaque.rotulo}
+                    </span>
+                  </div>
+                  <span className="text-xs font-semibold leading-none text-muted">
+                    {destaque.sacola.disponivel === 1
+                      ? "1 sacola"
+                      : `${destaque.sacola.disponivel} sacolas`}
+                  </span>
+                </div>
+                <SpotlightCard sacola={destaque.sacola} />
+              </>
+            )}
 
-            <div className="px-5 pb-[9px] text-[11.5px] font-bold uppercase tracking-[0.6px] text-muted">
-              🛍️ Disponível hoje
+            <div className="px-5 pb-2.5 pt-[22px] text-xs font-extrabold uppercase leading-none tracking-[0.7px] text-muted">
+              Disponível hoje · {demais.length}
             </div>
-            <div className="flex flex-col gap-[13px] px-5 pb-6">
+            <div className="flex flex-col gap-3 px-5 pb-[18px]">
               {demais.map((s) => (
                 <BagCard key={s.id} sacola={s} />
               ))}

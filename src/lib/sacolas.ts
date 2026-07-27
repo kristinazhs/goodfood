@@ -99,6 +99,9 @@ function toSacola(
       ? `Restam ${disp} ${disp === 1 ? "unidade" : "unidades"}`
       : "",
     timer: listing ? `até ${hora(listing.janela_fim)}h` : "hoje",
+    disponivel: disp,
+    total: listing?.quantidade_total ?? 0,
+    janelaFim: listing?.janela_fim ?? null,
     avaliacao: 4.8, // TODO: média real quando houver avaliações (reviews)
     endereco: [est.endereco, est.bairro].filter(Boolean).join(" — "),
     descricao: bag.descricao ?? "",
@@ -127,22 +130,55 @@ export async function getSacolasDisponiveis(): Promise<Sacola[]> {
   if (error) throw error;
 
   const rows = (data ?? []) as unknown as ListingWithRelations[];
-  const sacolas = rows.map((row) => toSacola(row.bag, row.establishment, row));
+  return rows.map((row) => toSacola(row.bag, row.establishment, row));
+}
 
-  // Highlight the scarcest one as the "Acabando agora" spotlight.
-  if (rows.length > 0) {
-    let idx = 0;
-    let min = Infinity;
-    rows.forEach((row, i) => {
-      if (row.quantidade_disponivel < min) {
-        min = row.quantidade_disponivel;
-        idx = i;
-      }
-    });
-    sacolas[idx].destaque = true;
-  }
+// ---- The "Acabando agora" rule -----------------------------------------
+// Urgency is the currency of this product: if the banner lies, the whole
+// hierarchy stops being believed. So a sacola is only ever highlighted when
+// something real is true about it — the window is about to close, or there
+// are almost none left. When nothing qualifies, there is NO spotlight and
+// "Disponível hoje" takes the top of the feed.
 
-  return sacolas;
+const JANELA_URGENTE_MIN = 90; // window closing within 90 min
+const ESTOQUE_URGENTE = 2; // or 2 units or fewer left
+
+export interface Destaque {
+  sacola: Sacola;
+  /** Says which fact fired, so the banner never overstates it. */
+  rotulo: string;
+}
+
+function minutosAteFechar(s: Sacola, agora: number): number {
+  if (!s.janelaFim) return Infinity;
+  return (new Date(s.janelaFim).getTime() - agora) / 60000;
+}
+
+export function escolherDestaque(
+  sacolas: Sacola[],
+  agora: number = Date.now(),
+): Destaque | null {
+  const candidatas = sacolas.filter((s) => {
+    const min = minutosAteFechar(s, agora);
+    return min <= JANELA_URGENTE_MIN || s.disponivel <= ESTOQUE_URGENTE;
+  });
+  if (candidatas.length === 0) return null;
+
+  // Most urgent first: soonest to close, then scarcest.
+  const sacola = candidatas.sort((a, b) => {
+    const da = minutosAteFechar(a, agora);
+    const db = minutosAteFechar(b, agora);
+    return da !== db ? da - db : a.disponivel - b.disponivel;
+  })[0];
+
+  const min = minutosAteFechar(sacola, agora);
+  let rotulo: string;
+  if (min <= 60) rotulo = "Fecha em menos de 1h";
+  else if (min <= JANELA_URGENTE_MIN) rotulo = "Fecha em menos de 1h30";
+  else if (sacola.disponivel === 1) rotulo = "Última unidade";
+  else rotulo = `Últimas ${sacola.disponivel} unidades`;
+
+  return { sacola, rotulo };
 }
 
 // One sacola for the detail / checkout / payment screens, by bag id.
