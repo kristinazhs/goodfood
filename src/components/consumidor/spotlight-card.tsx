@@ -39,9 +39,13 @@ export function SpotlightCard({ sacola }: { sacola: Sacola }) {
           <div className="truncate font-display text-[17px] font-semibold leading-[1.2] text-white">
             {sacola.nome}
           </div>
-          <div className="mt-1 truncate text-[12.5px] font-medium leading-[1.3] text-mint">
-            {sacola.loja}
-            {sacola.distancia ? ` · ${sacola.distancia}` : ""}
+          {/* Distance never truncates — it's decision-relevant; a long shop
+              name gives way to it instead. */}
+          <div className="mt-1 flex text-[12.5px] font-medium leading-[1.3] text-mint">
+            <span className="truncate">{sacola.loja}</span>
+            {sacola.distancia && (
+              <span className="shrink-0">&nbsp;· {sacola.distancia}</span>
+            )}
           </div>
           <div className="mt-[9px] inline-flex h-[27px] items-center gap-1.5 whitespace-nowrap rounded-lg bg-white/[0.14] px-2.5 text-xs font-bold leading-none text-white">
             <IconClock />
