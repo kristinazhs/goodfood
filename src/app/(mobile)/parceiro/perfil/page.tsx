@@ -46,12 +46,17 @@ export default async function Loja({
           </div>
         </div>
 
-        {erro && (
+        {erro === "duplicada" ? (
+          <p className="mx-5 mt-4 rounded-xl bg-amber-bg px-3.5 py-3 text-[13px] font-semibold text-amber-ink">
+            Essa sacola já está publicada hoje. Para uma segunda leva, use
+            Publicar sacola e defina outra janela de retirada.
+          </p>
+        ) : erro ? (
           <p className="mx-5 mt-4 rounded-xl bg-alert-bg px-3.5 py-3 text-[13px] font-semibold text-alert">
             Não foi possível publicar esse modelo. Tente pela tela Publicar
             sacola.
           </p>
-        )}
+        ) : null}
 
         <div className="flex items-center justify-between px-5 pb-2.5 pt-6">
           <span className="text-xs font-extrabold uppercase leading-none tracking-[0.7px] text-muted">
@@ -98,15 +103,21 @@ export default async function Loja({
                 </div>
 
                 <div className="mt-[11px] flex gap-2.5">
-                  <form action={publicarModeloHoje} className="flex-1">
-                    <input type="hidden" name="bagId" value={m.bagId} />
-                    <button
-                      type="submit"
-                      className="h-11 w-full rounded-xl bg-brand text-[13.5px] font-bold text-white transition-transform active:scale-[0.98]"
-                    >
-                      Publicar hoje
-                    </button>
-                  </form>
+                  {m.publicadoHoje ? (
+                    <span className="flex h-11 flex-1 items-center justify-center rounded-xl bg-sage text-[13.5px] font-bold text-brand-dark">
+                      Publicada hoje
+                    </span>
+                  ) : (
+                    <form action={publicarModeloHoje} className="flex-1">
+                      <input type="hidden" name="bagId" value={m.bagId} />
+                      <button
+                        type="submit"
+                        className="h-11 w-full rounded-xl bg-brand text-[13.5px] font-bold text-white transition-transform active:scale-[0.98]"
+                      >
+                        Publicar hoje
+                      </button>
+                    </form>
+                  )}
                   <Link
                     href={`/parceiro/sacolas/nova?modelo=${m.bagId}`}
                     className="flex h-11 shrink-0 items-center rounded-xl border-[1.5px] border-sage-line bg-white px-3.5 text-[13.5px] font-bold text-[#4a4a44]"

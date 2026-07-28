@@ -293,6 +293,18 @@ export async function publicarModeloHoje(formData: FormData) {
     .maybeSingle();
   if (!bag) redirect("/parceiro/perfil?erro=1");
 
+  // Already on sale today? Publishing again would put the same sacola on the
+  // consumer feed twice — one tap makes that far too easy to do by accident.
+  const { data: jaHoje } = await supabase
+    .from("listings")
+    .select("id")
+    .eq("bag_id", bagId)
+    .eq("data", hojeSP())
+    .eq("status", "ativa")
+    .limit(1)
+    .maybeSingle();
+  if (jaHoje) redirect("/parceiro/perfil?erro=duplicada");
+
   const { data: ultima } = await supabase
     .from("listings")
     .select("quantidade_total, janela_inicio, janela_fim")
