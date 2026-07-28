@@ -31,9 +31,13 @@ export function metrosEntre(
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-/** 450 -> "450 m"; 1120 -> "1,1 km" (pt-BR decimal comma). */
+/**
+ * 450 -> "450m"; 1120 -> "1,1 km" (pt-BR decimal comma).
+ * Metres are written tight, as in the design ("450m"), which also buys the
+ * few pixels the spotlight's shop line needs to fit on one line at 375px.
+ */
 export function formatarDistancia(metros: number): string {
-  if (metros < 1000) return `${Math.round(metros / 10) * 10} m`;
+  if (metros < 1000) return `${Math.round(metros / 10) * 10}m`;
   return `${(metros / 1000).toFixed(1).replace(".", ",")} km`;
 }
 

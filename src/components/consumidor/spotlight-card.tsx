@@ -3,8 +3,12 @@ import { IconClock } from "@/components/ui/icons";
 import { brl } from "@/lib/format";
 import type { Sacola } from "@/lib/types";
 
-// The one sacola in focus. It only ever renders when `escolherDestaque` found
-// a real reason (see sacolas.ts) — this component never decides urgency itself.
+// The one sacola in focus. Structure follows the design exactly: the photo
+// band on top, then a single row with name/shop/pickup on the left and the
+// prices bottom-aligned on the right.
+//
+// It only ever renders when `escolherDestaque` found a real reason (see
+// sacolas.ts) — this component never decides urgency itself.
 
 export function SpotlightCard({ sacola }: { sacola: Sacola }) {
   const temDesconto = sacola.precoOriginal > sacola.preco;
@@ -34,34 +38,30 @@ export function SpotlightCard({ sacola }: { sacola: Sacola }) {
         </span>
       </div>
 
-      {/* Name and shop get the full card width — the price sits on the row
-          below, beside the pickup chip, so neither the shop name nor the
-          distance has to be cut. */}
-      <div className="px-4 pb-3.5 pt-3">
-        <div className="font-display text-[17px] font-semibold leading-[1.2] text-white">
-          {sacola.nome}
-        </div>
-        <div className="mt-1 text-[12.5px] font-medium leading-[1.3] text-mint">
-          {sacola.loja}
-          {sacola.distancia ? ` · ${sacola.distancia}` : ""}
-        </div>
-
-        <div className="mt-[9px] flex items-end justify-between gap-2.5">
-          <span className="inline-flex h-[27px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-white/[0.14] px-2.5 text-xs font-bold leading-none text-white">
+      <div className="flex items-end justify-between gap-2.5 px-4 pb-3.5 pt-3">
+        <div className="min-w-0">
+          <div className="whitespace-nowrap font-display text-[17px] font-semibold leading-[1.2] text-white">
+            {sacola.nome}
+          </div>
+          <div className="mt-1 whitespace-nowrap text-[12.5px] font-medium leading-[1.3] text-mint">
+            {sacola.loja}
+            {sacola.distancia ? ` · ${sacola.distancia}` : ""}
+          </div>
+          <div className="mt-[9px] inline-flex h-[27px] items-center gap-1.5 whitespace-nowrap rounded-lg bg-white/[0.14] px-2.5 text-xs font-bold leading-none text-white">
             <IconClock />
             Retirar {sacola.janela}
-          </span>
+          </div>
+        </div>
 
-          <span className="shrink-0 text-right">
-            {temDesconto && (
-              <span className="block text-xs font-medium leading-none text-[#8fbc9d] line-through">
-                {brl(sacola.precoOriginal)}
-              </span>
-            )}
-            <span className="mt-1 block font-display text-2xl font-bold leading-[1.1] text-white">
-              {brl(sacola.preco)}
-            </span>
-          </span>
+        <div className="shrink-0 text-right">
+          {temDesconto && (
+            <div className="text-xs font-medium leading-none text-[#8fbc9d] line-through">
+              {brl(sacola.precoOriginal)}
+            </div>
+          )}
+          <div className="mt-1 font-display text-2xl font-bold leading-[1.1] text-white">
+            {brl(sacola.preco)}
+          </div>
         </div>
       </div>
     </Link>
