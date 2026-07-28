@@ -34,34 +34,34 @@ export function SpotlightCard({ sacola }: { sacola: Sacola }) {
         </span>
       </div>
 
-      <div className="flex items-end justify-between gap-2.5 px-4 pb-3.5 pt-3">
-        <div className="min-w-0">
-          <div className="truncate font-display text-[17px] font-semibold leading-[1.2] text-white">
-            {sacola.nome}
-          </div>
-          {/* Distance never truncates — it's decision-relevant; a long shop
-              name gives way to it instead. */}
-          <div className="mt-1 flex text-[12.5px] font-medium leading-[1.3] text-mint">
-            <span className="truncate">{sacola.loja}</span>
-            {sacola.distancia && (
-              <span className="shrink-0">&nbsp;· {sacola.distancia}</span>
-            )}
-          </div>
-          <div className="mt-[9px] inline-flex h-[27px] items-center gap-1.5 whitespace-nowrap rounded-lg bg-white/[0.14] px-2.5 text-xs font-bold leading-none text-white">
-            <IconClock />
-            Retirar {sacola.janela}
-          </div>
+      {/* Name and shop get the full card width — the price sits on the row
+          below, beside the pickup chip, so neither the shop name nor the
+          distance has to be cut. */}
+      <div className="px-4 pb-3.5 pt-3">
+        <div className="font-display text-[17px] font-semibold leading-[1.2] text-white">
+          {sacola.nome}
+        </div>
+        <div className="mt-1 text-[12.5px] font-medium leading-[1.3] text-mint">
+          {sacola.loja}
+          {sacola.distancia ? ` · ${sacola.distancia}` : ""}
         </div>
 
-        <div className="shrink-0 text-right">
-          {temDesconto && (
-            <div className="text-xs font-medium leading-none text-[#8fbc9d] line-through">
-              {brl(sacola.precoOriginal)}
-            </div>
-          )}
-          <div className="mt-1 font-display text-2xl font-bold leading-[1.1] text-white">
-            {brl(sacola.preco)}
-          </div>
+        <div className="mt-[9px] flex items-end justify-between gap-2.5">
+          <span className="inline-flex h-[27px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg bg-white/[0.14] px-2.5 text-xs font-bold leading-none text-white">
+            <IconClock />
+            Retirar {sacola.janela}
+          </span>
+
+          <span className="shrink-0 text-right">
+            {temDesconto && (
+              <span className="block text-xs font-medium leading-none text-[#8fbc9d] line-through">
+                {brl(sacola.precoOriginal)}
+              </span>
+            )}
+            <span className="mt-1 block font-display text-2xl font-bold leading-[1.1] text-white">
+              {brl(sacola.preco)}
+            </span>
+          </span>
         </div>
       </div>
     </Link>

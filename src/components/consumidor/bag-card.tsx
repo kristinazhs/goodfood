@@ -22,12 +22,9 @@ export function BagCard({ sacola }: { sacola: Sacola }) {
         <div className="truncate font-display text-base font-semibold leading-[1.3]">
           {sacola.nome}
         </div>
-        {/* Distance never truncates — see SpotlightCard. */}
-        <div className="mt-0.5 flex text-[13px] font-medium leading-[1.3] text-muted">
-          <span className="truncate">{sacola.loja}</span>
-          {sacola.distancia && (
-            <span className="shrink-0">&nbsp;· {sacola.distancia}</span>
-          )}
+        <div className="mt-0.5 text-[13px] font-medium leading-[1.3] text-muted">
+          {sacola.loja}
+          {sacola.distancia ? ` · ${sacola.distancia}` : ""}
         </div>
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-[9px]">
