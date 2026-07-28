@@ -119,11 +119,11 @@ export function CriarSacolaForm({
   const pO = parseNum(precoOriginal);
   const p = parseNum(preco);
   const pct = pO > 0 && p > 0 ? Math.round((1 - p / pO) * 100) : 0;
-  // The recommended 50–70% band is the PRICE as a share of the window value,
-  // not the discount: the design labels −38% as "dentro da faixa", and
-  // 27,90 / 45,00 = 62%.
-  const share = pO > 0 && p > 0 ? Math.round((p / pO) * 100) : 0;
-  const dentroDaFaixa = share >= 50 && share <= 70;
+  const economia = pO > p && p > 0 ? pO - p : 0;
+  // NOTE: the design also shows a "faixa recomendada (50–70%)" next to this.
+  // Left out on purpose — we have no sales data to support a recommended
+  // band, and a made-up benchmark would push shops to price against nothing.
+  // Bring it back when there are enough completed orders to derive it.
 
   const erro = state.error || estadoModelo.error;
 
@@ -324,18 +324,10 @@ export function CriarSacolaForm({
             </label>
           </div>
 
+          {/* Plain arithmetic on the two prices above — no recommendation. */}
           {pct > 0 && (
-            <div
-              className={`rounded-xl px-3.5 py-[11px] text-[13px] font-semibold leading-[1.4] ${
-                dentroDaFaixa
-                  ? "bg-sage text-brand-dark"
-                  : "bg-amber-bg text-amber-ink"
-              }`}
-            >
-              −{pct}% ·{" "}
-              {dentroDaFaixa
-                ? "dentro da faixa recomendada (50–70%)"
-                : `preço em ${share}% do valor de vitrine — a faixa que mais vende é 50–70%`}
+            <div className="rounded-xl bg-sage px-3.5 py-[11px] text-[13px] font-semibold leading-[1.4] text-brand-dark">
+              −{pct}% · o cliente economiza {brl(economia)}
             </div>
           )}
 
