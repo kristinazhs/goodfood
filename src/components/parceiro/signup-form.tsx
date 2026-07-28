@@ -9,13 +9,6 @@ import { signUpEstablishment, type AuthState } from "@/lib/auth-actions";
 // in a B2B signup; here they publish first and give payout details before
 // the first transfer.
 
-const TIPOS = [
-  { id: "padaria", label: "Padaria" },
-  { id: "doceria", label: "Doceria" },
-  { id: "refeicao", label: "Refeição" },
-  { id: "mercado", label: "Mercado" },
-];
-
 const DIAS = [
   { id: "seg", label: "Seg" },
   { id: "ter", label: "Ter" },
@@ -49,7 +42,6 @@ export function ParceiroSignupForm() {
     signUpEstablishment,
     {},
   );
-  const [categoria, setCategoria] = useState("padaria");
   const [horarios, setHorarios] = useState<Record<string, Horario>>(PADRAO);
   const [aceite, setAceite] = useState(false);
 
@@ -71,7 +63,6 @@ export function ParceiroSignupForm() {
 
   return (
     <form action={action} className="flex flex-1 flex-col">
-      <input type="hidden" name="categoria" value={categoria} />
       <input type="hidden" name="horarios" value={JSON.stringify(horarios)} />
 
       <div className="flex flex-col gap-3.5">
@@ -97,30 +88,6 @@ export function ParceiroSignupForm() {
               justification reads as suspicion. */}
           <span className={AJUDA}>Usado só para o repasse e a nota fiscal</span>
         </label>
-
-        <div>
-          <span className={ROTULO}>Tipo de estabelecimento</span>
-          <div className="flex flex-wrap gap-2">
-            {TIPOS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setCategoria(t.id)}
-                aria-pressed={categoria === t.id}
-                className={`inline-flex h-10 items-center rounded-full px-3.5 text-[13.5px] ${
-                  categoria === t.id
-                    ? "bg-brand-dark font-bold text-white"
-                    : "border-[1.5px] border-sage-line bg-white font-semibold text-charcoal"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-          <span className={AJUDA}>
-            Alimenta os filtros de categoria do cliente
-          </span>
-        </div>
 
         <label className="block">
           <span className={ROTULO}>Endereço da retirada</span>
@@ -284,8 +251,8 @@ export function ParceiroSignupForm() {
           Aceito o{" "}
           <Link href="/contrato-parceria" className="font-bold text-brand-dark">
             contrato de parceria
-          </Link>{" "}
-          e a comissão de 25% por sacola vendida.
+          </Link>
+          .
         </span>
       </label>
 
