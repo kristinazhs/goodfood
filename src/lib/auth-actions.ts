@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { geocodarEndereco } from "./geocode";
 import { createSupabaseServerClient } from "./supabase-server";
@@ -42,24 +43,71 @@ export async function signUpConsumer(
 ): Promise<AuthState> {
   const nome = String(formData.get("nome") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
-  const telefone = String(formData.get("telefone") ?? "").trim();
   const senha = String(formData.get("senha") ?? "");
+  const aceite = formData.get("aceite") === "on";
 
   if (!nome) return { error: "Informe seu nome." };
   if (!email) return { error: "Informe seu e-mail." };
   if (senha.length < 8)
     return { error: "A senha precisa ter ao menos 8 caracteres." };
+  if (!aceite)
+    return { error: "Aceite os termos de uso para criar sua conta." };
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signUp({
     email,
     password: senha,
-    // Passed to the profile-creation trigger as user metadata.
-    options: { data: { role: "consumer", nome, telefone } },
+    // Passed to the profile-creation trigger as user metadata. Phone is no
+    // longer asked for at signup — the shop only needs it to warn about a
+    // specific order, so it's collected then, not upfront.
+    options: { data: { role: "consumer", nome } },
   });
   if (error) return { error: traduzErro(error.message) };
 
   redirect("/consumidor");
+}
+
+/**
+ * Is the Google provider configured in Supabase?
+ *
+ * Flip to true ONLY after enabling it in Supabase → Authentication →
+ * Providers → Google, with a client ID/secret from Google Cloud.
+ *
+ * This flag is needed because signInWithOAuth() happily builds an authorize
+ * URL even when the provider is off — the failure only happens after the
+ * browser has already left the app, and Supabase answers with raw JSON
+ * ("Unsupported provider: provider is not enabled"). Sending someone to that
+ * is worse than telling them here.
+ */
+const GOOGLE_ATIVO = false;
+
+export async function signInWithGoogle(
+  _prev: AuthState,
+  _formData: FormData,
+): Promise<AuthState> {
+  if (!GOOGLE_ATIVO) {
+    return {
+      error:
+        "Entrar com Google ainda não está disponível. Crie sua conta com e-mail por enquanto.",
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const origem = (await headers()).get("origin") ?? "";
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${origem}/auth/callback?next=/consumidor` },
+  });
+
+  if (error || !data?.url) {
+    return {
+      error:
+        "Não foi possível entrar com Google agora. Tente com seu e-mail.",
+    };
+  }
+
+  redirect(data.url);
 }
 
 export async function signInEstablishment(
