@@ -76,6 +76,8 @@ export async function getPainelParceiro(): Promise<PainelParceiro> {
     .from("establishments")
     .select("id, nome, categoria")
     .eq("owner_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
     .maybeSingle();
   if (!est) return vazio;
 
@@ -283,6 +285,8 @@ export async function getFilaHoje(): Promise<FilaHoje> {
     .from("establishments")
     .select("id")
     .eq("owner_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
     .maybeSingle();
   if (!est) return vaziaFila;
 
@@ -389,6 +393,8 @@ export async function getPedidoPorCodigo(
     .from("establishments")
     .select("id")
     .eq("owner_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
     .maybeSingle();
   if (!est) return null;
 

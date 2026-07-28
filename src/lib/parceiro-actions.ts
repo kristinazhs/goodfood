@@ -54,6 +54,8 @@ export async function publicarSacola(
     .from("establishments")
     .select("id, categoria")
     .eq("owner_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
     .maybeSingle();
   if (!est) return { error: "Não encontramos o seu estabelecimento." };
 
