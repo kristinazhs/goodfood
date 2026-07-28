@@ -26,7 +26,9 @@ export function FotoSacola({
   quantidade,
   size = 78,
   radius = 14,
-  legenda = "foto\nsacola",
+  // At compact sizes the plaque covers the top of the box, so the two-line
+  // caption gets clipped — one word fits.
+  legenda = size <= 56 ? "foto" : "foto\nsacola",
 }: FotoSacolaProps) {
   return (
     <div
