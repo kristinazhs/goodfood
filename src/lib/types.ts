@@ -35,6 +35,8 @@ export interface Sacola {
   endereco: string;
   descricao: string;
   conteudos: ConteudoSacola[];
+  /** Declared allergens, e.g. ["gluten","leite"]. Empty when none declared. */
+  alergenos: string[];
   categoria: Exclude<CategoriaId, "tudo">;
   destaque?: boolean;
   lat?: number | null;

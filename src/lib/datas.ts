@@ -27,3 +27,23 @@ export function horaMinutoSP(iso: string): string {
     .format(new Date(iso))
     .replace(":", "h");
 }
+
+// Reservations close 15 minutes before the pickup window ends — so someone
+// walking past the shop at 18h30 can still buy a bag whose window ends at
+// 19h00. Enforced in reservar_sacola() (migration 0009); this is the label.
+export const CORTE_RESERVA_MIN = 15;
+
+export function horaCorteReserva(janelaFimISO: string): string {
+  const corte = new Date(
+    new Date(janelaFimISO).getTime() - CORTE_RESERVA_MIN * 60_000,
+  );
+  return horaMinutoSP(corte.toISOString());
+}
+
+/** True once reservations have closed for this window. */
+export function reservasEncerradas(janelaFimISO: string | null): boolean {
+  if (!janelaFimISO) return true;
+  return (
+    new Date(janelaFimISO).getTime() - CORTE_RESERVA_MIN * 60_000 < Date.now()
+  );
+}

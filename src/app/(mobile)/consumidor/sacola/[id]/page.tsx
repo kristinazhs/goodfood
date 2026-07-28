@@ -1,144 +1,219 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ReserveBar } from "@/components/consumidor/reserve-bar";
+import { horaCorteReserva, reservasEncerradas } from "@/lib/datas";
+import { minutosAPe } from "@/lib/distancia";
+import { brl } from "@/lib/format";
 import { getSacolaPorId } from "@/lib/sacolas";
+
+export const dynamic = "force-dynamic";
+
+const NOME_ALERGENO: Record<string, string> = {
+  gluten: "glúten",
+  leite: "leite",
+  ovos: "ovos",
+  nozes: "nozes",
+  soja: "soja",
+  peixe: "peixe",
+};
 
 export default async function SacolaDetalhe({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ de?: string }>;
 }) {
-  const { id } = await params;
+  const [{ id }, { de }] = await Promise.all([params, searchParams]);
   const sacola = await getSacolaPorId(id);
   if (!sacola) notFound();
+
+  // Back respects where you came from, instead of always going home.
+  const voltarPara = de === "mapa" ? "/consumidor/descobrir" : "/consumidor";
+
+  const temDesconto = sacola.precoOriginal > sacola.preco;
+  const economia = sacola.precoOriginal - sacola.preco;
+  const pct = temDesconto
+    ? Math.round((1 - sacola.preco / sacola.precoOriginal) * 100)
+    : 0;
+
+  const minutos = minutosAPe(sacola.lat, sacola.lng);
+  const corte = sacola.janelaFim ? horaCorteReserva(sacola.janelaFim) : null;
+  const fechada = reservasEncerradas(sacola.janelaFim);
+  const esgotada = sacola.disponivel === 0;
+
+  const alergenos = sacola.alergenos
+    .map((a) => NOME_ALERGENO[a] ?? a)
+    .join(", ");
+
+  const rota = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+    `${sacola.endereco || sacola.loja}, Porto Alegre`,
+  )}`;
 
   return (
     <>
       <main className="flex-1">
-        {/* hero */}
-        <div className="relative h-[220px] overflow-hidden bg-brand">
-          <span className="absolute -left-[50px] -top-[60px] h-40 w-40 rounded-full bg-white/[0.05]" />
-          <span className="absolute -bottom-[30px] -right-5 h-[90px] w-[90px] rounded-full bg-white/[0.05]" />
+        {/* hero — photo slot, striped placeholder until real photos exist */}
+        <div
+          className="relative h-[172px]"
+          style={{
+            background:
+              "repeating-linear-gradient(135deg,#2b7c49 0 12px,#25703f 12px 24px)",
+          }}
+        >
           <Link
-            href="/consumidor"
+            href={voltarPara}
             aria-label="Voltar"
-            className="absolute left-[18px] top-[18px] z-[5] flex h-[38px] w-[38px] items-center justify-center rounded-full bg-white/90 text-base"
+            className="absolute left-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/95"
           >
-            ←
+            <svg width="20" height="20" viewBox="0 0 22 22" aria-hidden="true">
+              <path
+                d="M13.5 4.5 7 11l6.5 6.5"
+                fill="none"
+                stroke="#23231f"
+                strokeWidth="1.9"
+                strokeLinecap="round"
+              />
+            </svg>
           </Link>
-          <span className="absolute right-[18px] top-[22px] z-[5] rounded-full bg-white px-3 py-1.5 text-[10.5px] font-extrabold text-brand-dark">
-            {sacola.desconto.split("·")[0].trim()}
-          </span>
-          <span
-            className="blob-c absolute left-1/2 top-1/2 flex h-[168px] w-[168px] -translate-x-1/2 -translate-y-1/2 items-center justify-center text-[72px]"
-            style={{
-              background: sacola.corThumb,
-              boxShadow: "0 0 0 7px rgba(255,255,255,0.18)",
-            }}
-          >
-            {sacola.emoji}
+
+          {temDesconto && (
+            <span className="absolute bottom-3.5 left-4 inline-flex h-7 items-center whitespace-nowrap rounded-full bg-white px-[11px] text-[13px] font-extrabold leading-none text-brand-dark">
+              −{pct}% · economize {brl(economia)}
+            </span>
+          )}
+          <span className="absolute bottom-4 right-4 font-mono text-[11px] leading-none text-mint">
+            foto da loja
           </span>
         </div>
 
-        <div className="px-5 pb-8 pt-5">
-          <h1 className="font-display text-[23px] font-bold leading-[1.18]">
-            {sacola.nome}
-          </h1>
-          <div className="mt-[5px] flex items-start justify-between">
-            <span className="text-[13px] text-muted">
-              {sacola.loja}
-              {sacola.distancia ? ` · ${sacola.distancia}` : ""}
-            </span>
-            <span className="shrink-0 text-[13px] font-extrabold">
-              ★ {sacola.avaliacao.toFixed(1).replace(".", ",")}
-            </span>
-          </div>
-
-          <div className="mt-4 flex items-center gap-3 rounded-[14px] bg-sage px-3.5 py-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-[15px] text-white">
-              ⏰
-            </span>
-            <div>
-              <b className="block text-[13.5px] font-extrabold text-brand-dark">
-                Retirar entre {sacola.janela}
-              </b>
-              <span className="text-[11.5px] text-muted">
-                {sacola.janelaNota}
-              </span>
+        <div className="px-5 pt-[18px]">
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="font-display text-2xl font-bold leading-[1.15]">
+              {sacola.nome}
+            </h1>
+            <div className="shrink-0 text-right">
+              {temDesconto && (
+                <div className="text-[13px] font-medium leading-none text-muted line-through">
+                  {brl(sacola.precoOriginal)}
+                </div>
+              )}
+              <div className="mt-1 font-display text-2xl font-bold leading-[1.15]">
+                {brl(sacola.preco)}
+              </div>
             </div>
           </div>
 
-          <section className="mt-[22px]">
-            <h2 className="mb-2.5 font-display text-base font-semibold">
-              Sobre esta sacola
-            </h2>
-            <p className="text-[13.5px] leading-[1.55] text-muted">
-              {sacola.descricao}
-            </p>
-          </section>
+          <div className="mt-1.5 text-sm font-medium leading-[1.4] text-muted">
+            {sacola.loja}
+            {sacola.distancia ? ` · ${sacola.distancia}` : ""}
+            {" · ★ "}
+            {sacola.avaliacao.toFixed(1).replace(".", ",")}
+          </div>
 
-          {sacola.conteudos.length > 0 && (
-            <section className="mt-[22px]">
-              <h2 className="mb-2.5 font-display text-base font-semibold">
-                O que pode vir na sacola
+          {/* the two facts that decide the purchase */}
+          <div className="mt-4 flex gap-2.5">
+            <div className="flex-1 rounded-[14px] border-[1.5px] border-sage-line bg-white p-3">
+              <div className="text-xs font-bold uppercase leading-none tracking-[0.5px] text-muted">
+                Retirada
+              </div>
+              <div className="mt-1.5 text-[15px] font-bold leading-[1.2]">
+                {sacola.janela || "—"}
+              </div>
+              {corte && (
+                <div className="mt-[3px] text-[12.5px] font-medium leading-[1.3] text-terracotta-dark">
+                  {fechada ? "reservas encerradas" : `reservas até ${corte}`}
+                </div>
+              )}
+            </div>
+            <div className="flex-1 rounded-[14px] border-[1.5px] border-sage-line bg-white p-3">
+              <div className="text-xs font-bold uppercase leading-none tracking-[0.5px] text-muted">
+                Resta
+              </div>
+              <div className="mt-1.5 text-[15px] font-bold leading-[1.2] text-terracotta-dark">
+                {esgotada
+                  ? "esgotada"
+                  : `${sacola.disponivel} ${sacola.disponivel === 1 ? "sacola" : "sacolas"}`}
+              </div>
+              <div className="mt-[3px] text-[12.5px] font-medium leading-[1.3] text-muted">
+                de {sacola.total} hoje
+              </div>
+            </div>
+          </div>
+
+          {(sacola.conteudos.length > 0 || alergenos) && (
+            <section className="mt-[18px]">
+              <h2 className="mb-2 font-display text-[17px] font-semibold">
+                O que pode vir
               </h2>
-              <div className="flex flex-col gap-[9px]">
+              <div className="flex flex-col gap-2">
                 {sacola.conteudos.map((item) => (
                   <div
                     key={item.label}
-                    className="flex items-center gap-[11px] rounded-[14px] border-[1.5px] border-sage-line bg-white px-3.5 py-[11px] text-[13px]"
+                    className="flex items-center gap-2.5 rounded-xl border-[1.5px] border-sage-line bg-white px-3.5 py-[11px]"
                   >
-                    <span className="blob-a flex h-9 w-9 shrink-0 items-center justify-center bg-sage text-base">
-                      {item.emoji}
+                    <span className="flex-1 text-[13.5px] font-semibold leading-none">
+                      {item.label}
                     </span>
-                    <span className="flex-1 font-medium">{item.label}</span>
-                    <span className="rounded-md bg-sage px-[9px] py-[3px] text-[10.5px] font-bold text-brand-dark">
+                    <span
+                      className={`inline-flex h-6 items-center rounded-[7px] px-2 text-xs font-bold leading-none ${
+                        item.tag === "Provável"
+                          ? "bg-sage text-brand-dark"
+                          : "bg-[#f2efe8] text-muted"
+                      }`}
+                    >
                       {item.tag}
                     </span>
                   </div>
                 ))}
+
+                {/* Allergens are a safety declaration, not a detail — the
+                    customer cannot see inside a surprise bag before buying. */}
+                {alergenos && (
+                  <div className="flex items-center gap-2.5 rounded-xl border-[1.5px] border-sage-line bg-white px-3.5 py-[11px]">
+                    <span className="flex-1 text-[13.5px] font-semibold leading-none text-alert">
+                      Contém {alergenos}
+                    </span>
+                  </div>
+                )}
               </div>
             </section>
           )}
 
-          <section className="mt-[22px]">
-            <h2 className="mb-2.5 font-display text-base font-semibold">
-              Retirada
-            </h2>
-            <div className="flex items-start gap-3 rounded-[14px] border-[1.5px] border-sage-line bg-white p-3.5">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-sage text-base">
-                📍
-              </span>
-              <div>
-                <div className="text-[13px] font-bold">{sacola.endereco}</div>
-                <div className="mt-[3px] text-xs leading-[1.4] text-muted">
-                  Retire no balcão e mostre o código do pedido.
-                </div>
+          <div className="mt-[18px] flex items-center gap-3 rounded-2xl border-[1.5px] border-sage-line bg-white p-[13px]">
+            <div
+              className="h-11 w-11 shrink-0 rounded-xl"
+              style={{
+                background:
+                  "repeating-linear-gradient(135deg,#e4ede3 0 8px,#eff5ef 8px 16px)",
+              }}
+            />
+            <div className="min-w-0 flex-1">
+              <div className="text-[13.5px] font-bold leading-[1.3]">
+                {sacola.endereco}
               </div>
+              {minutos != null && (
+                <div className="mt-0.5 text-[12.5px] font-medium leading-[1.3] text-muted">
+                  {minutos} min a pé de você
+                </div>
+              )}
             </div>
+            <a
+              href={rota}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex h-9 shrink-0 items-center rounded-full border-[1.5px] border-sage-line bg-white px-3 text-[13px] font-bold text-brand-dark"
+            >
+              Rota
+            </a>
+          </div>
 
-            <div className="mt-3 flex items-start gap-[9px] rounded-[14px] bg-sage px-[13px] py-3 text-[11.5px] leading-[1.5] text-brand-dark">
-              💳{" "}
-              <span>
-                Você não é cobrado agora. O valor fica <b>reservado</b> e só é
-                cobrado na retirada — ou ao final da janela, caso não
-                compareça. <b>Cancelamento grátis até 17h00.</b>
-              </span>
-            </div>
-
-            <div className="mt-2.5 flex items-center justify-between rounded-[14px] border-[1.5px] border-sage-line bg-white px-3.5 py-3">
-              <span className="flex items-center gap-[9px] text-[12.5px] font-semibold">
-                🤝 Não vai poder vir?
-              </span>
-              <button className="rounded-full bg-sage px-3 py-[7px] text-[11.5px] font-bold text-brand-dark">
-                Pedir para um amigo retirar
-              </button>
-            </div>
-          </section>
+          {/* clears the sticky reserve bar so the address card stays reachable */}
+          <div className="h-6" />
         </div>
       </main>
 
-      <ReserveBar sacola={sacola} />
+      <ReserveBar sacola={sacola} bloqueada={fechada || esgotada} />
     </>
   );
 }

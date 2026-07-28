@@ -53,3 +53,16 @@ export function distanciaAte(
   if (lat == null || lng == null) return "";
   return formatarDistancia(metrosEntre(ORIGEM.lat, ORIGEM.lng, lat, lng));
 }
+
+/**
+ * Walking time, at a normal city pace of ~80 m/min. "7 min a pé de você" is
+ * more useful than metres when deciding whether you'll make the window.
+ */
+export function minutosAPe(
+  lat: number | null | undefined,
+  lng: number | null | undefined,
+): number | null {
+  if (lat == null || lng == null) return null;
+  const m = metrosEntre(ORIGEM.lat, ORIGEM.lng, lat, lng);
+  return Math.max(1, Math.round(m / 80));
+}
