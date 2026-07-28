@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { BagCard } from "@/components/consumidor/bag-card";
 import { CategoryRow } from "@/components/consumidor/category-row";
 import { SearchBar } from "@/components/consumidor/search-bar";
@@ -6,6 +5,7 @@ import { SpotlightCard } from "@/components/consumidor/spotlight-card";
 import { IconPin } from "@/components/ui/icons";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { getCurrentProfile } from "@/lib/auth";
+import { ORIGEM } from "@/lib/distancia";
 import { navConsumidor } from "@/lib/nav";
 import { escolherDestaque, getSacolasDisponiveis } from "@/lib/sacolas";
 import type { CategoriaId, Sacola } from "@/lib/types";
@@ -78,36 +78,24 @@ export default async function ConsumidorHome({
     <>
       <main className="flex-1">
         <div className="px-5 pt-[14px]">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <h1 className="font-display text-[21px] font-semibold leading-[1.2]">
-                {primeiroNome ? `Oi, ${primeiroNome} 👋` : "Oi 👋"}
-                <br />
-                <span className="text-terracotta-dark">a comida boa</span> te
-                espera
-              </h1>
+          <h1 className="font-display text-[21px] font-semibold leading-[1.2]">
+            {primeiroNome ? `Oi, ${primeiroNome} 👋` : "Oi 👋"}
+            <br />
+            <span className="text-terracotta-dark">a comida boa</span> te espera
+          </h1>
 
-              {buscando ? (
-                <SearchBar q={q} cat={cat} />
-              ) : (
-                // The origin of the search, in the words the person recognises.
-                // Not yet tappable: picking between saved addresses needs an
-                // addresses table, which doesn't exist yet.
-                <p className="mt-[7px] flex h-6 items-center gap-[5px] text-[13px] font-semibold text-muted">
-                  <IconPin active size={14} />
-                  Bom Fim, Porto Alegre
-                </p>
-              )}
-            </div>
-
-            <Link
-              href="/consumidor/perfil"
-              aria-label="Perfil"
-              className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-sage-line bg-sage text-base"
-            >
-              👤
-            </Link>
-          </div>
+          {buscando ? (
+            <SearchBar q={q} cat={cat} />
+          ) : (
+            // The origin every distance on this screen is measured from.
+            // PLACEHOLDER: the address is the design's, because there's no
+            // saved-addresses table yet — see ORIGEM in lib/distancia.ts.
+            <p className="mt-[7px] flex h-6 items-center gap-[5px] text-[13px] font-semibold text-muted">
+              <IconPin active size={14} />
+              {ORIGEM.label}
+              <span className="text-[#8d8d84]">▾</span>
+            </p>
+          )}
         </div>
 
         <CategoryRow active={cat} q={q} buscando={buscando} />

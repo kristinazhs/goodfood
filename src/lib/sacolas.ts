@@ -1,3 +1,4 @@
+import { distanciaAte } from "@/lib/distancia";
 import { createSupabaseClient } from "@/lib/supabase";
 import type { CategoriaId, ConteudoSacola, Sacola } from "@/lib/types";
 
@@ -86,7 +87,7 @@ function toSacola(
     id: bag.id,
     nome: bag.nome,
     loja: est.nome,
-    distancia: est.bairro ?? "",
+    distancia: distanciaAte(est.lat, est.lng),
     emoji: bag.emoji ?? "🛍️",
     corThumb: bag.cor_thumb ?? "#E4EDE3",
     precoOriginal,
@@ -190,7 +191,7 @@ export async function getSacolaPorId(id: string): Promise<Sacola | undefined> {
     .from("bags")
     .select(
       `id, nome, descricao, categoria, preco, preco_original, emoji, cor_thumb, conteudos,
-       establishment:establishments!inner ( nome, endereco, bairro ),
+       establishment:establishments!inner ( nome, endereco, bairro, lat, lng ),
        listings ( id, janela_inicio, janela_fim, quantidade_disponivel, quantidade_total, status )`,
     )
     .eq("id", id)

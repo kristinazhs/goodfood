@@ -22,11 +22,9 @@ export function BagCard({ sacola }: { sacola: Sacola }) {
         <div className="truncate font-display text-base font-semibold leading-[1.3]">
           {sacola.nome}
         </div>
-        {/* The design puts "shop · 450 m" here. We have no geodistance yet, and
-            padding the slot with the bairro truncates the shop name mid-word,
-            so the shop stands alone until a real distance exists. */}
         <div className="mt-0.5 truncate text-[13px] font-medium leading-[1.3] text-muted">
           {sacola.loja}
+          {sacola.distancia ? ` · ${sacola.distancia}` : ""}
         </div>
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-[9px]">
