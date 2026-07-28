@@ -1,4 +1,5 @@
 import { horaMinutoSP } from "./datas";
+import { distanciaAte } from "./distancia";
 import { createSupabaseServerClient } from "./supabase-server";
 
 export type PedidoStatus = "reservado" | "retirado" | "nao_retirado" | "cancelado";
@@ -20,13 +21,25 @@ export interface PedidoDetalhe {
 
 export interface PedidoResumo {
   id: string;
+  codigo: string;
   status: PedidoStatus;
+  qtd: number;
   total: number;
   bagId: string;
   nomeSacola: string;
   emoji: string;
   loja: string;
+  distancia: string;
   janela: string;
+  /** ISO start/end of the pickup window, for the countdown. */
+  janelaInicio: string;
+  janelaFim: string;
+  /** ISO reservation timestamp — groups the history by month. */
+  reservadoEm: string;
+  /** What this order saved against the shop-window price. */
+  economia: number;
+  /** Estimated kg of food this order rescued. */
+  pesoKg: number;
 }
 
 interface OrderRow {
@@ -35,19 +48,33 @@ interface OrderRow {
   status: PedidoStatus;
   quantidade: number;
   total: string | number;
+  reserved_at: string;
   listing: {
     bag_id: string;
     janela_inicio: string;
     janela_fim: string;
-    bag: { nome: string; emoji: string | null; cor_thumb: string | null };
-    establishment: { nome: string; endereco: string | null; bairro: string | null };
+    bag: {
+      nome: string;
+      emoji: string | null;
+      cor_thumb: string | null;
+      preco: string | number;
+      preco_original: string | number | null;
+      peso_kg: string | number | null;
+    };
+    establishment: {
+      nome: string;
+      endereco: string | null;
+      bairro: string | null;
+      lat: number | null;
+      lng: number | null;
+    };
   };
 }
 
-const SELECT = `id, codigo, status, quantidade, total,
+const SELECT = `id, codigo, status, quantidade, total, reserved_at,
   listing:listings!inner ( bag_id, janela_inicio, janela_fim,
-    bag:bags!inner ( nome, emoji, cor_thumb ),
-    establishment:establishments!inner ( nome, endereco, bairro ) )`;
+    bag:bags!inner ( nome, emoji, cor_thumb, preco, preco_original, peso_kg ),
+    establishment:establishments!inner ( nome, endereco, bairro, lat, lng ) )`;
 
 // One order (RLS lets the buyer — or the listing's establishment — read it).
 export async function getPedidoDetalhe(
@@ -95,14 +122,58 @@ export async function getMeusPedidos(): Promise<PedidoResumo[]> {
     .order("reserved_at", { ascending: false });
 
   const rows = (data ?? []) as unknown as OrderRow[];
-  return rows.map((o) => ({
-    id: o.id,
-    status: o.status,
-    total: Number(o.total),
-    bagId: o.listing.bag_id,
-    nomeSacola: o.listing.bag.nome,
-    emoji: o.listing.bag.emoji ?? "🛍️",
-    loja: o.listing.establishment.nome,
-    janela: `${horaMinutoSP(o.listing.janela_inicio)} – ${horaMinutoSP(o.listing.janela_fim)}`,
-  }));
+  return rows.map((o) => {
+    const preco = Number(o.listing.bag.preco);
+    const original =
+      o.listing.bag.preco_original != null
+        ? Number(o.listing.bag.preco_original)
+        : preco;
+    return {
+      id: o.id,
+      codigo: o.codigo,
+      status: o.status,
+      qtd: o.quantidade,
+      total: Number(o.total),
+      bagId: o.listing.bag_id,
+      nomeSacola: o.listing.bag.nome,
+      emoji: o.listing.bag.emoji ?? "🛍️",
+      loja: o.listing.establishment.nome,
+      distancia: distanciaAte(
+        o.listing.establishment.lat,
+        o.listing.establishment.lng,
+      ),
+      janela: `${horaMinutoSP(o.listing.janela_inicio)} – ${horaMinutoSP(o.listing.janela_fim)}`,
+      janelaInicio: o.listing.janela_inicio,
+      janelaFim: o.listing.janela_fim,
+      reservadoEm: o.reserved_at,
+      economia: Math.max(0, original - preco) * o.quantidade,
+      pesoKg: Number(o.listing.bag.peso_kg ?? 0) * o.quantidade,
+    };
+  });
+}
+
+export interface Impacto {
+  kg: number;
+  economizado: number;
+  ano: number;
+}
+
+/**
+ * What the person actually rescued. Only collected orders count — a no-show
+ * saved nothing, and counting it would flatter the number into meaninglessness.
+ */
+export function calcularImpacto(
+  pedidos: PedidoResumo[],
+  ano: number = new Date().getFullYear(),
+): Impacto {
+  const doAno = pedidos.filter(
+    (p) =>
+      p.status === "retirado" &&
+      new Date(p.reservadoEm).getFullYear() === ano,
+  );
+  return {
+    kg: doAno.reduce((t, p) => t + p.pesoKg, 0),
+    economizado: doAno.reduce((t, p) => t + p.economia, 0),
+    ano,
+  };
 }

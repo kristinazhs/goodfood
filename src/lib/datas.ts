@@ -47,3 +47,45 @@ export function reservasEncerradas(janelaFimISO: string | null): boolean {
     new Date(janelaFimISO).getTime() - CORTE_RESERVA_MIN * 60_000 < Date.now()
   );
 }
+
+/**
+ * Live countdown for a pickup window: "faltam 42 min" before it opens,
+ * "janela aberta" while it's open, null once it has closed. A static window
+ * label doesn't tell you whether you still have time.
+ */
+export function contagemRetirada(
+  inicioISO: string,
+  fimISO: string,
+  agora: number = Date.now(),
+): string | null {
+  const inicio = new Date(inicioISO).getTime();
+  const fim = new Date(fimISO).getTime();
+  if (agora > fim) return null;
+  if (agora >= inicio) return "janela aberta";
+
+  const min = Math.round((inicio - agora) / 60_000);
+  if (min < 60) return `faltam ${min} min`;
+  const h = Math.floor(min / 60);
+  const resto = min % 60;
+  return resto === 0 ? `faltam ${h}h` : `faltam ${h}h${String(resto).padStart(2, "0")}`;
+}
+
+/** "Junho", "Julho" — the month heading the history is grouped by. */
+export function mesPorExtenso(iso: string): string {
+  const nome = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: TZ,
+    month: "long",
+  }).format(new Date(iso));
+  return nome.charAt(0).toUpperCase() + nome.slice(1);
+}
+
+/** "28 jun" — the compact date on a history row. */
+export function diaMes(iso: string): string {
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: TZ,
+    day: "2-digit",
+    month: "short",
+  })
+    .format(new Date(iso))
+    .replace(".", "");
+}
