@@ -52,7 +52,9 @@ body {
 /* Descobrir map — the tiles are toned down to the app's palette so the map
    reads as part of the product rather than a generic embed. */
 .mv-tiles {
-  filter: saturate(0.55) brightness(1.05) contrast(0.92) sepia(0.16);
+  /* Positron is already very light, so the earlier brightness lift washed it
+     out. Keep the warmth, but let streets and labels hold their edges. */
+  filter: saturate(0.8) contrast(1.14) brightness(0.97) sepia(0.12);
 }
 
 /* Stock pins. A shop can sell several kinds of sacola, so a price on the pin
