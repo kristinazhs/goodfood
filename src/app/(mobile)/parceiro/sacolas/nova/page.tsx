@@ -7,9 +7,12 @@ export const dynamic = "force-dynamic";
 export default async function PublicarSacola({
   searchParams,
 }: {
-  searchParams: Promise<{ salvo?: string }>;
+  searchParams: Promise<{ salvo?: string; modelo?: string }>;
 }) {
-  const [{ salvo }, modelos] = await Promise.all([searchParams, getModelos()]);
+  const [{ salvo, modelo }, modelos] = await Promise.all([
+    searchParams,
+    getModelos(),
+  ]);
 
   return (
     <main className="flex flex-1 flex-col pb-0 pt-3.5">
@@ -34,7 +37,11 @@ export default async function PublicarSacola({
         </h1>
       </div>
 
-      <CriarSacolaForm modelos={modelos} salvo={salvo === "1"} />
+      <CriarSacolaForm
+        modelos={modelos}
+        salvo={salvo === "1"}
+        modeloInicial={modelo}
+      />
     </main>
   );
 }

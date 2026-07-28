@@ -258,3 +258,73 @@ export async function salvarModelo(
 
   redirect("/parceiro/sacolas/nova?salvo=1");
 }
+
+/**
+ * P5 — "Publicar hoje" straight from a saved model. Re-publishing what
+ * already exists is the most common act of the day, so it should cost one
+ * tap. Quantity and window are read from the model's last outing rather
+ * than trusted from the form.
+ */
+export async function publicarModeloHoje(formData: FormData) {
+  const bagId = String(formData.get("bagId") ?? "");
+  if (!bagId) redirect("/parceiro/perfil?erro=1");
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/parceiro/entrar");
+
+  const { data: est } = await supabase
+    .from("establishments")
+    .select("id")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!est) redirect("/parceiro/perfil?erro=1");
+
+  // The bag must belong to this shop.
+  const { data: bag } = await supabase
+    .from("bags")
+    .select("id")
+    .eq("id", bagId)
+    .eq("establishment_id", est.id)
+    .maybeSingle();
+  if (!bag) redirect("/parceiro/perfil?erro=1");
+
+  const { data: ultima } = await supabase
+    .from("listings")
+    .select("quantidade_total, janela_inicio, janela_fim")
+    .eq("bag_id", bagId)
+    .order("janela_inicio", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const quantidade = ultima?.quantidade_total ?? 5;
+  // Same clock times as last time, today.
+  const hhmm = (iso: string) =>
+    new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(new Date(iso));
+
+  const inicio = ultima ? timestampSP(hhmm(ultima.janela_inicio)) : timestampSP("18:00");
+  const fim = ultima ? timestampSP(hhmm(ultima.janela_fim)) : timestampSP("19:00");
+
+  const { error } = await supabase.from("listings").insert({
+    bag_id: bagId,
+    establishment_id: est.id,
+    data: hojeSP(),
+    janela_inicio: inicio,
+    janela_fim: fim,
+    quantidade_total: quantidade,
+    quantidade_disponivel: quantidade,
+    status: "ativa",
+  });
+  if (error) redirect("/parceiro/perfil?erro=1");
+
+  redirect("/parceiro?publicado=1");
+}

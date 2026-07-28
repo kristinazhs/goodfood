@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { FotoSacola } from "@/components/consumidor/foto-sacola";
 import { brl } from "@/lib/format";
 import {
@@ -51,9 +51,12 @@ const ROTULO = "mb-[7px] block text-[13px] font-bold leading-none text-[#4a4a44]
 export function CriarSacolaForm({
   modelos,
   salvo = false,
+  modeloInicial,
 }: {
   modelos: Modelo[];
   salvo?: boolean;
+  /** Arriving from "Editar" on P5 — open with that model already applied. */
+  modeloInicial?: string;
 }) {
   const [state, action, pending] = useActionState<PublishState, FormData>(
     publicarSacola,
@@ -93,6 +96,14 @@ export function CriarSacolaForm({
     setFotoUrl(m.fotoUrl ?? "");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+
+  useEffect(() => {
+    if (!modeloInicial) return;
+    const m = modelos.find((x) => x.bagId === modeloInicial);
+    if (m) aplicarModelo(m);
+    // Only on arrival; afterwards the partner is in control of the form.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modeloInicial]);
 
   async function enviarFoto(file: File) {
     setErroFoto(null);

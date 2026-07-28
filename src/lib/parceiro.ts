@@ -529,3 +529,36 @@ export async function getModelos(): Promise<Modelo[]> {
     };
   });
 }
+
+// ---- P5: the shop itself -------------------------------------------------
+
+export interface Loja {
+  id: string;
+  nome: string;
+  endereco: string;
+  categoria: string | null;
+}
+
+export async function getLoja(): Promise<Loja | null> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data } = await supabase
+    .from("establishments")
+    .select("id, nome, endereco, bairro, categoria")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!data) return null;
+
+  return {
+    id: data.id,
+    nome: data.nome,
+    endereco: [data.endereco, data.bairro].filter(Boolean).join(" — "),
+    categoria: data.categoria,
+  };
+}
