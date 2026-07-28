@@ -16,7 +16,11 @@ export function BagCard({ sacola }: { sacola: Sacola }) {
       href={`/consumidor/sacola/${sacola.id}`}
       className="flex gap-[13px] rounded-[18px] border-[1.5px] border-sage-line bg-white p-[11px] transition-transform active:scale-[0.98]"
     >
-      <FotoSacola quantidade={sacola.disponivel} alt={sacola.nome} />
+      <FotoSacola
+        src={sacola.fotoUrl}
+        quantidade={sacola.disponivel}
+        alt={sacola.nome}
+      />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="truncate font-display text-base font-semibold leading-[1.3]">

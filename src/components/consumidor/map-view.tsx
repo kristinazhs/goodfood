@@ -246,6 +246,7 @@ export function MapView({ sacolas }: { sacolas: Sacola[] }) {
         <div className="absolute inset-x-4 bottom-4 z-[1000] rounded-[20px] bg-white p-3.5 shadow-[0_-2px_24px_rgba(0,0,0,0.14)]">
           <div className="flex gap-[13px]">
             <FotoSacola
+              src={selecionada.fotoUrl}
               quantidade={selecionada.disponivel}
               alt={selecionada.nome}
               size={72}

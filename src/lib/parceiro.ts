@@ -430,3 +430,102 @@ export async function getPedidoPorCodigo(
     impedimento,
   };
 }
+
+// ---- P3/P5: saved models -------------------------------------------------
+// A `bag` IS the model: the recurring template (name, price, contents,
+// allergens, photo). A `listing` is one day's offer of it. Publishing is a
+// daily, repetitive chore, so the form's fast path is picking a model rather
+// than filling seven fields from scratch.
+
+export interface Modelo {
+  bagId: string;
+  nome: string;
+  categoria: string;
+  preco: number;
+  precoOriginal: number | null;
+  conteudos: { label: string; tag: string }[];
+  alergenos: string[];
+  fotoUrl: string | null;
+  /** Defaults carried over from the last time this model was published. */
+  quantidade: number;
+  janelaInicio: string; // "18:40"
+  janelaFim: string; // "19:00"
+  /** How many times it has been published — the design shows "usado 24×". */
+  usos: number;
+  /** True when it's already on sale today. */
+  publicadoHoje: boolean;
+}
+
+interface ModeloRow {
+  id: string;
+  nome: string;
+  categoria: string | null;
+  preco: string | number;
+  preco_original: string | number | null;
+  conteudos: { label: string; tag: string }[] | null;
+  alergenos: string[] | null;
+  foto_url: string | null;
+  listings: {
+    data: string;
+    janela_inicio: string;
+    janela_fim: string;
+    quantidade_total: number;
+  }[];
+}
+
+function horaHHMM(iso: string): string {
+  return horaMinutoSP(iso).replace("h", ":");
+}
+
+export async function getModelos(): Promise<Modelo[]> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  const { data: est } = await supabase
+    .from("establishments")
+    .select("id")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!est) return [];
+
+  const { data } = await supabase
+    .from("bags")
+    .select(
+      `id, nome, categoria, preco, preco_original, conteudos, alergenos, foto_url,
+       listings ( data, janela_inicio, janela_fim, quantidade_total )`,
+    )
+    .eq("establishment_id", est.id)
+    .eq("ativo", true)
+    .order("created_at", { ascending: false });
+
+  const rows = (data ?? []) as unknown as ModeloRow[];
+  const hoje = hojeSP();
+
+  return rows.map((b) => {
+    const listings = [...(b.listings ?? [])].sort((a, c) =>
+      c.janela_inicio.localeCompare(a.janela_inicio),
+    );
+    const ultima = listings[0];
+    return {
+      bagId: b.id,
+      nome: b.nome,
+      categoria: b.categoria ?? "padaria",
+      preco: Number(b.preco),
+      precoOriginal:
+        b.preco_original != null ? Number(b.preco_original) : null,
+      conteudos: b.conteudos ?? [],
+      alergenos: b.alergenos ?? [],
+      fotoUrl: b.foto_url,
+      quantidade: ultima?.quantidade_total ?? 5,
+      janelaInicio: ultima ? horaHHMM(ultima.janela_inicio) : "18:00",
+      janelaFim: ultima ? horaHHMM(ultima.janela_fim) : "19:00",
+      usos: listings.length,
+      publicadoHoje: listings.some((l) => l.data === hoje),
+    };
+  });
+}

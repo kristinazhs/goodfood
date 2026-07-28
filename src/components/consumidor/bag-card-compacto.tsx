@@ -39,6 +39,7 @@ export function BagCardCompacto({
       className="flex items-center gap-2.5 rounded-[14px] border-[1.5px] border-sage-line bg-white p-2 transition-transform active:scale-[0.98]"
     >
       <FotoSacola
+        src={sacola.fotoUrl}
         quantidade={sacola.disponivel}
         alt={sacola.nome}
         size={56}

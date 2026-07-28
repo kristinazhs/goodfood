@@ -16,6 +16,7 @@ interface BagRow {
   cor_thumb: string | null;
   conteudos: ConteudoSacola[] | null;
   alergenos: string[] | null;
+  foto_url: string | null;
 }
 
 interface EstablishmentRow {
@@ -91,6 +92,7 @@ function toSacola(
     distancia: distanciaAte(est.lat, est.lng),
     emoji: bag.emoji ?? "🛍️",
     corThumb: bag.cor_thumb ?? "#E4EDE3",
+    fotoUrl: bag.foto_url,
     precoOriginal,
     preco,
     desconto: pct > 0 ? `${pct}% off` : "Oferta",
@@ -123,7 +125,7 @@ export async function getSacolasDisponiveis(): Promise<Sacola[]> {
     .from("listings")
     .select(
       `id, janela_inicio, janela_fim, quantidade_disponivel, quantidade_total, status,
-       bag:bags!inner ( id, nome, descricao, categoria, preco, preco_original, emoji, cor_thumb, conteudos, alergenos ),
+       bag:bags!inner ( id, nome, descricao, categoria, preco, preco_original, emoji, cor_thumb, conteudos, alergenos, foto_url ),
        establishment:establishments!inner ( nome, endereco, bairro, lat, lng )`,
     )
     .eq("status", "ativa")
@@ -193,7 +195,7 @@ export async function getSacolaPorId(id: string): Promise<Sacola | undefined> {
   const { data, error } = await supabase
     .from("bags")
     .select(
-      `id, nome, descricao, categoria, preco, preco_original, emoji, cor_thumb, conteudos, alergenos,
+      `id, nome, descricao, categoria, preco, preco_original, emoji, cor_thumb, conteudos, alergenos, foto_url,
        establishment:establishments!inner ( nome, endereco, bairro, lat, lng ),
        listings ( id, janela_inicio, janela_fim, quantidade_disponivel, quantidade_total, status )`,
     )

@@ -18,6 +18,8 @@ export interface Sacola {
   distancia: string;
   emoji: string;
   corThumb: string;
+  /** Shop-window photo; null falls back to the striped placeholder. */
+  fotoUrl: string | null;
   precoOriginal: number;
   preco: number;
   desconto: string;
