@@ -11,6 +11,8 @@ export async function reservar(
 ): Promise<ReservaState> {
   const bagId = String(formData.get("bagId") ?? "");
   const qtd = Math.max(1, Math.floor(Number(formData.get("qtd") ?? 1)));
+  const metodoBruto = String(formData.get("metodo") ?? "pix");
+  const metodo = metodoBruto === "cartao" ? "cartao" : "pix";
 
   const supabase = await createSupabaseServerClient();
   const {
@@ -33,6 +35,7 @@ export async function reservar(
   const { data, error } = await supabase.rpc("reservar_sacola", {
     p_listing_id: listing.id,
     p_quantidade: qtd,
+    p_metodo: metodo,
   });
   if (error) return { error: error.message };
 
@@ -90,4 +93,23 @@ export async function avaliarPedido(formData: FormData) {
   if (error) redirect("/consumidor/perfil?erro=avaliacao");
 
   redirect("/consumidor/perfil?avaliado=1");
+}
+
+/**
+ * C5 — cancel inside the free-refund window. The app has promised free
+ * cancellation since the first mockup and never offered a button; with money
+ * leaving at reservation, that promise needs a control behind it.
+ * The window and the stock restore are enforced in cancelar_reserva().
+ */
+export async function cancelarPedido(formData: FormData) {
+  const orderId = String(formData.get("orderId") ?? "");
+  if (!orderId) redirect("/consumidor/pedidos");
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc("cancelar_reserva", {
+    p_order_id: orderId,
+  });
+  if (error) redirect(`/consumidor/pedido/${orderId}?erro=cancelar`);
+
+  redirect("/consumidor/pedidos?cancelado=1");
 }

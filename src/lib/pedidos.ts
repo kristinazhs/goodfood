@@ -14,9 +14,17 @@ export interface PedidoDetalhe {
   nomeSacola: string;
   emoji: string;
   corThumb: string;
+  fotoUrl: string | null;
   loja: string;
   endereco: string;
   janela: string;
+  /** ISO, for the live countdown and the cancellation window. */
+  janelaInicio: string;
+  janelaFim: string;
+  reservadoEm: string;
+  metodo: "pix" | "cartao" | null;
+  lat: number | null;
+  lng: number | null;
 }
 
 export interface PedidoResumo {
@@ -49,6 +57,7 @@ interface OrderRow {
   quantidade: number;
   total: string | number;
   reserved_at: string;
+  metodo_pagamento: "pix" | "cartao" | null;
   listing: {
     bag_id: string;
     janela_inicio: string;
@@ -57,6 +66,7 @@ interface OrderRow {
       nome: string;
       emoji: string | null;
       cor_thumb: string | null;
+      foto_url: string | null;
       preco: string | number;
       preco_original: string | number | null;
       peso_kg: string | number | null;
@@ -71,9 +81,9 @@ interface OrderRow {
   };
 }
 
-const SELECT = `id, codigo, status, quantidade, total, reserved_at,
+const SELECT = `id, codigo, status, quantidade, total, reserved_at, metodo_pagamento,
   listing:listings!inner ( bag_id, janela_inicio, janela_fim,
-    bag:bags!inner ( nome, emoji, cor_thumb, preco, preco_original, peso_kg ),
+    bag:bags!inner ( nome, emoji, cor_thumb, foto_url, preco, preco_original, peso_kg ),
     establishment:establishments!inner ( nome, endereco, bairro, lat, lng ) )`;
 
 // One order (RLS lets the buyer — or the listing's establishment — read it).
@@ -99,11 +109,18 @@ export async function getPedidoDetalhe(
     nomeSacola: o.listing.bag.nome,
     emoji: o.listing.bag.emoji ?? "🛍️",
     corThumb: o.listing.bag.cor_thumb ?? "#E4EDE3",
+    fotoUrl: o.listing.bag.foto_url,
     loja: o.listing.establishment.nome,
     endereco: [o.listing.establishment.endereco, o.listing.establishment.bairro]
       .filter(Boolean)
       .join(" — "),
     janela: `${horaMinutoSP(o.listing.janela_inicio)} – ${horaMinutoSP(o.listing.janela_fim)}`,
+    janelaInicio: o.listing.janela_inicio,
+    janelaFim: o.listing.janela_fim,
+    reservadoEm: o.reserved_at,
+    metodo: o.metodo_pagamento,
+    lat: o.listing.establishment.lat,
+    lng: o.listing.establishment.lng,
   };
 }
 
