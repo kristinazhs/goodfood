@@ -1,6 +1,5 @@
 import { BagCard } from "@/components/consumidor/bag-card";
 import { CategoryRow } from "@/components/consumidor/category-row";
-import { SearchBar } from "@/components/consumidor/search-bar";
 import { SpotlightCard } from "@/components/consumidor/spotlight-card";
 import { IconPin } from "@/components/ui/icons";
 import { BottomNav } from "@/components/ui/bottom-nav";
@@ -8,7 +7,7 @@ import { getCurrentProfile } from "@/lib/auth";
 import { ORIGEM } from "@/lib/distancia";
 import { navConsumidor } from "@/lib/nav";
 import { escolherDestaque, getSacolasDisponiveis } from "@/lib/sacolas";
-import type { CategoriaId, Sacola } from "@/lib/types";
+import type { CategoriaId } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -20,27 +19,10 @@ const CATEGORIAS: CategoriaId[] = [
   "mercado",
 ];
 
-// "Pães" and "paes" should both match "Sacola Mista Pães".
-function normalizar(texto: string): string {
-  return texto
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase()
-    .trim();
-}
-
-function buscar(sacolas: Sacola[], q: string): Sacola[] {
-  const termo = normalizar(q);
-  if (!termo) return sacolas;
-  return sacolas.filter((s) =>
-    normalizar(`${s.nome} ${s.loja}`).includes(termo),
-  );
-}
-
 export default async function ConsumidorHome({
   searchParams,
 }: {
-  searchParams: Promise<{ cat?: string; q?: string; busca?: string }>;
+  searchParams: Promise<{ cat?: string }>;
 }) {
   const [params, todas, sessao] = await Promise.all([
     searchParams,
@@ -51,15 +33,11 @@ export default async function ConsumidorHome({
   const cat: CategoriaId = CATEGORIAS.includes(params.cat as CategoriaId)
     ? (params.cat as CategoriaId)
     : "tudo";
-  const q = params.q?.trim() ?? "";
-  // The field stays open while searching, and while a term is active.
-  const buscando = params.busca === "1" || q.length > 0;
 
   const primeiroNome = sessao?.profile?.nome?.split(" ")[0] ?? null;
 
-  const porCategoria =
+  const sacolas =
     cat === "tudo" ? todas : todas.filter((s) => s.categoria === cat);
-  const sacolas = buscar(porCategoria, q);
 
   // No spotlight unless a real rule fires — see escolherDestaque in sacolas.ts.
   const destaque = escolherDestaque(sacolas);
@@ -68,11 +46,9 @@ export default async function ConsumidorHome({
     : sacolas;
 
   const vazio =
-    q.length > 0
-      ? `Nenhuma sacola para “${q}”.`
-      : cat === "tudo"
-        ? "Nenhuma sacola disponível agora."
-        : "Nenhuma sacola nesta categoria agora.";
+    cat === "tudo"
+      ? "Nenhuma sacola disponível agora."
+      : "Nenhuma sacola nesta categoria agora.";
 
   return (
     <>
@@ -84,21 +60,17 @@ export default async function ConsumidorHome({
             <span className="text-terracotta-dark">a comida boa</span> te espera
           </h1>
 
-          {buscando ? (
-            <SearchBar q={q} cat={cat} />
-          ) : (
-            // The origin every distance on this screen is measured from.
-            // PLACEHOLDER: the address is the design's, because there's no
-            // saved-addresses table yet — see ORIGEM in lib/distancia.ts.
-            <p className="mt-[7px] flex h-6 items-center gap-[5px] text-[13px] font-semibold text-muted">
-              <IconPin active size={14} />
-              {ORIGEM.label}
-              <span className="text-[#8d8d84]">▾</span>
-            </p>
-          )}
+          {/* The origin every distance on this screen is measured from.
+              PLACEHOLDER: the address is the design's, because there's no
+              saved-addresses table yet — see ORIGEM in lib/distancia.ts. */}
+          <p className="mt-[7px] flex h-6 items-center gap-[5px] text-[13px] font-semibold text-muted">
+            <IconPin active size={14} />
+            {ORIGEM.label}
+            <span className="text-[#8d8d84]">▾</span>
+          </p>
         </div>
 
-        <CategoryRow active={cat} q={q} buscando={buscando} />
+        <CategoryRow active={cat} />
 
         {sacolas.length === 0 ? (
           <div className="px-5 py-16 text-center text-sm text-muted">

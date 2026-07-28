@@ -1,9 +1,9 @@
 import Link from "next/link";
 import type { CategoriaId } from "@/lib/types";
 
-// The category row, with search as its first item — the design puts it here
-// because it's where the person is already asking "what kind of food?".
 // The organic blob shapes are kept deliberately: they're the app's signature.
+// Search doesn't live here — it belongs to Descobrir, where filtering by
+// "what's open now" and price already happens.
 
 const categorias: {
   id: CategoriaId;
@@ -18,59 +18,17 @@ const categorias: {
   { id: "mercado", emoji: "🥦", label: "Mercado", blob: "blob-c" },
 ];
 
-function href(cat: CategoriaId, q?: string) {
-  const params = new URLSearchParams();
-  if (cat !== "tudo") params.set("cat", cat);
-  if (q) params.set("q", q);
-  const qs = params.toString();
-  return qs ? `/consumidor?${qs}` : "/consumidor";
-}
-
-export function CategoryRow({
-  active,
-  q,
-  buscando = false,
-}: {
-  active: CategoriaId;
-  q?: string;
-  buscando?: boolean;
-}) {
+export function CategoryRow({ active }: { active: CategoriaId }) {
   return (
     <div className="flex gap-[13px] overflow-x-auto px-5 pb-[18px] pt-[18px] [scrollbar-width:none]">
-      {/* Search — opens the field in place of the address line above. */}
-      {!buscando && (
-        <Link
-          href={href(active, q) + (href(active, q).includes("?") ? "&" : "?") + "busca=1"}
-          className="flex shrink-0 flex-col items-center gap-[7px]"
-        >
-          <span className="blob-b flex h-[58px] w-[58px] items-center justify-center border-[1.5px] border-sage-line bg-white">
-            <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
-              <circle
-                cx="10"
-                cy="10"
-                r="6"
-                fill="none"
-                stroke="#23231f"
-                strokeWidth="1.9"
-              />
-              <path
-                d="M14.5 14.5 19 19"
-                stroke="#23231f"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-              />
-            </svg>
-          </span>
-          <span className="text-xs font-semibold text-muted">Buscar</span>
-        </Link>
-      )}
-
       {categorias.map((cat) => {
         const isActive = cat.id === active;
+        const href =
+          cat.id === "tudo" ? "/consumidor" : `/consumidor?cat=${cat.id}`;
         return (
           <Link
             key={cat.id}
-            href={href(cat.id, q)}
+            href={href}
             aria-current={isActive ? "page" : undefined}
             className="flex shrink-0 flex-col items-center gap-[7px]"
           >
