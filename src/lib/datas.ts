@@ -79,13 +79,21 @@ export function mesPorExtenso(iso: string): string {
   return nome.charAt(0).toUpperCase() + nome.slice(1);
 }
 
-/** "28 jun" — the compact date on a history row. */
+/**
+ * "28 jun" — the compact date on a history row. Built from parts because
+ * pt-BR's short format renders "28 de jun.", which is wordier than the row
+ * has space for.
+ */
 export function diaMes(iso: string): string {
-  return new Intl.DateTimeFormat("pt-BR", {
+  const partes = new Intl.DateTimeFormat("pt-BR", {
     timeZone: TZ,
     day: "2-digit",
     month: "short",
-  })
-    .format(new Date(iso))
-    .replace(".", "");
+  }).formatToParts(new Date(iso));
+  const dia = partes.find((p) => p.type === "day")?.value ?? "";
+  const mes = (partes.find((p) => p.type === "month")?.value ?? "").replace(
+    ".",
+    "",
+  );
+  return `${dia} ${mes}`;
 }
