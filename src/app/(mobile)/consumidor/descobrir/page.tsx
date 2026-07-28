@@ -10,16 +10,10 @@ export default async function Descobrir() {
 
   return (
     <>
+      {/* Full-bleed map: the header floats over it. The old fixed
+          title + subtitle block spent ~90px on the one element that
+          matters least here. */}
       <main className="flex flex-1 flex-col overflow-hidden">
-        <div className="z-10 px-5 pb-3 pt-6">
-          <h1 className="font-display text-[22px] font-semibold">
-            Descobrir no mapa
-          </h1>
-          <p className="mt-1 flex items-center gap-[5px] text-xs text-muted">
-            📍 Sacolas disponíveis perto de Bom Fim, Porto Alegre
-          </p>
-        </div>
-
         {sacolas.length === 0 ? (
           <div className="flex flex-1 items-center justify-center px-5 text-center text-sm text-muted">
             Nenhuma sacola disponível agora.

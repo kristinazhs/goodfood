@@ -28,7 +28,8 @@ export interface Sacola {
   disponivel: number;
   /** How many were published today — "resta 1 de 8 hoje". */
   total: number;
-  /** ISO end of the pickup window; null when there's no active listing. */
+  /** ISO start/end of the pickup window; null when there's no active listing. */
+  janelaInicio: string | null;
   janelaFim: string | null;
   avaliacao: number;
   endereco: string;

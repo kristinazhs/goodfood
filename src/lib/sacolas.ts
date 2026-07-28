@@ -102,6 +102,7 @@ function toSacola(
     timer: listing ? `até ${hora(listing.janela_fim)}h` : "hoje",
     disponivel: disp,
     total: listing?.quantidade_total ?? 0,
+    janelaInicio: listing?.janela_inicio ?? null,
     janelaFim: listing?.janela_fim ?? null,
     avaliacao: 4.8, // TODO: média real quando houver avaliações (reviews)
     endereco: [est.endereco, est.bairro].filter(Boolean).join(" — "),
