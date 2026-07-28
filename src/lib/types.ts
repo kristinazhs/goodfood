@@ -1,4 +1,9 @@
-export type CategoriaId = "tudo" | "padaria" | "refeicao" | "mercado";
+export type CategoriaId =
+  | "tudo"
+  | "padaria"
+  | "doceria"
+  | "refeicao"
+  | "mercado";
 
 export interface ConteudoSacola {
   emoji: string;
