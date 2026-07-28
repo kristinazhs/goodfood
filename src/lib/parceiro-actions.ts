@@ -181,3 +181,80 @@ export async function entregarSacola(formData: FormData) {
   if (error) redirect("/parceiro/retirada?erro=1");
   redirect("/parceiro?entregue=1");
 }
+
+/**
+ * "Salvar modelo" — store the template WITHOUT putting it on sale today.
+ * Publishing and saving are different intentions: a shop may prepare a bag
+ * type in the morning and decide later whether today has surplus.
+ */
+export async function salvarModelo(
+  _prev: PublishState,
+  formData: FormData,
+): Promise<PublishState> {
+  const bagId = String(formData.get("bagId") ?? "").trim();
+  const nome = String(formData.get("nome") ?? "").trim();
+  const preco = parsePreco(formData.get("preco"));
+  const precoOriginal = parsePreco(formData.get("precoOriginal"));
+  const fotoUrl = String(formData.get("fotoUrl") ?? "").trim();
+  const categoriaForm = String(formData.get("categoria") ?? "").trim();
+  const alergenos = formData.getAll("alergenos").map(String);
+
+  let conteudos: { label: string; tag: string }[] = [];
+  try {
+    const parsed = JSON.parse(String(formData.get("conteudos") ?? "[]"));
+    if (Array.isArray(parsed)) conteudos = parsed;
+  } catch {
+    conteudos = [];
+  }
+
+  if (!nome) return { error: "Dê um nome à sacola." };
+  if (!preco || preco <= 0) return { error: "Informe um preço válido." };
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada. Entre novamente." };
+
+  const { data: est } = await supabase
+    .from("establishments")
+    .select("id, categoria")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!est) return { error: "Não encontramos o seu estabelecimento." };
+
+  const categoria = CATEGORIAS_VALIDAS.includes(categoriaForm)
+    ? categoriaForm
+    : (est.categoria ?? "padaria");
+
+  const campos = {
+    nome,
+    categoria,
+    preco,
+    preco_original: precoOriginal || null,
+    conteudos,
+    alergenos,
+    foto_url: fotoUrl || null,
+  };
+
+  if (bagId) {
+    const { error } = await supabase
+      .from("bags")
+      .update(campos)
+      .eq("id", bagId)
+      .eq("establishment_id", est.id);
+    if (error) return { error: "Falha ao salvar o modelo: " + error.message };
+  } else {
+    const { error } = await supabase.from("bags").insert({
+      establishment_id: est.id,
+      ...campos,
+      emoji: emojiPorCategoria[categoria] ?? "🛍️",
+      cor_thumb: "#E4EDE3",
+    });
+    if (error) return { error: "Falha ao salvar o modelo: " + error.message };
+  }
+
+  redirect("/parceiro/sacolas/nova?salvo=1");
+}

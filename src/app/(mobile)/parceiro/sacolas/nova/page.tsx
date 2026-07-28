@@ -4,12 +4,16 @@ import { getModelos } from "@/lib/parceiro";
 
 export const dynamic = "force-dynamic";
 
-export default async function PublicarSacola() {
-  const modelos = await getModelos();
+export default async function PublicarSacola({
+  searchParams,
+}: {
+  searchParams: Promise<{ salvo?: string }>;
+}) {
+  const [{ salvo }, modelos] = await Promise.all([searchParams, getModelos()]);
 
   return (
-    <main className="flex-1 px-5 pb-8 pt-4">
-      <div className="flex items-center gap-3">
+    <main className="flex flex-1 flex-col pb-0 pt-3.5">
+      <div className="flex items-center gap-3 px-5 pb-3">
         <Link
           href="/parceiro"
           aria-label="Voltar"
@@ -25,12 +29,12 @@ export default async function PublicarSacola() {
             />
           </svg>
         </Link>
-        <h1 className="font-display text-[22px] font-semibold">
+        <h1 className="font-display text-[19px] font-semibold">
           Publicar sacola
         </h1>
       </div>
 
-      <CriarSacolaForm modelos={modelos} />
+      <CriarSacolaForm modelos={modelos} salvo={salvo === "1"} />
     </main>
   );
 }
