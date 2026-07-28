@@ -41,3 +41,53 @@ export async function reservar(
 
   redirect(`/consumidor/pedido/${orderId}`);
 }
+
+/**
+ * C7 — rate a collected order. One review per order (the table's unique
+ * constraint on order_id enforces that), and only the person who placed it
+ * may write one (RLS policy from 0001).
+ */
+export async function avaliarPedido(formData: FormData) {
+  const orderId = String(formData.get("orderId") ?? "");
+  const nota = Number(formData.get("nota") ?? 0);
+  const comentario = String(formData.get("comentario") ?? "").trim();
+
+  if (!orderId || nota < 1 || nota > 5) {
+    redirect("/consumidor/perfil?erro=avaliacao");
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/consumidor/entrar");
+
+  // The establishment is taken from the order, never from the form.
+  const { data: pedido } = await supabase
+    .from("orders")
+    .select("id, consumer_id, status, listing:listings!inner ( establishment_id )")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  const o = pedido as unknown as {
+    id: string;
+    consumer_id: string;
+    status: string;
+    listing: { establishment_id: string };
+  } | null;
+
+  if (!o || o.consumer_id !== user.id || o.status !== "retirado") {
+    redirect("/consumidor/perfil?erro=avaliacao");
+  }
+
+  const { error } = await supabase.from("reviews").insert({
+    order_id: o.id,
+    establishment_id: o.listing.establishment_id,
+    consumer_id: user.id,
+    nota,
+    comentario: comentario || null,
+  });
+  if (error) redirect("/consumidor/perfil?erro=avaliacao");
+
+  redirect("/consumidor/perfil?avaliado=1");
+}

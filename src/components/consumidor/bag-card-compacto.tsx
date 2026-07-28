@@ -79,7 +79,7 @@ export function LojaRow({
   termo = "",
 }: {
   nome: string;
-  avaliacao: number;
+  avaliacao: number | null;
   distancia: string;
   sacolas: number;
   sacolaId: string;
@@ -100,8 +100,8 @@ export function LojaRow({
           <Marcado texto={nome} termo={termo} />
         </div>
         <div className="mt-0.5 truncate text-xs font-medium leading-[1.3] text-muted">
-          ★ {avaliacao.toFixed(1).replace(".", ",")}
-          {distancia ? ` · ${distancia}` : ""} ·{" "}
+          {avaliacao != null ? `★ ${avaliacao.toFixed(1).replace(".", ",")} · ` : ""}
+          {distancia ? `${distancia} · ` : ""}
           {sacolas === 1 ? "1 sacola hoje" : `${sacolas} sacolas hoje`}
         </div>
       </div>

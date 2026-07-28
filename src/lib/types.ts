@@ -33,7 +33,9 @@ export interface Sacola {
   /** ISO start/end of the pickup window; null when there's no active listing. */
   janelaInicio: string | null;
   janelaFim: string | null;
-  avaliacao: number;
+  /** Real average, or null when the shop has no reviews yet. */
+  avaliacao: number | null;
+  avaliacoesTotal: number;
   endereco: string;
   descricao: string;
   conteudos: ConteudoSacola[];

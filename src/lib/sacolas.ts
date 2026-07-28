@@ -1,3 +1,4 @@
+import { getNotasPorLoja, type NotaLoja } from "@/lib/avaliacoes";
 import { distanciaAte } from "@/lib/distancia";
 import { createSupabaseClient } from "@/lib/supabase";
 import type { CategoriaId, ConteudoSacola, Sacola } from "@/lib/types";
@@ -20,6 +21,7 @@ interface BagRow {
 }
 
 interface EstablishmentRow {
+  id: string;
   nome: string;
   endereco: string | null;
   bairro: string | null;
@@ -77,6 +79,7 @@ function toSacola(
   bag: BagRow,
   est: EstablishmentRow,
   listing: ListingRow | null,
+  nota?: NotaLoja,
 ): Sacola {
   const preco = Number(bag.preco);
   const precoOriginal =
@@ -107,7 +110,10 @@ function toSacola(
     total: listing?.quantidade_total ?? 0,
     janelaInicio: listing?.janela_inicio ?? null,
     janelaFim: listing?.janela_fim ?? null,
-    avaliacao: 4.8, // TODO: média real quando houver avaliações (reviews)
+    // Real average, or null when the shop has no reviews yet — the UI shows
+    // no star rather than inventing one.
+    avaliacao: nota ? nota.media : null,
+    avaliacoesTotal: nota ? nota.total : 0,
     endereco: [est.endereco, est.bairro].filter(Boolean).join(" — "),
     descricao: bag.descricao ?? "",
     conteudos: bag.conteudos ?? [],
@@ -126,7 +132,7 @@ export async function getSacolasDisponiveis(): Promise<Sacola[]> {
     .select(
       `id, janela_inicio, janela_fim, quantidade_disponivel, quantidade_total, status,
        bag:bags!inner ( id, nome, descricao, categoria, preco, preco_original, emoji, cor_thumb, conteudos, alergenos, foto_url ),
-       establishment:establishments!inner ( nome, endereco, bairro, lat, lng )`,
+       establishment:establishments!inner ( id, nome, endereco, bairro, lat, lng )`,
     )
     .eq("status", "ativa")
     .gt("quantidade_disponivel", 0)
@@ -136,7 +142,12 @@ export async function getSacolasDisponiveis(): Promise<Sacola[]> {
   if (error) throw error;
 
   const rows = (data ?? []) as unknown as ListingWithRelations[];
-  return rows.map((row) => toSacola(row.bag, row.establishment, row));
+  const notas = await getNotasPorLoja([
+    ...new Set(rows.map((r) => r.establishment.id)),
+  ]);
+  return rows.map((row) =>
+    toSacola(row.bag, row.establishment, row, notas.get(row.establishment.id)),
+  );
 }
 
 // ---- The "Acabando agora" rule -----------------------------------------
@@ -196,7 +207,7 @@ export async function getSacolaPorId(id: string): Promise<Sacola | undefined> {
     .from("bags")
     .select(
       `id, nome, descricao, categoria, preco, preco_original, emoji, cor_thumb, conteudos, alergenos, foto_url,
-       establishment:establishments!inner ( nome, endereco, bairro, lat, lng ),
+       establishment:establishments!inner ( id, nome, endereco, bairro, lat, lng ),
        listings ( id, janela_inicio, janela_fim, quantidade_disponivel, quantidade_total, status )`,
     )
     .eq("id", id)
@@ -216,5 +227,6 @@ export async function getSacolaPorId(id: string): Promise<Sacola | undefined> {
     (bag.listings ?? [])[0] ??
     null;
 
-  return toSacola(bag, bag.establishment, ativa);
+  const notas = await getNotasPorLoja([bag.establishment.id]);
+  return toSacola(bag, bag.establishment, ativa, notas.get(bag.establishment.id));
 }

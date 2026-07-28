@@ -58,7 +58,7 @@ export function buscarSacolas(sacolas: Sacola[], q: string): Sacola[] {
 
 export interface Loja {
   nome: string;
-  avaliacao: number;
+  avaliacao: number | null;
   distancia: string;
   sacolas: number;
   /** Somewhere to go — there's no store page yet, so the shop's own sacola. */

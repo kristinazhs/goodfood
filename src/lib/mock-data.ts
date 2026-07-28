@@ -19,6 +19,7 @@ export const sacolas: Sacola[] = [
     janelaInicio: null,
     janelaFim: null,
     avaliacao: 4.8,
+    avaliacoesTotal: 0,
     endereco: "Rua Padre Chagas, 314 — Bom Fim",
     descricao:
       "Uma seleção surpresa dos pães, croissants e doces que sobraram do dia na Domenica Casa de Pães. Tudo preparado nas últimas 24 horas — só não vendemos tudo antes do fechamento, e por isso o desconto é tão grande.",
@@ -50,6 +51,7 @@ export const sacolas: Sacola[] = [
     janelaInicio: null,
     janelaFim: null,
     avaliacao: 4.7,
+    avaliacoesTotal: 0,
     endereco: "Rua Fernandes Vieira, 512 — Bom Fim",
     descricao:
       "Uma seleção surpresa dos pratos do buffet do dia no Madrecita Bistrô. Comida caseira preparada hoje — o que não foi servido no almoço vira sacola com desconto.",
@@ -80,6 +82,7 @@ export const sacolas: Sacola[] = [
     janelaInicio: null,
     janelaFim: null,
     avaliacao: 4.6,
+    avaliacoesTotal: 0,
     endereco: "Av. Osvaldo Aranha, 890 — Bom Fim",
     descricao:
       "Pães variados do dia na Panificadora Estrela: francês, integral, cacetinho e o que mais sobrar da fornada da tarde.",
@@ -110,6 +113,7 @@ export const sacolas: Sacola[] = [
     janelaInicio: null,
     janelaFim: null,
     avaliacao: 4.5,
+    avaliacoesTotal: 0,
     endereco: "Rua 24 de Outubro, 1300 — Moinhos de Vento",
     descricao:
       "Queijos, iogurtes e frios próximos da data de validade, perfeitos para consumir nos próximos dias. Seleção surpresa do setor de laticínios.",

@@ -107,8 +107,14 @@ export default async function SacolaDetalhe({
           <div className="mt-1.5 text-sm font-medium leading-[1.4] text-muted">
             {sacola.loja}
             {sacola.distancia ? ` · ${sacola.distancia}` : ""}
-            {" · ★ "}
-            {sacola.avaliacao.toFixed(1).replace(".", ",")}
+            {/* No star until the shop actually has reviews. */}
+            {sacola.avaliacao != null && (
+              <>
+                {" · ★ "}
+                {sacola.avaliacao.toFixed(1).replace(".", ",")}
+                {sacola.avaliacoesTotal > 0 ? ` (${sacola.avaliacoesTotal})` : ""}
+              </>
+            )}
           </div>
 
           {/* the two facts that decide the purchase */}
