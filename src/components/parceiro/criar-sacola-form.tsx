@@ -35,6 +35,11 @@ function parseNum(v: string): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/** 27.9 -> "27,90" — money always shows both decimals in the field. */
+function paraCampo(n: number): string {
+  return n.toFixed(2).replace(".", ",");
+}
+
 export function CriarSacolaForm({ modelos }: { modelos: Modelo[] }) {
   const [state, action, pending] = useActionState<PublishState, FormData>(
     publicarSacola,
@@ -60,10 +65,8 @@ export function CriarSacolaForm({ modelos }: { modelos: Modelo[] }) {
     setBagId(m.bagId);
     setNome(m.nome);
     setCategoria(m.categoria);
-    setPreco(String(m.preco).replace(".", ","));
-    setPrecoOriginal(
-      m.precoOriginal != null ? String(m.precoOriginal).replace(".", ",") : "",
-    );
+    setPreco(paraCampo(m.preco));
+    setPrecoOriginal(m.precoOriginal != null ? paraCampo(m.precoOriginal) : "");
     setQuantidade(m.quantidade);
     setInicio(m.janelaInicio);
     setFim(m.janelaFim);
@@ -97,8 +100,12 @@ export function CriarSacolaForm({ modelos }: { modelos: Modelo[] }) {
   const pO = parseNum(precoOriginal);
   const p = parseNum(preco);
   const pct = pO > 0 && p > 0 ? Math.round((1 - p / pO) * 100) : 0;
-  // The review recommends selling at 30–50% of the window price.
-  const dentroDaFaixa = pct >= 50 && pct <= 70;
+  // The recommended 50–70% band is the PRICE as a share of the window value,
+  // not the discount: the design labels −38% as "dentro da faixa", and
+  // 27,90 / 45,00 = 62%. Checking the discount against 50–70 would have
+  // called every healthy price too cheap.
+  const share = pO > 0 && p > 0 ? Math.round((p / pO) * 100) : 0;
+  const dentroDaFaixa = share >= 50 && share <= 70;
 
   return (
     <form action={action} className="pb-6">
@@ -290,9 +297,9 @@ export function CriarSacolaForm({ modelos }: { modelos: Modelo[] }) {
             −{pct}% ·{" "}
             {dentroDaFaixa
               ? "dentro da faixa recomendada (50–70%)"
-              : pct < 50
-                ? "desconto baixo — a faixa que mais vende é 50–70%"
-                : "desconto alto — confira se ainda compensa"}
+              : share > 70
+                ? `preço em ${share}% do valor de vitrine — a faixa que mais vende é 50–70%`
+                : `preço em ${share}% do valor de vitrine — abaixo da faixa de 50–70%`}
           </p>
         )}
 
@@ -456,7 +463,9 @@ function ConteudoEditor({
             key={`${c.label}-${i}`}
             className="flex items-center gap-2 rounded-xl border-[1.5px] border-sage-line bg-white p-2.5"
           >
-            <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold">
+            {/* wraps rather than truncates: you have to be able to read what
+                you promised the customer */}
+            <span className="min-w-0 flex-1 text-[13.5px] font-semibold leading-[1.3]">
               {c.label}
             </span>
             {["Provável", "Possível"].map((t) => (
