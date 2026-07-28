@@ -17,7 +17,7 @@ export const navConsumidor: NavItem[] = [
 ];
 
 export const navParceiro: NavItem[] = [
-  { href: "/parceiro", icon: "🛍️", iconKey: "home", label: "Sacolas" },
+  { href: "/parceiro", icon: "🛍️", iconKey: "home", label: "Hoje" },
   { href: "/parceiro/desempenho", icon: "📊", iconKey: "chart", label: "Desempenho" },
   { href: "/parceiro/avaliacoes", icon: "💬", iconKey: "star", label: "Avaliações" },
   { href: "/parceiro/perfil", icon: "⚙️", iconKey: "store", label: "Loja" },

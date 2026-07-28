@@ -118,3 +118,23 @@ export async function marcarNaoRetirada(formData: FormData) {
     .eq("id", orderId);
   redirect(`/parceiro/sacolas/${listingId}`);
 }
+
+/**
+ * P2 — hand the bag over. The consequence is stated on the screen before the
+ * button, because the money already left the customer at reservation: this
+ * records the pickup and releases the payout, it does NOT charge anyone.
+ */
+export async function entregarSacola(formData: FormData) {
+  const orderId = String(formData.get("orderId") ?? "");
+  if (!orderId) redirect("/parceiro/retirada?erro=1");
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from("orders")
+    .update({ status: "retirado", picked_up_at: new Date().toISOString() })
+    .eq("id", orderId)
+    .eq("status", "reservado"); // never re-deliver an order twice
+
+  if (error) redirect("/parceiro/retirada?erro=1");
+  redirect("/parceiro?entregue=1");
+}
