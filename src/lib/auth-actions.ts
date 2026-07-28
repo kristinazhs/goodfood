@@ -144,13 +144,26 @@ export async function signUpEstablishment(
   const endereco = String(formData.get("endereco") ?? "").trim();
   const categoria = String(formData.get("categoria") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
-  const telefone = String(formData.get("telefone") ?? "").trim();
+  const telefone = String(formData.get("whatsapp") ?? "").trim();
   const senha = String(formData.get("senha") ?? "");
+  const aceite = formData.get("aceite") === "on";
+
+  // Opening hours arrive as JSON from the client (one entry per weekday).
+  let horarios: Record<string, unknown> = {};
+  try {
+    const parsed = JSON.parse(String(formData.get("horarios") ?? "{}"));
+    if (parsed && typeof parsed === "object") horarios = parsed;
+  } catch {
+    horarios = {};
+  }
 
   if (!nome) return { error: "Informe o nome do negócio." };
+  if (!endereco) return { error: "Informe o endereço da retirada." };
   if (!email) return { error: "Informe o e-mail." };
   if (senha.length < 8)
     return { error: "A senha precisa ter ao menos 8 caracteres." };
+  if (!aceite)
+    return { error: "Aceite o contrato de parceria para continuar." };
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signUp({
@@ -172,6 +185,8 @@ export async function signUpEstablishment(
       cnpj: cnpj || null,
       categoria: categoria || null,
       endereco: endereco || null,
+      whatsapp: telefone || null,
+      horarios,
       lat: geo?.lat ?? null,
       lng: geo?.lng ?? null,
     });
