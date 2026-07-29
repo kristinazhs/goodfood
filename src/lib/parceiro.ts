@@ -678,3 +678,69 @@ export async function getAvaliacoes(): Promise<AvaliacoesLoja> {
     semResposta: itens.filter((a) => !a.resposta).length,
   };
 }
+
+// ---- B: payout details ---------------------------------------------------
+// Its own table, because establishments is world-readable and an account
+// number on it would be published. Nothing here is wired to a payment
+// provider yet — see migration 0019.
+
+export interface DadosBancarios {
+  titular: string;
+  documento: string;
+  banco: string;
+  agencia: string;
+  conta: string;
+  tipoConta: string;
+  chavePix: string;
+}
+
+export const DADOS_BANCARIOS_VAZIOS: DadosBancarios = {
+  titular: "",
+  documento: "",
+  banco: "",
+  agencia: "",
+  conta: "",
+  tipoConta: "corrente",
+  chavePix: "",
+};
+
+export async function getDadosBancarios(): Promise<{
+  dados: DadosBancarios;
+  configurado: boolean;
+}> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { dados: DADOS_BANCARIOS_VAZIOS, configurado: false };
+
+  const { data: est } = await supabase
+    .from("establishments")
+    .select("id")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!est) return { dados: DADOS_BANCARIOS_VAZIOS, configurado: false };
+
+  const { data, error } = await supabase
+    .from("dados_bancarios")
+    .select("titular, documento, banco, agencia, conta, tipo_conta, chave_pix")
+    .eq("establishment_id", est.id)
+    .maybeSingle();
+  if (error) throw new Error("Não foi possível carregar os dados de repasse.");
+  if (!data) return { dados: DADOS_BANCARIOS_VAZIOS, configurado: false };
+
+  return {
+    dados: {
+      titular: data.titular ?? "",
+      documento: data.documento ?? "",
+      banco: data.banco ?? "",
+      agencia: data.agencia ?? "",
+      conta: data.conta ?? "",
+      tipoConta: data.tipo_conta ?? "corrente",
+      chavePix: data.chave_pix ?? "",
+    },
+    configurado: true,
+  };
+}

@@ -425,3 +425,50 @@ export async function salvarPerfilPublico(
 
   redirect("/parceiro/perfil?perfil=1");
 }
+
+/**
+ * B — payout details. One row per shop, upserted.
+ *
+ * Nothing is paid out on this yet: the provider (Mercado Pago vs Pagar.me)
+ * is undecided and will dictate the final field list. The screen says so.
+ */
+export async function salvarDadosBancarios(
+  _prev: PublishState,
+  formData: FormData,
+): Promise<PublishState> {
+  const campo = (n: string) => String(formData.get(n) ?? "").trim();
+  const tipoConta = campo("tipoConta") === "poupanca" ? "poupanca" : "corrente";
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada. Entre novamente." };
+
+  const { data: est } = await supabase
+    .from("establishments")
+    .select("id")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!est) return { error: "Não encontramos o seu estabelecimento." };
+
+  const { error } = await supabase.from("dados_bancarios").upsert(
+    {
+      establishment_id: est.id,
+      titular: campo("titular") || null,
+      documento: campo("documento") || null,
+      banco: campo("banco") || null,
+      agencia: campo("agencia") || null,
+      conta: campo("conta") || null,
+      tipo_conta: tipoConta,
+      chave_pix: campo("chavePix") || null,
+      atualizado_em: new Date().toISOString(),
+    },
+    { onConflict: "establishment_id" },
+  );
+  if (error) return { error: "Não foi possível salvar: " + error.message };
+
+  redirect("/parceiro/perfil?repasse=1");
+}

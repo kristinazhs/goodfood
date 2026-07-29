@@ -4,7 +4,7 @@ import { BottomNav } from "@/components/ui/bottom-nav";
 import { signOut } from "@/lib/auth-actions";
 import { brl } from "@/lib/format";
 import { navParceiro } from "@/lib/nav";
-import { getLoja, getModelos } from "@/lib/parceiro";
+import { getDadosBancarios, getLoja, getModelos } from "@/lib/parceiro";
 import { publicarModeloHoje } from "@/lib/parceiro-actions";
 
 export const dynamic = "force-dynamic";
@@ -23,13 +23,21 @@ const ROTULO_CATEGORIA: Record<string, string> = {
 export default async function Loja({
   searchParams,
 }: {
-  searchParams: Promise<{ erro?: string; salvo?: string; perfil?: string }>;
+  searchParams: Promise<{
+    erro?: string;
+    salvo?: string;
+    perfil?: string;
+    repasse?: string;
+  }>;
 }) {
-  const [{ erro, salvo, perfil }, loja, modelos] = await Promise.all([
-    searchParams,
-    getLoja(),
-    getModelos(),
-  ]);
+  const [{ erro, salvo, perfil, repasse }, loja, modelos, banco] =
+    await Promise.all([
+      searchParams,
+      getLoja(),
+      getModelos(),
+      getDadosBancarios(),
+    ]);
+  const repasseConfigurado = banco.configurado;
 
   return (
     <>
@@ -51,6 +59,17 @@ export default async function Loja({
             </p>
           </div>
         </div>
+
+        {repasse === "1" && (
+          <div className="mx-5 mt-4 rounded-xl bg-sage px-3.5 py-3">
+            <p className="text-[13px] font-bold leading-[1.3] text-brand-dark">
+              Dados de repasse salvos
+            </p>
+            <p className="mt-1 text-[12.5px] font-medium leading-[1.4] text-brand-dark">
+              Ficam guardados até os repasses começarem. Só a sua loja vê.
+            </p>
+          </div>
+        )}
 
         {perfil === "1" && (
           <div className="mx-5 mt-4 rounded-xl bg-sage px-3.5 py-3">
@@ -171,8 +190,6 @@ export default async function Loja({
         </div>
 
         <div className="flex flex-col gap-2.5 px-5">
-          {/* No chevron on the row that still has nowhere to go — an arrow
-              that leads nowhere is worse than no arrow. */}
           <Link
             href="/parceiro/perfil/publico"
             className="flex min-h-11 items-center gap-3 rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5"
@@ -190,14 +207,24 @@ export default async function Loja({
             </span>
           </Link>
 
-          <div className="rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5">
-            <div className="text-sm font-bold leading-[1.3]">
-              Repasse e dados bancários
-            </div>
-            <div className="mt-0.5 text-[12.5px] font-medium leading-[1.35] text-muted">
-              Ainda não configurado · em breve
-            </div>
-          </div>
+          <Link
+            href="/parceiro/perfil/repasse"
+            className="flex min-h-11 items-center gap-3 rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold leading-[1.3]">
+                Repasse e dados bancários
+              </span>
+              <span className="mt-0.5 block text-[12.5px] font-medium leading-[1.35] text-muted">
+                {repasseConfigurado
+                  ? "Dados salvos · repasses ainda não ativos"
+                  : "Deixe pronto para quando os repasses começarem"}
+              </span>
+            </span>
+            <span className="shrink-0 text-base font-bold leading-none text-[#8d8d84]">
+              ›
+            </span>
+          </Link>
 
           <a
             href="mailto:contato@goodfood.app?subject=Ajuda%20para%20parceiros"
