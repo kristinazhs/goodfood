@@ -213,7 +213,7 @@ export async function signUpEstablishment(
     }
   }
 
-  redirect("/parceiro");
+  redirect("/parceiro?cadastrado=1");
 }
 
 export async function signOut() {

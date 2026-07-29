@@ -20,7 +20,7 @@ const CATEGORIAS: CategoriaId[] = [
 export default async function ConsumidorHome({
   searchParams,
 }: {
-  searchParams: Promise<{ cat?: string }>;
+  searchParams: Promise<{ cat?: string; cancelado?: string }>;
 }) {
   const [params, todas, sessao] = await Promise.all([
     searchParams,
@@ -52,6 +52,20 @@ export default async function ConsumidorHome({
     <>
       <main className="flex flex-1 flex-col">
         <FeedConsumidor primeiroNome={primeiroNome} cat={cat} todas={todas}>
+          {/* Where a cancellation lands: the evening just freed up, so the
+              useful next thing is what else is available now. */}
+          {params.cancelado === "1" && (
+            <div className="mx-5 mt-4 rounded-xl bg-sage px-3.5 py-3">
+              <p className="text-[13px] font-bold leading-[1.3] text-brand-dark">
+                Reserva cancelada
+              </p>
+              <p className="mt-1 text-[12.5px] font-medium leading-[1.4] text-brand-dark">
+                O reembolso total já foi solicitado. Veja o que mais tem perto
+                de você agora.
+              </p>
+            </div>
+          )}
+
           {sacolas.length === 0 ? (
             <div className="px-5 py-16 text-center text-sm text-muted">
               {vazio}

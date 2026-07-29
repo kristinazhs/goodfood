@@ -6,7 +6,7 @@ import { contagemRetirada, horaMinutoSP } from "@/lib/datas";
 import { minutosAPe } from "@/lib/distancia";
 import { brl } from "@/lib/format";
 import { navConsumidor } from "@/lib/nav";
-import { cancelarPedido } from "@/lib/pedido-actions";
+import { CancelarPedido } from "@/components/consumidor/cancelar-pedido";
 import { getPedidoDetalhe } from "@/lib/pedidos";
 
 export const dynamic = "force-dynamic";
@@ -131,15 +131,7 @@ export default async function PedidoConfirmacao({
 
         <div className="mx-5 mt-3">
           {podeCancelar ? (
-            <form action={cancelarPedido}>
-              <input type="hidden" name="orderId" value={pedido.id} />
-              <button
-                type="submit"
-                className="h-11 w-full text-[13px] font-semibold text-muted underline"
-              >
-                Cancelar e receber reembolso (até {horaLimite})
-              </button>
-            </form>
+            <CancelarPedido orderId={pedido.id} horaLimite={horaLimite} />
           ) : pedido.status === "reservado" ? (
             <p className="text-center text-[12.5px] font-medium leading-[1.4] text-muted">
               O prazo de cancelamento encerrou às {horaLimite}. Não vai

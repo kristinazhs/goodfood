@@ -117,5 +117,5 @@ export async function cancelarPedido(formData: FormData) {
   });
   if (error) redirect(`/consumidor/pedido/${orderId}?erro=cancelar`);
 
-  redirect("/consumidor/pedidos?cancelado=1");
+  redirect("/consumidor?cancelado=1");
 }

@@ -25,10 +25,14 @@ const DIAS = [
 export default async function ParceiroHoje({
   searchParams,
 }: {
-  searchParams: Promise<{ entregue?: string; publicada?: string }>;
+  searchParams: Promise<{
+    entregue?: string;
+    publicada?: string;
+    cadastrado?: string;
+  }>;
 }) {
   const [
-    { entregue, publicada },
+    { entregue, publicada, cadastrado },
     { establishment, sacolas },
     fila,
   ] = await Promise.all([
@@ -88,6 +92,23 @@ export default async function ParceiroHoje({
         {entregue && (
           <div className="mx-5 mt-4 rounded-xl bg-sage px-3.5 py-3 text-[13px] font-bold text-brand-dark">
             Retirada registrada. O repasse entra no seu extrato.
+          </div>
+        )}
+
+        {/* First thing a new partner sees. Signing up used to land here with
+            no acknowledgement at all, which reads as "did that work?". */}
+        {cadastrado === "1" && (
+          <div className="mx-5 mt-4 rounded-xl bg-sage px-3.5 py-3">
+            <p className="text-[13px] font-bold leading-[1.3] text-brand-dark">
+              Negócio cadastrado
+            </p>
+            <p className="mt-1 text-[12.5px] font-medium leading-[1.4] text-brand-dark">
+              Está tudo pronto. Os dados do seu negócio ficam em{" "}
+              <Link href="/parceiro/perfil" className="font-bold underline">
+                Loja
+              </Link>
+              . Publique sua primeira sacola para começar a vender.
+            </p>
           </div>
         )}
 

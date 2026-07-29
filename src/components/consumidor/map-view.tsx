@@ -7,6 +7,7 @@ import { FotoSacola } from "@/components/consumidor/foto-sacola";
 import type { PontoMapa } from "@/components/consumidor/leaflet-map";
 import { ORIGEM } from "@/lib/distancia";
 import { brl } from "@/lib/format";
+import { escolherNoMapa } from "@/lib/mapa";
 import type { Sacola } from "@/lib/types";
 
 const LeafletMap = dynamic(() => import("./leaflet-map"), {
@@ -76,16 +77,10 @@ export function MapView({ sacolas }: { sacolas: Sacola[] }) {
   // The card shows the shop's most urgent sacola. With nothing tapped yet the
   // map still opens on a decision rather than an empty sheet: the soonest
   // window wins, matching the order the feed uses.
-  const selecionada = useMemo(() => {
-    const candidatas = lojaSelecionada
-      ? visiveis.filter((s) => s.loja === lojaSelecionada)
-      : visiveis;
-    return (
-      [...candidatas].sort((a, b) =>
-        (a.janelaFim ?? "").localeCompare(b.janelaFim ?? ""),
-      )[0] ?? null
-    );
-  }, [visiveis, lojaSelecionada]);
+  const { selecionada, esgotada } = useMemo(
+    () => escolherNoMapa(visiveis, lojaSelecionada),
+    [visiveis, lojaSelecionada],
+  );
 
   // Which pin reads as selected, including the default one.
   const lojaAtiva = selecionada?.loja ?? null;
@@ -297,13 +292,26 @@ export function MapView({ sacolas }: { sacolas: Sacola[] }) {
             </span>
           </div>
 
+          {esgotada && (
+            <p className="mt-2.5 text-[12.5px] font-medium leading-[1.4] text-muted">
+              Tudo reservado nesta loja hoje. Toque em outro pin para ver o que
+              ainda tem perto de você.
+            </p>
+          )}
+
           <div className="mt-3 flex gap-2.5">
-            <Link
-              href={`/consumidor/sacola/${selecionada.id}?de=mapa`}
-              className="flex h-12 flex-1 items-center justify-center rounded-[14px] bg-brand text-[15px] font-bold text-white transition-transform active:scale-[0.98]"
-            >
-              Ver sacola
-            </Link>
+            {esgotada ? (
+              <span className="flex h-12 flex-1 items-center justify-center rounded-[14px] bg-sage text-[15px] font-bold text-muted">
+                Esgotada hoje
+              </span>
+            ) : (
+              <Link
+                href={`/consumidor/sacola/${selecionada.id}?de=mapa`}
+                className="flex h-12 flex-1 items-center justify-center rounded-[14px] bg-brand text-[15px] font-bold text-white transition-transform active:scale-[0.98]"
+              >
+                Ver sacola
+              </Link>
+            )}
             <a
               href={rota}
               target="_blank"
