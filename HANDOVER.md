@@ -59,8 +59,19 @@ to do.**
 | P5 Loja | done |
 | P4 Desempenho | **demo only — not connected**, see `src/lib/parceiro-mock.ts` |
 | P6 Cadastrar negócio | done |
-| **C7 Perfil** | **not started** |
-| **C4/C5 Reserva + pagamento** | **not started — needs the payments decision** |
+| C7 Perfil | done — and it made the ★ ratings real |
+| C4 Reserva + pagamento | done — payment itself is still simulated |
+| C5 Código de retirada | done — includes cancelling inside the refund window |
+
+**All 16 screens are built.** What remains is listed screen by screen in
+`PENDENCIAS.md`: placeholders, dead controls, missing functions and known
+defects. Read that file before planning any work.
+
+### Ratings are real
+
+The `reviews` table existed from migration 0001 and nothing ever wrote to
+it, so every ★ was hardcoded to 4.8. C7 now writes reviews, and a shop with
+none shows no star at all rather than an invented one.
 
 ### The two-sided loop works end to end
 
@@ -126,7 +137,7 @@ Reintroduce these only when the data exists to support them:
 
 ## Migrations
 
-`0001`–`0005` predate the redesign. `0006`–`0016` are the redesign's:
+`0001`–`0005` predate the redesign. `0006`–`0018` are the redesign's:
 
 | # | What |
 | --- | --- |
@@ -137,6 +148,8 @@ Reintroduce these only when the data exists to support them:
 | 0012–0014 | Demo ownership plumbing so a partner account owns a shop with real activity |
 | 0015 | `bags.foto_url` + the public `sacolas` storage bucket and policies |
 | 0016 | `establishments.horarios` (jsonb, per weekday) + `whatsapp` |
+| 0017 | Removes duplicate listings of the same bag on the same day |
+| 0018 | `orders.metodo_pagamento` + `cancelar_reserva()` (15-min window, restores stock) |
 
 All have been run against the live database.
 
