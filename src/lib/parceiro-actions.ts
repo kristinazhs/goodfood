@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { hojeSP, timestampSP } from "./datas";
 import { createSupabaseServerClient } from "./supabase-server";
@@ -341,4 +342,34 @@ export async function publicarModeloHoje(formData: FormData) {
   if (error) redirect("/parceiro/perfil?erro=1");
 
   redirect("/parceiro?publicado=1");
+}
+
+/**
+ * G — the shop's public reply to a review.
+ *
+ * Goes through responder_avaliacao() rather than a plain update: RLS grants
+ * whole rows, so an update policy on reviews would also let a shop rewrite
+ * the customer's rating and comment. The function writes the reply and
+ * nothing else, and checks ownership itself. Passing an empty string clears
+ * a reply that was sent by mistake.
+ */
+export async function responderAvaliacao(
+  _prev: PublishState,
+  formData: FormData,
+): Promise<PublishState> {
+  const reviewId = String(formData.get("reviewId") ?? "");
+  const resposta = String(formData.get("resposta") ?? "").trim();
+  if (!reviewId) return { error: "Avaliação não encontrada." };
+  if (resposta.length > 600)
+    return { error: "A resposta ficou longa demais (máx. 600 caracteres)." };
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.rpc("responder_avaliacao", {
+    p_review_id: reviewId,
+    p_resposta: resposta,
+  });
+  if (error) return { error: "Não foi possível salvar a resposta." };
+
+  revalidatePath("/parceiro/avaliacoes");
+  return {};
 }

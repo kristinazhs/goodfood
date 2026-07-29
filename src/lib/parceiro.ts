@@ -1,4 +1,4 @@
-import { horaMinutoSP, hojeSP } from "./datas";
+import { haQuanto, horaMinutoSP, hojeSP } from "./datas";
 import { janelaForaDoHorario, type Horarios } from "./horarios";
 import type { PedidoStatus } from "./pedidos";
 import { createSupabaseServerClient } from "./supabase-server";
@@ -573,5 +573,101 @@ export async function getLoja(): Promise<Loja | null> {
     nome: data.nome,
     endereco: [data.endereco, data.bairro].filter(Boolean).join(" — "),
     categoria: data.categoria,
+  };
+}
+
+// ---- G: real reviews for the owning shop, with its reply -----------------
+// The screen was mock until now, which is why "Responder" did nothing: there
+// was no review to answer. The reviewer's name comes from orders.cliente_nome
+// (migration 0011) because a shop cannot read profiles.
+
+export interface AvaliacaoLoja {
+  id: string;
+  autor: string;
+  quando: string;
+  nota: number;
+  texto: string;
+  sacola: string | null;
+  resposta: string | null;
+  /** A poor rating is actionable, not just readable. */
+  critica: boolean;
+}
+
+export interface AvaliacoesLoja {
+  itens: AvaliacaoLoja[];
+  media: number | null;
+  total: number;
+  semResposta: number;
+}
+
+interface AvaliacaoRow {
+  id: string;
+  nota: number;
+  comentario: string | null;
+  created_at: string;
+  resposta: string | null;
+  order: {
+    cliente_nome: string | null;
+    listing: { bag: { nome: string } } | null;
+  } | null;
+}
+
+export async function getAvaliacoes(): Promise<AvaliacoesLoja> {
+  const nenhuma: AvaliacoesLoja = {
+    itens: [],
+    media: null,
+    total: 0,
+    semResposta: 0,
+  };
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return nenhuma;
+
+  const { data: est } = await supabase
+    .from("establishments")
+    .select("id")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!est) return nenhuma;
+
+  const { data, error } = await supabase
+    .from("reviews")
+    .select(
+      `id, nota, comentario, created_at, resposta,
+       order:orders ( cliente_nome, listing:listings ( bag:bags ( nome ) ) )`,
+    )
+    .eq("establishment_id", est.id)
+    .order("created_at", { ascending: false });
+
+  // An unread error here used to look like "no reviews yet", which is a very
+  // different thing to tell a shop owner.
+  if (error) throw new Error("Não foi possível carregar as avaliações.");
+
+  const linhas = (data ?? []) as unknown as AvaliacaoRow[];
+  const itens: AvaliacaoLoja[] = linhas.map((r) => ({
+    id: r.id,
+    autor: r.order?.cliente_nome ?? "Cliente",
+    quando: haQuanto(r.created_at),
+    nota: r.nota,
+    texto: r.comentario ?? "",
+    sacola: r.order?.listing?.bag?.nome ?? null,
+    resposta: r.resposta,
+    critica: r.nota <= 3,
+  }));
+
+  const total = itens.length;
+  const media =
+    total > 0 ? itens.reduce((s, a) => s + a.nota, 0) / total : null;
+
+  return {
+    itens,
+    media,
+    total,
+    semResposta: itens.filter((a) => !a.resposta).length,
   };
 }

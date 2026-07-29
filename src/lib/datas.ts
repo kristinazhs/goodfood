@@ -97,3 +97,15 @@ export function diaMes(iso: string): string {
   );
   return `${dia} ${mes}`;
 }
+
+/** "hoje", "ontem", "há 3 dias", "há 2 semanas" — for review timestamps. */
+export function haQuanto(iso: string): string {
+  const dias = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (dias <= 0) return "hoje";
+  if (dias === 1) return "ontem";
+  if (dias < 7) return `há ${dias} dias`;
+  const semanas = Math.floor(dias / 7);
+  if (semanas < 5) return semanas === 1 ? "há 1 semana" : `há ${semanas} semanas`;
+  const meses = Math.floor(dias / 30);
+  return meses <= 1 ? "há 1 mês" : `há ${meses} meses`;
+}

@@ -16,6 +16,8 @@ export interface AvaliacaoPendente {
 }
 
 export interface MinhaAvaliacao {
+  /** The shop's public reply, shown under the review the customer wrote. */
+  resposta?: string | null;
   id: string;
   loja: string;
   nota: number;
@@ -81,6 +83,7 @@ interface MinhaRow {
   nota: number;
   comentario: string | null;
   created_at: string;
+  resposta: string | null;
   establishment: { nome: string };
 }
 
@@ -95,7 +98,7 @@ export async function getMinhasAvaliacoes(): Promise<MinhaAvaliacao[]> {
   const { data } = await supabase
     .from("reviews")
     .select(
-      `id, nota, comentario, created_at,
+      `id, nota, comentario, created_at, resposta,
        establishment:establishments!inner ( nome )`,
     )
     .eq("consumer_id", user.id)
@@ -107,6 +110,7 @@ export async function getMinhasAvaliacoes(): Promise<MinhaAvaliacao[]> {
     nota: r.nota,
     comentario: r.comentario,
     quando: diaMes(r.created_at),
+    resposta: r.resposta,
   }));
 }
 

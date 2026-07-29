@@ -129,6 +129,17 @@ export default async function Perfil({
                       {a.comentario}
                     </p>
                   )}
+                  {/* Answering is only worth doing if the customer sees it. */}
+                  {a.resposta && (
+                    <div className="mt-2.5 rounded-xl bg-sage px-3 py-2.5">
+                      <div className="text-[11.5px] font-extrabold uppercase leading-none tracking-[0.5px] text-brand-dark">
+                        Resposta de {a.loja}
+                      </div>
+                      <p className="mt-1.5 text-[13px] leading-[1.5] text-brand-dark">
+                        {a.resposta}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
