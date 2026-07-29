@@ -373,3 +373,55 @@ export async function responderAvaliacao(
   revalidatePath("/parceiro/avaliacoes");
   return {};
 }
+
+/**
+ * H — the shop's public profile: photo, description and opening hours.
+ *
+ * Categoria is deliberately absent: the bag type lives on the sacola, and a
+ * shop-level type only duplicated it (decided 2026-07-27).
+ */
+export async function salvarPerfilPublico(
+  _prev: PublishState,
+  formData: FormData,
+): Promise<PublishState> {
+  const descricao = String(formData.get("descricao") ?? "").trim();
+  const fotoUrl = String(formData.get("fotoUrl") ?? "").trim();
+
+  if (descricao.length > 400)
+    return { error: "A descrição ficou longa demais (máx. 400 caracteres)." };
+
+  let horarios: Record<string, unknown> = {};
+  try {
+    const parsed = JSON.parse(String(formData.get("horarios") ?? "{}"));
+    if (parsed && typeof parsed === "object") horarios = parsed;
+  } catch {
+    horarios = {};
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Sessão expirada. Entre novamente." };
+
+  const { data: est } = await supabase
+    .from("establishments")
+    .select("id")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!est) return { error: "Não encontramos o seu estabelecimento." };
+
+  const { error } = await supabase
+    .from("establishments")
+    .update({
+      descricao: descricao || null,
+      foto_url: fotoUrl || null,
+      horarios,
+    })
+    .eq("id", est.id);
+  if (error) return { error: "Não foi possível salvar: " + error.message };
+
+  redirect("/parceiro/perfil?perfil=1");
+}

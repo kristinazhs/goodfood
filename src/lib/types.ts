@@ -17,6 +17,8 @@ export interface Sacola {
   loja: string;
   distancia: string;
   emoji: string;
+  /** The shop that sells it — links to its public page. */
+  lojaId: string;
   corThumb: string;
   /** Shop-window photo; null falls back to the striped placeholder. */
   fotoUrl: string | null;

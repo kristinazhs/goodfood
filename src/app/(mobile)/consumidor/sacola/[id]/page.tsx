@@ -105,7 +105,14 @@ export default async function SacolaDetalhe({
           </div>
 
           <div className="mt-1.5 text-sm font-medium leading-[1.4] text-muted">
-            {sacola.loja}
+            {/* The shop name is the one thing here people want to look up
+                before buying, and it led nowhere until now. */}
+            <Link
+              href={`/loja/${sacola.lojaId}`}
+              className="font-bold text-brand-dark underline"
+            >
+              {sacola.loja}
+            </Link>
             {sacola.distancia ? ` · ${sacola.distancia}` : ""}
             {/* No star until the shop actually has reviews. */}
             {sacola.avaliacao != null && (

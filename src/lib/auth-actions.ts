@@ -159,6 +159,7 @@ export async function signUpEstablishment(
   const nome = String(formData.get("nome") ?? "").trim(); // nome do negócio
   const cnpj = String(formData.get("cnpj") ?? "").trim();
   const endereco = String(formData.get("endereco") ?? "").trim();
+  const descricao = String(formData.get("descricao") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const telefone = String(formData.get("whatsapp") ?? "").trim();
   const senha = String(formData.get("senha") ?? "");
@@ -199,6 +200,7 @@ export async function signUpEstablishment(
       owner_id: userId,
       nome,
       cnpj: cnpj || null,
+      descricao: descricao || null,
       // No category on the shop: the consumer filter reads the SACOLA's type,
       // which P3 asks for per bag. A shop-level type only duplicated it.
       categoria: null,

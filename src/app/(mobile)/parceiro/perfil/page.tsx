@@ -23,9 +23,9 @@ const ROTULO_CATEGORIA: Record<string, string> = {
 export default async function Loja({
   searchParams,
 }: {
-  searchParams: Promise<{ erro?: string; salvo?: string }>;
+  searchParams: Promise<{ erro?: string; salvo?: string; perfil?: string }>;
 }) {
-  const [{ erro, salvo }, loja, modelos] = await Promise.all([
+  const [{ erro, salvo, perfil }, loja, modelos] = await Promise.all([
     searchParams,
     getLoja(),
     getModelos(),
@@ -35,7 +35,13 @@ export default async function Loja({
     <>
       <main className="flex-1 pb-6">
         <div className="flex items-center gap-3.5 px-5 pt-5">
-          <FotoSacola size={62} radius={16} legenda={"foto\nloja"} alt="" />
+          <FotoSacola
+            src={loja?.fotoUrl ?? null}
+            size={62}
+            radius={16}
+            legenda={"foto\nloja"}
+            alt=""
+          />
           <div className="min-w-0 flex-1">
             <h1 className="truncate font-display text-xl font-semibold leading-[1.2]">
               {loja?.nome ?? "Sua loja"}
@@ -45,6 +51,17 @@ export default async function Loja({
             </p>
           </div>
         </div>
+
+        {perfil === "1" && (
+          <div className="mx-5 mt-4 rounded-xl bg-sage px-3.5 py-3">
+            <p className="text-[13px] font-bold leading-[1.3] text-brand-dark">
+              Perfil público atualizado
+            </p>
+            <p className="mt-1 text-[12.5px] font-medium leading-[1.4] text-brand-dark">
+              É assim que sua loja aparece para quem procura sacola.
+            </p>
+          </div>
+        )}
 
         {salvo === "1" && (
           <div className="mx-5 mt-4 rounded-xl bg-sage px-3.5 py-3">
@@ -154,14 +171,24 @@ export default async function Loja({
         </div>
 
         <div className="flex flex-col gap-2.5 px-5">
-          {/* No chevron on the two that have nowhere to go yet — an arrow
+          {/* No chevron on the row that still has nowhere to go — an arrow
               that leads nowhere is worse than no arrow. */}
-          <div className="rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5">
-            <div className="text-sm font-bold leading-[1.3]">Perfil público</div>
-            <div className="mt-0.5 text-[12.5px] font-medium leading-[1.35] text-muted">
-              Foto, descrição e horários · em breve
-            </div>
-          </div>
+          <Link
+            href="/parceiro/perfil/publico"
+            className="flex min-h-11 items-center gap-3 rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold leading-[1.3]">
+                Perfil público
+              </span>
+              <span className="mt-0.5 block text-[12.5px] font-medium leading-[1.35] text-muted">
+                Foto, descrição e horários
+              </span>
+            </span>
+            <span className="shrink-0 text-base font-bold leading-none text-[#8d8d84]">
+              ›
+            </span>
+          </Link>
 
           <div className="rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5">
             <div className="text-sm font-bold leading-[1.3]">

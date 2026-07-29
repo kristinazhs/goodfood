@@ -550,6 +550,10 @@ export interface Loja {
   nome: string;
   endereco: string;
   categoria: string | null;
+  /** Public profile — what a consumer sees on the shop's page. */
+  descricao: string | null;
+  fotoUrl: string | null;
+  horarios: Horarios;
 }
 
 export async function getLoja(): Promise<Loja | null> {
@@ -561,7 +565,7 @@ export async function getLoja(): Promise<Loja | null> {
 
   const { data } = await supabase
     .from("establishments")
-    .select("id, nome, endereco, bairro, categoria")
+    .select("id, nome, endereco, bairro, categoria, descricao, foto_url, horarios")
     .eq("owner_id", user.id)
     .order("created_at", { ascending: true })
     .limit(1)
@@ -573,6 +577,9 @@ export async function getLoja(): Promise<Loja | null> {
     nome: data.nome,
     endereco: [data.endereco, data.bairro].filter(Boolean).join(" — "),
     categoria: data.categoria,
+    descricao: data.descricao,
+    fotoUrl: data.foto_url,
+    horarios: (data.horarios ?? {}) as Horarios,
   };
 }
 

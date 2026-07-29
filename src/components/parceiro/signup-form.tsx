@@ -90,6 +90,20 @@ export function ParceiroSignupForm() {
         </label>
 
         <label className="block">
+          <span className={ROTULO}>Descrição do negócio</span>
+          <textarea
+            name="descricao"
+            rows={3}
+            maxLength={400}
+            placeholder="ex. Casa de pães de fermentação natural no Bom Fim. O que sobra da vitrine no fim do dia vira sacola surpresa."
+            className="w-full rounded-[14px] border-[1.5px] border-sage-line bg-white p-3.5 text-[14.5px] font-medium leading-[1.5] outline-none focus:border-brand"
+          />
+          <span className={AJUDA}>
+            É o que o cliente lê na sua página. Pode mudar depois em Loja.
+          </span>
+        </label>
+
+        <label className="block">
           <span className={ROTULO}>Endereço da retirada</span>
           <input
             name="endereco"

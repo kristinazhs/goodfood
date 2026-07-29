@@ -1,5 +1,6 @@
 import { getNotasPorLoja, type NotaLoja } from "@/lib/avaliacoes";
 import { distanciaAte } from "@/lib/distancia";
+import type { Horarios } from "@/lib/horarios";
 import { createSupabaseClient } from "@/lib/supabase";
 import type { CategoriaId, ConteudoSacola, Sacola } from "@/lib/types";
 
@@ -92,6 +93,7 @@ function toSacola(
     id: bag.id,
     nome: bag.nome,
     loja: est.nome,
+    lojaId: est.id,
     distancia: distanciaAte(est.lat, est.lng),
     emoji: bag.emoji ?? "🛍️",
     corThumb: bag.cor_thumb ?? "#E4EDE3",
@@ -229,4 +231,53 @@ export async function getSacolaPorId(id: string): Promise<Sacola | undefined> {
 
   const notas = await getNotasPorLoja([bag.establishment.id]);
   return toSacola(bag, bag.establishment, ativa, notas.get(bag.establishment.id));
+}
+
+// ---- H: the public page of one shop -------------------------------------
+// PENDENCIAS listed this as missing and it showed: search results for "Lojas"
+// opened a *sacola* because there was nowhere else to go.
+
+export interface LojaPublica {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  fotoUrl: string | null;
+  endereco: string;
+  horarios: Horarios;
+  avaliacao: number | null;
+  avaliacoesTotal: number;
+  sacolas: Sacola[];
+}
+
+export async function getLojaPublica(
+  id: string,
+): Promise<LojaPublica | null> {
+  const supabase = createSupabaseClient();
+
+  const { data: est, error } = await supabase
+    .from("establishments")
+    .select("id, nome, descricao, foto_url, endereco, bairro, lat, lng, horarios")
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error("Não foi possível carregar a loja.");
+  if (!est) return null;
+
+  const notas = await getNotasPorLoja([est.id]);
+  const nota = notas.get(est.id);
+
+  // Its sacolas on sale right now — same rules as the feed, so a shop page
+  // can never advertise something the feed would refuse to sell.
+  const todas = await getSacolasDisponiveis();
+
+  return {
+    id: est.id,
+    nome: est.nome,
+    descricao: est.descricao,
+    fotoUrl: est.foto_url,
+    endereco: [est.endereco, est.bairro].filter(Boolean).join(" — "),
+    horarios: (est.horarios ?? {}) as Horarios,
+    avaliacao: nota?.media ?? null,
+    avaliacoesTotal: nota?.total ?? 0,
+    sacolas: todas.filter((s) => s.lojaId === est.id),
+  };
 }
