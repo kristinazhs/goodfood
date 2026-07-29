@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 // C0 — splash and entry are ONE screen in two states.
 //
@@ -11,67 +11,204 @@ import { useEffect, useState } from "react";
 //
 // The splash also carries the promise, not just the brand — half a second of
 // full attention is too scarce to spend on a logo alone.
+//
+// HOW THE MOVEMENT WORKS
+//
+// The two states don't share a layout: the splash centres the logo in a
+// full-screen block, the header pins it to the bottom-left of a short one.
+// justify-content, align-items and text-align can't be animated, and neither
+// can a height of `auto` — so simply swapping the classes makes the screen
+// jump. Instead we measure the splash, switch to the real header layout, and
+// then use a transform to put the logo *back* where the splash had it before
+// releasing it. Only height and transform animate, and both are smooth.
 
 const JA_VISTO = "goodfood:splash-visto";
-const DURACAO_SPLASH = 1100;
+const DURACAO_SPLASH = 1100; // how long the full screen holds before opening
+const DURACAO_ABERTURA = 900; // how long the green takes to shrink
+const CURVA = "cubic-bezier(.4,0,.2,1)";
+
+type Fase = "entrada" | "splash" | "abrindo";
+
+type Medidas = { altura: number; logo: DOMRect; frase: DOMRect };
+
+// useLayoutEffect warns when rendered on the server, where there is nothing
+// to measure anyway. Measuring before the first paint is what stops the entry
+// screen from flashing for a frame on a first visit.
+const useEfeitoDeLayout = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+// Put an element back where it used to be, with no transition. Scale comes
+// from the width ratio, which absorbs the font-size change for free.
+function inverter(el: HTMLElement, antes: DOMRect) {
+  const agora = el.getBoundingClientRect();
+  const escala = agora.width > 0 ? antes.width / agora.width : 1;
+  el.style.transition = "none";
+  el.style.transformOrigin = "left top";
+  el.style.transform =
+    `translate(${antes.left - agora.left}px, ${antes.top - agora.top}px) ` +
+    `scale(${escala})`;
+}
+
+function soltar(el: HTMLElement) {
+  el.style.transition = `transform ${DURACAO_ABERTURA}ms ${CURVA}`;
+  el.style.transform = "none";
+}
+
+function limpar(el: HTMLElement | null) {
+  if (!el) return;
+  el.style.transition = "";
+  el.style.transform = "";
+  el.style.transformOrigin = "";
+  el.style.height = "";
+}
 
 export function Abertura() {
-  // Starts open (no splash) so a return visit never waits; the effect below
-  // decides whether this is a first launch.
-  const [aberto, setAberto] = useState(true);
-  const [montado, setMontado] = useState(false);
+  // Starts on the entry state so a return visit never waits, the page works
+  // without JS, and the layout we measure against is the real one.
+  const [fase, setFase] = useState<Fase>("entrada");
+  const [solto, setSolto] = useState(false);
 
-  useEffect(() => {
-    setMontado(true);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
+  const fraseRef = useRef<HTMLDivElement>(null);
+  const medidas = useRef<Medidas | null>(null);
+
+  const finalizar = useCallback(() => {
+    limpar(headerRef.current);
+    limpar(logoRef.current);
+    limpar(fraseRef.current);
+    setFase("entrada");
+  }, []);
+
+  // 1 — decide, before the first paint, whether this is a first launch.
+  useEfeitoDeLayout(() => {
     let visto = true;
     try {
       visto = sessionStorage.getItem(JA_VISTO) === "1";
     } catch {
       // storage blocked — just skip the splash
     }
-    if (visto) return;
+    const semMovimento = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (visto || semMovimento) return;
 
-    setAberto(false);
     try {
       sessionStorage.setItem(JA_VISTO, "1");
     } catch {
       // ignore
     }
-    const t = setTimeout(() => setAberto(true), DURACAO_SPLASH);
-    return () => clearTimeout(t);
+    setFase("splash");
   }, []);
 
-  // Before hydration we render the entry state, so the page is usable with
-  // no JS and never flashes a splash that can't animate away.
-  const splash = montado && !aberto;
+  // 2 — hold the full screen, and note exactly where the logo sits on it.
+  useEfeitoDeLayout(() => {
+    if (fase !== "splash") return;
+    const header = headerRef.current;
+    const logo = logoRef.current;
+    const frase = fraseRef.current;
+    if (!header || !logo || !frase) return;
+
+    medidas.current = {
+      altura: header.getBoundingClientRect().height,
+      logo: logo.getBoundingClientRect(),
+      frase: frase.getBoundingClientRect(),
+    };
+
+    const t = setTimeout(() => setFase("abrindo"), DURACAO_SPLASH);
+    return () => clearTimeout(t);
+  }, [fase]);
+
+  // 3 — the DOM is already in the header layout here. Send everything back to
+  // the splash with no transition, then release it over one animation.
+  useEfeitoDeLayout(() => {
+    if (fase !== "abrindo") return;
+    const antes = medidas.current;
+    const header = headerRef.current;
+    const logo = logoRef.current;
+    const frase = fraseRef.current;
+    if (!antes || !header || !logo || !frase) {
+      setSolto(true);
+      finalizar();
+      return;
+    }
+
+    // Where the green block ends up once it is only the rounded top bar.
+    const alturaFinal = header.getBoundingClientRect().height;
+
+    header.style.transition = "none";
+    header.style.height = `${antes.altura}px`;
+    inverter(logo, antes.logo);
+    inverter(frase, antes.frase);
+
+    // One whole frame later — a single rAF still runs before this paint.
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        header.style.transition =
+          `height ${DURACAO_ABERTURA}ms ${CURVA}, ` +
+          `border-radius ${DURACAO_ABERTURA}ms ${CURVA}`;
+        header.style.height = `${alturaFinal}px`;
+        soltar(logo);
+        soltar(frase);
+        setSolto(true);
+      });
+    });
+
+    // If transitionend never arrives, don't leave inline styles behind.
+    const rede = setTimeout(finalizar, DURACAO_ABERTURA + 300);
+
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+      clearTimeout(rede);
+    };
+  }, [fase, finalizar]);
+
+  const aoTerminar = useCallback(
+    (e: React.TransitionEvent<HTMLDivElement>) => {
+      if (e.target !== e.currentTarget || e.propertyName !== "height") return;
+      finalizar();
+    },
+    [finalizar],
+  );
+
+  const telaCheia = fase === "splash";
+  // The buttons, the sentence and the rounded corner arrive with the movement.
+  const revelado = fase === "entrada" || solto;
 
   return (
     <main className="flex flex-1 flex-col">
       <div
-        className={`relative shrink-0 overflow-hidden bg-brand px-6 transition-all duration-[900ms] ease-[cubic-bezier(.4,0,.2,1)] ${
-          splash
-            ? "h-[calc(100dvh-42px)] rounded-b-none pb-11 pt-11"
-            : "h-auto rounded-b-[32px] pb-[34px] pt-[46px]"
-        }`}
+        ref={headerRef}
+        onTransitionEnd={aoTerminar}
+        className={`relative shrink-0 overflow-hidden bg-brand px-6 ${
+          telaCheia
+            ? "h-[calc(100dvh-42px)] pb-11 pt-11"
+            : "h-auto pb-[34px] pt-[46px]"
+        } ${revelado ? "rounded-b-[32px]" : "rounded-b-none"}`}
       >
         <span className="absolute -left-12 -top-14 h-40 w-40 rounded-full bg-white/[0.05]" />
         <span className="absolute -bottom-8 -right-5 h-[90px] w-[90px] rounded-full bg-white/[0.05]" />
 
         <div
           className={`relative flex h-full flex-col ${
-            splash ? "items-center justify-center text-center" : "justify-end"
+            telaCheia ? "items-center justify-center text-center" : "justify-end"
           }`}
         >
+          {/* w-fit so these boxes hug the words: the transform that moves them
+              is measured from the glyphs, not from the full column width. */}
           <div
-            className={`font-display font-bold leading-none text-white transition-all duration-[900ms] ${
-              splash ? "text-[40px]" : "text-[32px]"
+            ref={logoRef}
+            className={`w-fit font-display font-bold leading-none text-white ${
+              telaCheia ? "text-[40px]" : "text-[32px]"
             }`}
           >
             GoodFood
           </div>
           <div
-            className={`text-mint transition-all duration-[900ms] ${
-              splash
+            ref={fraseRef}
+            className={`w-fit text-mint ${
+              telaCheia
                 ? "mt-3 text-sm font-medium leading-[1.4]"
                 : "mt-2.5 font-display text-lg font-medium leading-[1.3]"
             }`}
@@ -81,19 +218,27 @@ export function Abertura() {
             menos desperdício.
           </div>
 
-          {/* the sentence that says what the app is for — only in the header */}
+          {/* The sentence that says what the app is for — only in the header.
+              It takes up its real height as soon as we leave the splash and
+              only fades in, so the header has ONE final height to travel to.
+              Growing it during the movement made the green overshoot and
+              snap back at the end. */}
           <div
-            className={`max-w-[260px] overflow-hidden text-[12.5px] leading-[1.55] text-[#bfe3cc] transition-all duration-[900ms] ${
-              splash ? "mt-0 max-h-0 opacity-0" : "mt-3 max-h-24 opacity-100"
-            }`}
+            className={`max-w-[260px] overflow-hidden text-[12.5px] leading-[1.55] text-[#bfe3cc] transition-opacity duration-[900ms] ${
+              telaCheia ? "mt-0 max-h-0" : "mt-3"
+            } ${revelado ? "opacity-100" : "opacity-0"}`}
           >
             Sacolas surpresa de padarias, restaurantes e mercados de Porto
             Alegre com até 50% de desconto.
           </div>
         </div>
 
-        {splash && (
-          <div className="absolute inset-x-0 bottom-11 flex justify-center gap-[5px]">
+        {fase !== "entrada" && (
+          <div
+            className={`absolute inset-x-0 bottom-11 flex justify-center gap-[5px] transition-opacity duration-300 ${
+              revelado ? "opacity-0" : "opacity-100"
+            }`}
+          >
             <span className="h-[7px] w-[7px] animate-pulse rounded-full bg-white/85" />
             <span className="h-[7px] w-[7px] rounded-full bg-white/45" />
             <span className="h-[7px] w-[7px] rounded-full bg-white/45" />
@@ -103,7 +248,7 @@ export function Abertura() {
 
       <div
         className={`flex flex-1 flex-col px-5 pb-5 pt-6 transition-opacity duration-500 ${
-          splash ? "pointer-events-none opacity-0" : "opacity-100 delay-200"
+          revelado ? "opacity-100 delay-200" : "pointer-events-none opacity-0"
         }`}
       >
         {/* One decision at a time: the path 95% of people take comes first,

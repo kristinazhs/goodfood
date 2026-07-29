@@ -18,9 +18,7 @@ Tipo:
 
 ## C0 — Abertura (splash + entrada)
 
-| Tipo | Item | Detalhe |
-| --- | --- | --- |
-| 🔴 | **Animação travada / com salto** | O verde deveria encolher suavemente até virar o cabeçalho. Hoje o movimento não está fluido. Precisa ser refeito — provavelmente animando `height`/`transform` em vez de trocar classes de layout. |
+Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 
 ## C0b — Criar conta
 
@@ -178,4 +176,6 @@ Botão "meu local" que falhava em silêncio · chips duplicados no mapa ·
 "Publicar hoje" publicando a mesma sacola duas vezes no dia · publicação
 criando modelo duplicado toda vez · loja sem conseguir ver quem retira ·
 faixa de preço comparando a grandeza errada · QR falso · nota ★ fixa em 4,8 ·
-reserva aceita depois do prazo que a tela prometia.
+reserva aceita depois do prazo que a tela prometia · abertura que saltava em vez
+de deslizar (o verde ia direto de `100dvh` para `auto`, que não é animável, e o
+logo trocava de alinhamento em vez de se mover).
