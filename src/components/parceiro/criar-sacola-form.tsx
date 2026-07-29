@@ -50,11 +50,9 @@ const ROTULO = "mb-[7px] block text-[13px] font-bold leading-none text-[#4a4a44]
 
 export function CriarSacolaForm({
   modelos,
-  salvo = false,
   modeloInicial,
 }: {
   modelos: Modelo[];
-  salvo?: boolean;
   /** Arriving from "Editar" on P5 — open with that model already applied. */
   modeloInicial?: string;
 }) {
@@ -213,12 +211,6 @@ export function CriarSacolaForm({
               <span className="h-px flex-1 bg-sage-line" />
             </div>
           </>
-        )}
-
-        {salvo && (
-          <p className="mt-4 rounded-xl bg-sage px-3.5 py-3 text-[13px] font-bold text-brand-dark">
-            Modelo salvo. Ele aparece no caminho rápido acima.
-          </p>
         )}
 
         {/* Foto — 96px slot beside the reason it matters */}

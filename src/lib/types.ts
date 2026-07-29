@@ -60,6 +60,8 @@ export interface SacolaLoja {
   naoRetirada: number;
   receita: number;
   alerta?: boolean;
+  /** True when this window falls outside the shop's registered hours. */
+  foraDoHorario?: boolean;
 }
 
 // pedido recebido pelo estabelecimento (visão do painel)

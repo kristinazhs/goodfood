@@ -1,18 +1,10 @@
-import { AvaliacaoCard } from "@/components/parceiro/avaliacao-card";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { navParceiro } from "@/lib/nav";
-import {
-  AVALIACOES,
-  METRICAS,
-  PERIODOS,
-  REPASSE,
-  RESUMO_AVALIACOES,
-  SEMANA,
-} from "@/lib/parceiro-mock";
+import { METRICAS, PERIODOS, REPASSE, SEMANA } from "@/lib/parceiro-mock";
 
-// P4 — Desempenho and Avaliações on one screen: both are read-only, and
-// together they answer one question, "how much did I sell and what did people
-// think?".
+// P4 — how much did I sell. The reviews used to be repeated at the bottom of
+// this screen; Avaliações owns them, and showing the same list in two places
+// only made it unclear which one was the real one.
 //
 // DEMO SCREEN: every number here comes from lib/parceiro-mock.ts. See that
 // file for why it isn't wired to Supabase yet.
@@ -121,23 +113,6 @@ export default function Desempenho() {
           ))}
         </div>
 
-        <div
-          id="avaliacoes"
-          className="flex items-center justify-between px-5 pb-2.5 pt-[22px]"
-        >
-          <span className="text-xs font-extrabold uppercase leading-none tracking-[0.7px] text-muted">
-            Avaliações
-          </span>
-          <span className="text-[12.5px] font-semibold leading-none text-muted">
-            {RESUMO_AVALIACOES}
-          </span>
-        </div>
-
-        <div className="flex flex-col gap-2.5 px-5">
-          {AVALIACOES.map((a) => (
-            <AvaliacaoCard key={a.autor} a={a} />
-          ))}
-        </div>
       </main>
       <BottomNav items={navParceiro} />
     </>

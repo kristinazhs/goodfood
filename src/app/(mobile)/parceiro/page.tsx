@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { brl } from "@/lib/format";
+import { comHora, estadoDaLoja } from "@/lib/horarios";
 import { navParceiro } from "@/lib/nav";
 import { getFilaHoje, getPainelParceiro } from "@/lib/parceiro";
 
@@ -24,16 +25,27 @@ const DIAS = [
 export default async function ParceiroHoje({
   searchParams,
 }: {
-  searchParams: Promise<{ entregue?: string }>;
+  searchParams: Promise<{ entregue?: string; publicada?: string }>;
 }) {
-  const [{ entregue }, { establishment, sacolas }, fila] = await Promise.all([
+  const [
+    { entregue, publicada },
+    { establishment, sacolas },
+    fila,
+  ] = await Promise.all([
     searchParams,
     getPainelParceiro(),
     getFilaHoje(),
   ]);
 
   const hoje = DIAS[new Date().getDay()];
-  const aberta = sacolas.some((s) => s.ativa > 0);
+
+  // "Aberta" now answers the question it appears to answer. It used to be
+  // `sacolas.some(s => s.ativa > 0)` — the shop was called open whenever any
+  // offer was live, even at 22h for a shop that closes at 19h30.
+  const estado = estadoDaLoja(establishment?.horarios);
+  const rotuloEstado =
+    estado.aberta === null ? "" : estado.aberta ? " · aberta" : " · fechada";
+  const foraDoHorario = sacolas.filter((s) => s.foraDoHorario);
 
   return (
     <>
@@ -44,13 +56,50 @@ export default async function ParceiroHoje({
           </h1>
           <p className="mt-1 text-[13px] font-medium text-muted">
             {establishment?.nome ?? "Seu estabelecimento"}
-            {aberta ? " · aberta" : ""}
+            {rotuloEstado}
+            {estado.aberta && estado.fechaAs
+              ? ` até ${comHora(estado.fechaAs)}`
+              : ""}
+            {estado.aberta === false && estado.abreAs
+              ? ` · abre ${comHora(estado.abreAs)}`
+              : ""}
           </p>
         </div>
+
+        {/* A bag published for a time nobody is at the counter is a customer
+            standing at a locked door. Worth catching here, not at 22h. */}
+        {foraDoHorario.length > 0 && (
+          <div className="mx-5 mt-4 rounded-xl border-[1.5px] border-[#e8c37a] bg-[#faf1dc] px-3.5 py-3">
+            <div className="text-[13px] font-bold leading-[1.3] text-[#8a6a14]">
+              {foraDoHorario.length === 1
+                ? "Uma sacola está fora do seu horário"
+                : `${foraDoHorario.length} sacolas estão fora do seu horário`}
+            </div>
+            <div className="mt-1 text-[12.5px] font-medium leading-[1.4] text-[#8a6a14]">
+              {foraDoHorario.map((s) => s.nome).join(", ")} —{" "}
+              {foraDoHorario.length === 1 ? "a janela dela" : "as janelas"} não
+              cabe
+              {foraDoHorario.length === 1 ? "" : "m"} no horário que você
+              cadastrou. Quem for retirar pode encontrar a loja fechada.
+            </div>
+          </div>
+        )}
 
         {entregue && (
           <div className="mx-5 mt-4 rounded-xl bg-sage px-3.5 py-3 text-[13px] font-bold text-brand-dark">
             Retirada registrada. O repasse entra no seu extrato.
+          </div>
+        )}
+
+        {publicada === "1" && (
+          <div className="mx-5 mt-4 rounded-xl bg-sage px-3.5 py-3">
+            <p className="text-[13px] font-bold leading-[1.3] text-brand-dark">
+              Sacola publicada
+            </p>
+            <p className="mt-1 text-[12.5px] font-medium leading-[1.4] text-brand-dark">
+              Ela já aparece para os clientes. As reservas chegam na fila
+              abaixo.
+            </p>
           </div>
         )}
 

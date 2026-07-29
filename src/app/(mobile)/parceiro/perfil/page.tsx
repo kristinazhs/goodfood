@@ -23,9 +23,9 @@ const ROTULO_CATEGORIA: Record<string, string> = {
 export default async function Loja({
   searchParams,
 }: {
-  searchParams: Promise<{ erro?: string }>;
+  searchParams: Promise<{ erro?: string; salvo?: string }>;
 }) {
-  const [{ erro }, loja, modelos] = await Promise.all([
+  const [{ erro, salvo }, loja, modelos] = await Promise.all([
     searchParams,
     getLoja(),
     getModelos(),
@@ -45,6 +45,18 @@ export default async function Loja({
             </p>
           </div>
         </div>
+
+        {salvo === "1" && (
+          <div className="mx-5 mt-4 rounded-xl bg-sage px-3.5 py-3">
+            <p className="text-[13px] font-bold leading-[1.3] text-brand-dark">
+              Modelo salvo
+            </p>
+            <p className="mt-1 text-[12.5px] font-medium leading-[1.4] text-brand-dark">
+              Ele fica em Modelos salvos, logo abaixo. Para colocá-lo à venda
+              hoje, toque em Publicar hoje.
+            </p>
+          </div>
+        )}
 
         {erro === "duplicada" ? (
           <p className="mx-5 mt-4 rounded-xl bg-amber-bg px-3.5 py-3 text-[13px] font-semibold text-amber-ink">
@@ -147,7 +159,7 @@ export default async function Loja({
           <div className="rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5">
             <div className="text-sm font-bold leading-[1.3]">Perfil público</div>
             <div className="mt-0.5 text-[12.5px] font-medium leading-[1.35] text-muted">
-              Foto, descrição, categoria e horários · em breve
+              Foto, descrição e horários · em breve
             </div>
           </div>
 

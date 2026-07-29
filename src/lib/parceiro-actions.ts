@@ -135,7 +135,7 @@ export async function publicarSacola(
   if (listErr)
     return { error: "Falha ao publicar a oferta: " + listErr.message };
 
-  redirect("/parceiro");
+  redirect("/parceiro?publicada=1");
 }
 
 // --- Fulfillment (RLS lets the listing's owner update its orders) ----------
@@ -256,7 +256,9 @@ export async function salvarModelo(
     if (error) return { error: "Falha ao salvar o modelo: " + error.message };
   }
 
-  redirect("/parceiro/sacolas/nova?salvo=1");
+  // Saving a template is finishing something, not staying put: the model now
+  // lives in Loja, so that is where it lands, with the confirmation there.
+  redirect("/parceiro/perfil?salvo=1");
 }
 
 /**

@@ -1,4 +1,5 @@
 import { horaMinutoSP, hojeSP } from "./datas";
+import { janelaForaDoHorario, type Horarios } from "./horarios";
 import type { PedidoStatus } from "./pedidos";
 import { createSupabaseServerClient } from "./supabase-server";
 import type { SacolaLoja } from "./types";
@@ -28,7 +29,12 @@ interface OrderAgg {
 }
 
 export interface PainelParceiro {
-  establishment: { id: string; nome: string; emoji: string } | null;
+  establishment: {
+    id: string;
+    nome: string;
+    emoji: string;
+    horarios: Horarios;
+  } | null;
   sacolas: SacolaLoja[];
   stats: { faturado: number; vendidas: number; resgatada: number };
 }
@@ -74,12 +80,13 @@ export async function getPainelParceiro(): Promise<PainelParceiro> {
 
   const { data: est } = await supabase
     .from("establishments")
-    .select("id, nome, categoria")
+    .select("id, nome, categoria, horarios")
     .eq("owner_id", user.id)
     .order("created_at", { ascending: true })
     .limit(1)
     .maybeSingle();
   if (!est) return vazio;
+  const horarios = (est.horarios ?? {}) as Horarios;
 
   const { data: listingsData } = await supabase
     .from("listings")
@@ -148,6 +155,11 @@ export async function getPainelParceiro(): Promise<PainelParceiro> {
       naoRetirada: a.naoRetirada,
       receita: a.receita,
       alerta: a.naoRetirada > 0,
+      foraDoHorario: janelaForaDoHorario(
+        horarios,
+        l.janela_inicio,
+        l.janela_fim,
+      ),
     };
   });
 
@@ -156,6 +168,7 @@ export async function getPainelParceiro(): Promise<PainelParceiro> {
       id: est.id,
       nome: est.nome,
       emoji: emojiPorCategoria[est.categoria ?? ""] ?? "🏪",
+      horarios,
     },
     sacolas,
     stats: { faturado, vendidas, resgatada },
