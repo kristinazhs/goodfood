@@ -49,7 +49,7 @@ function Campo({
   );
 }
 
-export function SignupForm() {
+export function SignupForm({ next }: { next?: string }) {
   const [state, action, pending] = useActionState<AuthState, FormData>(
     signUpConsumer,
     {},
@@ -88,6 +88,7 @@ export function SignupForm() {
       </div>
 
       <form action={action} className="flex flex-1 flex-col">
+        {next && <input type="hidden" name="next" value={next} />}
         <div className="mt-[18px] flex flex-col gap-3.5">
           <Campo
             label="Nome"
@@ -171,7 +172,11 @@ export function SignupForm() {
           <p className="mt-3 text-center text-[13px] font-medium leading-none text-muted">
             Já tem conta?{" "}
             <Link
-              href="/consumidor/entrar"
+              href={
+                next
+                  ? `/consumidor/entrar?next=${encodeURIComponent(next)}`
+                  : "/consumidor/entrar"
+              }
               className="font-bold text-brand-dark"
             >
               Entrar

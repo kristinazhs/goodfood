@@ -2,7 +2,16 @@ import Link from "next/link";
 import { LoginForm } from "@/components/consumidor/login-form";
 import { BackButton } from "@/components/ui/back-button";
 
-export default function EntrarConsumidor() {
+export default async function EntrarConsumidor({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  const paraCadastro = next
+    ? `/consumidor/cadastro?next=${encodeURIComponent(next)}`
+    : "/consumidor/cadastro";
+
   return (
     <main className="flex-1 px-5 pb-8">
       <div className="pt-5">
@@ -15,12 +24,12 @@ export default function EntrarConsumidor() {
         Entre para encontrar sacolas surpresa perto de você.
       </p>
 
-      <LoginForm />
+      <LoginForm next={next} />
 
       <p className="mt-5 text-center text-xs text-muted">
         Ainda não tem conta?{" "}
         <Link
-          href="/consumidor/cadastro"
+          href={paraCadastro}
           className="font-bold text-brand-dark underline"
         >
           Criar conta

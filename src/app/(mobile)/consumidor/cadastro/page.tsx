@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { SignupForm } from "@/components/consumidor/signup-form";
 
-export default function CadastroConsumidor() {
+export default async function CadastroConsumidor({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+
   return (
     <main className="flex flex-1 flex-col px-5 pb-[22px] pt-4">
       <Link
@@ -28,7 +34,7 @@ export default function CadastroConsumidor() {
         Você só precisa de conta para reservar uma sacola.
       </p>
 
-      <SignupForm />
+      <SignupForm next={next} />
     </main>
   );
 }

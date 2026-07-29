@@ -18,7 +18,13 @@ export async function reservar(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/consumidor/entrar");
+  // Someone who got this far has already picked a bag and a quantity. Sending
+  // them to login and then back to the feed threw that away and asked them to
+  // find it again; the destination rides along instead.
+  if (!user) {
+    const volta = `/consumidor/checkout?sacola=${bagId}&qtd=${qtd}`;
+    redirect(`/consumidor/entrar?next=${encodeURIComponent(volta)}`);
+  }
 
   // Which listing (today's active offer) does this bag map to?
   const { data: listing } = await supabase

@@ -19,6 +19,23 @@ function traduzErro(msg: string): string {
   return "Não foi possível concluir. Tente novamente.";
 }
 
+/**
+ * Where to go after signing in. Someone who picked a sacola and pressed Pagar
+ * used to be dropped back on the feed with their choice gone; now the login
+ * carries the destination.
+ *
+ * Only same-site paths are honoured. Anything else — an absolute URL, a
+ * protocol-relative "//evil.com", a backslash Chrome would normalise into one
+ * — falls back to the feed, so this parameter can never send someone off the
+ * site while wearing our login page.
+ */
+function destinoSeguro(bruto: FormDataEntryValue | null): string {
+  const destino = String(bruto ?? "");
+  if (!destino.startsWith("/")) return "/consumidor";
+  if (destino.startsWith("//") || destino.startsWith("/\\")) return "/consumidor";
+  return destino;
+}
+
 export async function signInConsumer(
   _prev: AuthState,
   formData: FormData,
@@ -34,7 +51,7 @@ export async function signInConsumer(
   });
   if (error) return { error: traduzErro(error.message) };
 
-  redirect("/consumidor");
+  redirect(destinoSeguro(formData.get("next")));
 }
 
 export async function signUpConsumer(
@@ -64,7 +81,7 @@ export async function signUpConsumer(
   });
   if (error) return { error: traduzErro(error.message) };
 
-  redirect("/consumidor");
+  redirect(destinoSeguro(formData.get("next")));
 }
 
 /**
