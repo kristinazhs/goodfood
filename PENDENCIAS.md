@@ -1,76 +1,181 @@
-# What is still mocked, missing or approximate
+# GoodFood — o que ainda falta
 
-Audit of the `design-v2` branch, 2026-07-28, after all 16 screens were built.
-Compiled from the code, not from memory.
+Lista completa, tela por tela, de tudo que hoje é **placeholder**, **botão que
+não faz nada**, **função que ainda não existe** ou **defeito conhecido**.
+Levantado a partir do código em 2026-07-28, depois das 16 telas do design v2.
 
-Legend:
+Tipo:
 
-- **MOCK** — looks real on screen, isn't backed by anything
-- **MISSING** — visibly marked "em breve" or simply absent
-- **ESTIMATE** — real data, but derived from an assumption worth revisiting
-- **DECISION** — blocked on a business choice, not on code
+- 🟡 **placeholder** — aparece na tela mas não tem nada por trás
+- ⚪ **não existe** — falta construir
+- 🔴 **defeito** — está errado, não só ausente
+- 🔵 **estimativa** — dado real, mas baseado numa suposição
+- 🟣 **decisão** — depende de escolha de negócio, não de código
 
 ---
 
-## A. Consumer side
+# LADO CONSUMIDOR
 
-| Screen | Item | Type | Notes |
-| --- | --- | --- | --- |
-| C0b | Sign in with Google | MISSING | Fully built and wired, disabled behind `GOOGLE_ATIVO = false` in `auth-actions.ts`. Needs the Google provider enabled in Supabase. One line to flip. |
-| C1 | Address "Av. Osvaldo Aranha, 540" | MOCK | `ORIGEM` in `lib/distancia.ts`. Not tappable, and there is no saved-addresses table. |
-| C1/C2/C3 | Distances ("310m") and walking time | ESTIMATE | Real haversine from the shop's real coordinates — but measured from the fixed `ORIGEM` above, so they're only correct for someone standing there. Walking time assumes 80 m/min. |
-| C2 | Filter sheet: raio and categoria | MISSING | "Abertas agora" and "Até R$ 20" **do work**. The design also lists radius and category, which aren't there. |
-| C2 | Map tiles | DECISION | CARTO Positron, free tier, attribution included. Check their terms before commercial launch. |
-| C3 | "foto da loja" hero | MISSING | Bags have photos (`bags.foto_url`, uploaded on P3). **Establishments have no photo column at all.** |
-| C4 | Payment | MOCK | No money moves. Method chosen is stored (`orders.metodo_pagamento`) so the real integration has somewhere to reconcile. Screen says so explicitly. |
-| C5 | QR code | MISSING | Removed on purpose — the old one was a hardcoded matrix encoding nothing, and P2 can't scan. Returns with the camera reader. |
-| C5 | "Peça pra um amigo" | PARTIAL | Really shares a message with the code and address. It does **not** transfer the order to another account. |
-| C7 | Endereços salvos | MISSING | Needs an addresses table; would also make C1's address real. |
-| C7 | Formas de pagamento | MISSING | Follows the payment provider decision. |
-| C7 | Notificações | MISSING | No push infrastructure exists at all — this is a separate build, not a screen. |
-| C7 | Ajuda e contato / feedback | PARTIAL | Real `mailto:` links to contato@goodfood.app, not in-app forms. The address must exist and be monitored. |
-| — | Store page | MISSING | Search results and order history link to a *sacola*, because there is no per-shop page. |
+## C0 — Abertura (splash + entrada)
 
-## B. Establishment side
-
-| Screen | Item | Type | Notes |
-| --- | --- | --- | --- |
-| P1 | Discount alert ("baixar para R$ 16,90?") | MISSING | Needs a per-day price override: price lives on `bags` (template), not `listings` (the day). Changes pricing across the consumer app. |
-| P1 | Shop open/closed | ESTIMATE | Derived from having active listings. The design's open/close switch was never built and needs an `establishments.aberta` column. |
-| P2 | Camera / QR reader | MISSING | Typed code works and is verified end to end. The camera needs a QR library and a permission flow. |
-| P3 | Recommended price band | MISSING | Removed deliberately — no sales data to support a benchmark. |
-| P4 | **The entire screen** | MOCK | Every number from `lib/parceiro-mock.ts`. Labelled on screen as "Dados de exemplo". |
-| P4 | Period chips (7 dias / 30 / Ano) | MOCK | Rendered as static spans — they don't filter anything. |
-| P4 | "Responder" on a review | MOCK | The only button in the app that does nothing when tapped. Needs a replies column. |
-| P4 | "média do RS: 89%", "sábado rende 2,3×" | MOCK | Need aggregate data across many establishments. Not computable from one shop. |
-| P5 | Shop photo ("foto loja") | MISSING | Same missing column as C3's hero. |
-| P5 | Perfil público | MISSING | Marked "em breve", no destination. |
-| P5 | Repasse e dados bancários | MISSING | Marked "Ainda não configurado". Follows the provider decision. |
-| P6 | CNPJ | PARTIAL | Stored as typed. **Not format-checked, not verified against Receita Federal, not deduplicated** — two shops can register the same CNPJ. |
-| P6 | Commission rate | DECISION | Removed from the screen pending your decision. Payments cannot split without it. |
-| P6 | Opening hours vs pickup windows | PARTIAL | Hours are captured per weekday (`establishments.horarios`). **Nothing yet stops a sacola being published for after closing time.** |
-
-## C. Data-level assumptions
-
-| Item | Type | Notes |
+| Tipo | Item | Detalhe |
 | --- | --- | --- |
-| `bags.peso_kg` | ESTIMATE | Drives "kg de comida que você salvou". Defaults to 1.5 kg; nobody weighs a surprise bag. |
-| Ratings | REAL | Now genuinely computed from `reviews`. A shop with no reviews shows no star. |
-| Demo catalogue | MOCK | The four seed shops and their sacolas are fictional. Migration 0008 refreshes them. |
-| Test accounts | — | `kristina.teste`, `padaria.teste`, `padaria.mapa`, `padaria.aranha`, plus the partner account created during testing. Delete before launch. |
+| 🔴 | **Animação travada / com salto** | O verde deveria encolher suavemente até virar o cabeçalho. Hoje o movimento não está fluido. Precisa ser refeito — provavelmente animando `height`/`transform` em vez de trocar classes de layout. |
 
-## D. Outside the redesign entirely
+## C0b — Criar conta
 
-| Item | Notes |
+| Tipo | Item | Detalhe |
+| --- | --- | --- |
+| ⚪ | **Entrar com Google** | Botão e fluxo prontos, desligados por `GOOGLE_ATIVO = false`. Falta ativar o provedor no Supabase (credenciais do Google Cloud). Depois é uma linha. |
+| 🟡 | Termos de uso / política de privacidade | Páginas existem mas dizem que o texto está sendo preparado. Precisam de texto jurídico real. |
+
+## C1 — Início (feed)
+
+| Tipo | Item | Detalhe |
+| --- | --- | --- |
+| 🟡 | **Endereço "Av. Osvaldo Aranha, 540"** | Fixo no código (`ORIGEM`). Não é clicável e não há tabela de endereços salvos. |
+| 🔵 | **Distâncias e tempo a pé** | Cálculo real a partir das coordenadas reais das lojas — mas sempre a partir daquele endereço fixo. Só valem para quem está no Bom Fim. Tempo a pé assume 80 m/min. |
+| 🟡 | **Fotos das sacolas** | Placeholder listrado quando a loja não subiu foto. O upload já funciona (P3). |
+| 🔴 | **"Disponível hoje" é texto fixo** | A janela pode ser de amanhã (a migration 0008 empurra para o dia seguinte). O app pode dizer "hoje" para comida que só sai amanhã. |
+
+## C1a / C1b — Busca
+
+| Tipo | Item | Detalhe |
+| --- | --- | --- |
+| 🔵 | Buscas recentes | Ficam no `localStorage` do aparelho. Não seguem o usuário entre celulares. |
+| ⚪ | Página de loja | "Lojas" nos resultados leva para uma *sacola*, porque não existe página por estabelecimento. |
+
+## C2 — Descobrir (mapa)
+
+| Tipo | Item | Detalhe |
+| --- | --- | --- |
+| ⚪ | **Filtro de raio** | O filtro tem janela, preço e categoria. Falta o raio — só faz sentido junto com endereço do usuário. |
+| 🔴 | **"Meu local" não atualiza as distâncias** | Centraliza o mapa e marca sua posição, mas os "310m" continuam medidos do endereço fixo. |
+| 🟣 | Mapa (CARTO) | Camada gratuita com atribuição. Conferir os termos antes de uso comercial. |
+
+## C3 — Detalhe da sacola
+
+| Tipo | Item | Detalhe |
+| --- | --- | --- |
+| ⚪ | **Foto da loja (topo)** | As sacolas têm foto; **estabelecimentos não têm coluna de foto nenhuma**. |
+| 🔴 | **Pode mostrar janela vencida** | Se a sacola não tem oferta ativa, a tela cai para qualquer oferta antiga e mostra o horário de ontem como se fosse hoje. O botão recusa, mas só depois. |
+
+## C4 — Reserva + pagamento
+
+| Tipo | Item | Detalhe |
+| --- | --- | --- |
+| 🟡 | **Pagamento** | Nada é cobrado. O método escolhido é gravado (`orders.metodo_pagamento`) para a integração futura. A tela avisa isso. |
+| 🟣 | Provedor de pagamento | Mercado Pago × Pagar.me ainda não decidido. |
+| 🔴 | **Reservar deslogado perde a sacola** | Manda para o login e volta para o feed — a pessoa já tinha escolhido quantidade e apertado pagar. |
+| 🔴 | "Hoje, 18h40 – 19h00" | Texto fixo, mesmo problema do C1. |
+
+## C5 — Código de retirada
+
+| Tipo | Item | Detalhe |
+| --- | --- | --- |
+| ⚪ | **QR code** | Removido de propósito: o antigo era falso (não codificava nada) e o P2 ainda não lê. Volta junto com a câmera. |
+| 🔴 | **"pago hoje, 14h20"** | Diz "hoje" mesmo em pedido de semanas atrás. |
+| 🟡 | **"Peça pra um amigo"** | Compartilha mensagem com código e endereço de verdade — mas **não transfere o pedido** para outra conta. |
+| 🔴 | Compartilhar pode falhar em silêncio | Sem share sheet e sem clipboard, o toque não faz nada visível. |
+| 🔵 | "aberto até HH:MM" | Extraído de texto já formatado em vez do horário original. Funciona, mas é frágil. |
+
+## C6 — Pedidos
+
+| Tipo | Item | Detalhe |
+| --- | --- | --- |
+| 🔵 | "kg de comida que você salvou" | Usa `bags.peso_kg`, que é estimativa (padrão 1,5 kg). Ninguém pesa sacola surpresa. |
+| 🟡 | Fotos | Mesmo placeholder do C1. |
+
+## C7 — Perfil
+
+| Tipo | Item | Detalhe |
+| --- | --- | --- |
+| ⚪ | **Endereços salvos** | Marcado "em breve". É o item de maior alavancagem: resolve também o endereço do C1, o raio do C2 e todas as distâncias. |
+| ⚪ | **Formas de pagamento** | Depende do provedor. |
+| ⚪ | **Notificações** | Não existe infraestrutura de push. É um projeto à parte, não uma tela. |
+| 🟡 | **Ajuda e contato / Enviar feedback** | Hoje são links `mailto:` para contato@goodfood.app — não são formulários no app. O e-mail precisa existir e ser monitorado. |
+
+---
+
+# LADO ESTABELECIMENTO
+
+## P1 — Hoje (fila do dia)
+
+| Tipo | Item | Detalhe |
+| --- | --- | --- |
+| ⚪ | **Alerta de desconto** ("baixar para R$ 16,90?") | Precisa de preço por dia: hoje o preço mora no modelo (`bags`), não na oferta do dia (`listings`). Mexe no preço em todo o app do consumidor. |
+| 🔵 | "aberta" no cabeçalho | Deduzido de existir oferta ativa. O interruptor abrir/fechar do design nunca foi feito (falta coluna `establishments.aberta`). |
+
+## P2 — Retirada (leitura de código)
+
+| Tipo | Item | Detalhe |
+| --- | --- | --- |
+| ⚪ | **Câmera / leitor de QR** | Digitar o código funciona e está testado ponta a ponta. A câmera precisa de biblioteca de QR e fluxo de permissão. |
+
+## P3 — Publicar sacola
+
+| Tipo | Item | Detalhe |
+| --- | --- | --- |
+| ⚪ | **Faixa de preço recomendada** | Removida de propósito — não há dados de venda para sustentar uma recomendação. |
+| ⚪ | **Horário não é validado** | A tela diz que a janela fica dentro do horário da loja, mas nada impede publicar para as 22h se a loja fecha 19h30. |
+
+## P4 — Desempenho e avaliações
+
+| Tipo | Item | Detalhe |
+| --- | --- | --- |
+| 🟡 | **A tela inteira** | Todos os números vêm de `lib/parceiro-mock.ts`. Rotulada "Dados de exemplo" na própria tela. Feita para mostrar a parceiros. |
+| 🔴 | **Chips 7 dias / 30 dias / Ano** | São texto, não filtram nada. |
+| 🔴 | **Botão "Responder"** | Não faz nada ao ser tocado. Precisa de coluna de resposta nas avaliações. |
+| ⚪ | "média do RS: 89%", "sábado rende 2,3×" | Precisam de dados agregados de várias lojas. Não dá para calcular com uma. |
+
+## P5 — Loja
+
+| Tipo | Item | Detalhe |
+| --- | --- | --- |
+| ⚪ | **Foto da loja** | Mesma coluna faltante do C3. |
+| ⚪ | **Perfil público** | "Em breve", sem destino. |
+| ⚪ | **Repasse e dados bancários** | "Ainda não configurado". Depende do provedor. |
+
+## P6 — Cadastrar meu negócio
+
+| Tipo | Item | Detalhe |
+| --- | --- | --- |
+| 🔴 | **CNPJ não é conferido** | Não valida formato, não consulta a Receita, não impede duplicado — duas lojas podem usar o mesmo. |
+| 🟣 | **Comissão** | Retirada da tela até você definir a taxa. Pagamentos não conseguem dividir sem ela. |
+| 🟡 | Contrato de parceria | Página placeholder. |
+
+---
+
+# TRANSVERSAL (vale para várias telas)
+
+| Tipo | Item | Detalhe |
+| --- | --- | --- |
+| 🔴 | **Erro de consulta vira tela vazia** | Onze funções leem `const { data } = await …` e nunca olham o `error`. Se a consulta falha, aparece "Nenhuma sacola disponível agora" em vez de um aviso de erro. Foi assim que o botão "meu local" escondeu a própria falha. |
+| ⚪ | **Foto do estabelecimento** | Não existe coluna. Afeta C3 e P5. |
+| ⚪ | **Página de loja** | Não existe. Afeta busca (C1b) e histórico (C6). |
+| 🟡 | Catálogo de demonstração | As quatro lojas e suas sacolas são fictícias. A migration 0008 renova (as janelas expiram e o feed esvazia). |
+| 🟡 | `/painel` (desktop do parceiro) | Totalmente em dados fictícios. Não fez parte do redesenho. |
+| 🟡 | `/admin` (painel interno) | Totalmente em dados fictícios. Não fez parte do redesenho. |
+
+---
+
+# ANTES DE LANÇAR (não é funcionalidade)
+
+| Item | Detalhe |
 | --- | --- |
-| `/painel` (desktop owner) | Entirely on `lib/mock-data.ts`. Untouched by design-v2. |
-| `/admin` (internal dashboard) | Entirely on `lib/admin-mock-data.ts`. Untouched. |
+| Textos jurídicos | `/termos`, `/privacidade` e `/contrato-parceria` são placeholders. |
+| Confirmação de e-mail | Desligada no Supabase por conveniência. Religar. |
+| Política do Storage | Qualquer usuário logado pode subir arquivo no bucket `sacolas`. Restringir por loja. |
+| Contas de teste | `kristina.teste`, `padaria.teste`, `padaria.mapa`, `padaria.aranha` e a conta de parceiro criada nos testes. Apagar. |
+| `design-v2` nunca foi para o ar | O redesenho só existe no localhost e na preview da Vercel. |
+| Comissão e provedor | As duas decisões que travam pagamentos. |
 
-## E. Pre-launch, not features
+---
 
-| Item | Notes |
-| --- | --- |
-| `/termos`, `/privacidade`, `/contrato-parceria` | Placeholder pages saying the documents are being prepared. Need real legal text. |
-| Supabase email confirmation | Switched OFF for convenience. Re-enable. |
-| Storage policy | Any signed-in user can upload to the `sacolas` bucket. Scope it per shop. |
-| `design-v2` never merged | The redesign has never been on the live site. |
+# JÁ CORRIGIDO (para não voltar)
+
+Botão "meu local" que falhava em silêncio · chips duplicados no mapa ·
+"Publicar hoje" publicando a mesma sacola duas vezes no dia · publicação
+criando modelo duplicado toda vez · loja sem conseguir ver quem retira ·
+faixa de preço comparando a grandeza errada · QR falso · nota ★ fixa em 4,8 ·
+reserva aceita depois do prazo que a tela prometia.
