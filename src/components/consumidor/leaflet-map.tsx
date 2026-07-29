@@ -2,7 +2,7 @@
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ORIGEM } from "@/lib/distancia";
 
 // Basemap. CARTO "Positron" is a deliberately minimal style — pale, few
@@ -61,6 +61,8 @@ export default function LeafletMap({
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Record<string, L.Marker>>({});
   const userRef = useRef<L.CircleMarker | null>(null);
+  const [localizando, setLocalizando] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
 
   // Initialise the map once.
   useEffect(() => {
@@ -143,11 +145,21 @@ export default function LeafletMap({
   }, [lojaSelecionada]);
 
   // User-initiated "find me" — asks for location only on tap.
+  // Every failure is reported: a silent catch here is why this button felt
+  // dead, since a denied permission or a timeout produced nothing at all.
   function localizar() {
     const map = mapRef.current;
-    if (!map || !navigator.geolocation) return;
+    if (!map) return;
+    if (!navigator.geolocation) {
+      setAviso("Seu navegador não permite localização.");
+      return;
+    }
+
+    setLocalizando(true);
+    setAviso(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        setLocalizando(false);
         const p: [number, number] = [pos.coords.latitude, pos.coords.longitude];
         if (userRef.current) userRef.current.setLatLng(p);
         else
@@ -160,21 +172,36 @@ export default function LeafletMap({
           }).addTo(map);
         map.setView(p, 15);
       },
-      () => {},
-      { enableHighAccuracy: true, timeout: 6000 },
+      (err) => {
+        setLocalizando(false);
+        setAviso(
+          err.code === err.PERMISSION_DENIED
+            ? "Permissão de localização negada. Autorize nas configurações do navegador."
+            : "Não conseguimos achar sua localização agora.",
+        );
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 60_000 },
     );
   }
 
   return (
     <>
       <div ref={containerRef} className="absolute inset-0" />
+      {/* directly under the filter button, same size and shape */}
       <button
         type="button"
         onClick={localizar}
+        disabled={localizando}
         aria-label="Centralizar no meu local"
-        className="absolute right-5 top-[136px] z-[600] flex h-11 w-11 items-center justify-center rounded-[14px] bg-white shadow-[0_6px_18px_rgba(0,0,0,0.10)]"
+        className="absolute right-5 top-[68px] z-[600] flex h-[46px] w-[46px] items-center justify-center rounded-[14px] bg-white shadow-[0_6px_18px_rgba(0,0,0,0.10)] disabled:opacity-70"
       >
-        <svg width="20" height="20" viewBox="0 0 22 22" aria-hidden="true">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 22 22"
+          aria-hidden="true"
+          className={localizando ? "animate-spin" : ""}
+        >
           <circle cx="11" cy="11" r="5" fill="none" stroke="#134d29" strokeWidth="1.8" />
           <path
             d="M11 1.5v3M11 17.5v3M1.5 11h3M17.5 11h3"
@@ -184,6 +211,16 @@ export default function LeafletMap({
           />
         </svg>
       </button>
+
+      {aviso && (
+        <button
+          type="button"
+          onClick={() => setAviso(null)}
+          className="absolute inset-x-5 top-[124px] z-[600] rounded-xl bg-white px-3.5 py-3 text-left text-[12.5px] font-semibold leading-[1.4] text-alert shadow-[0_6px_18px_rgba(0,0,0,0.12)]"
+        >
+          {aviso}
+        </button>
+      )}
     </>
   );
 }

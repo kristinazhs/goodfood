@@ -14,9 +14,17 @@ const LeafletMap = dynamic(() => import("./leaflet-map"), {
   loading: () => <div className="absolute inset-0 bg-[#eaf0e6]" />,
 });
 
-// On the map, category matters less than "can I get there in time and can I
-// afford it" — so the quick filters are window and price.
+// Everything filterable lives in the sheet — the map surface stays for the
+// map. Window and price answer "can I get there in time and can I afford it";
+// category is there for when someone knows what they want.
 type FiltroId = "abertas" | "preco20";
+
+const CATEGORIAS = [
+  { id: "padaria", label: "Padaria" },
+  { id: "doceria", label: "Doceria" },
+  { id: "refeicao", label: "Refeição" },
+  { id: "mercado", label: "Mercado" },
+];
 
 function estaAberta(s: Sacola, agora: number): boolean {
   if (!s.janelaInicio || !s.janelaFim) return false;
@@ -28,6 +36,7 @@ function estaAberta(s: Sacola, agora: number): boolean {
 
 export function MapView({ sacolas }: { sacolas: Sacola[] }) {
   const [filtros, setFiltros] = useState<FiltroId[]>([]);
+  const [categorias, setCategorias] = useState<string[]>([]);
   const [folhaAberta, setFolhaAberta] = useState(false);
   const [lojaSelecionada, setLojaSelecionada] = useState<string | null>(null);
 
@@ -41,9 +50,10 @@ export function MapView({ sacolas }: { sacolas: Sacola[] }) {
     return comCoords.filter(
       (s) =>
         (!filtros.includes("abertas") || estaAberta(s, agora)) &&
-        (!filtros.includes("preco20") || s.preco <= 20),
+        (!filtros.includes("preco20") || s.preco <= 20) &&
+        (categorias.length === 0 || categorias.includes(s.categoria)),
     );
-  }, [comCoords, filtros]);
+  }, [comCoords, filtros, categorias]);
 
   // One pin per shop: a shop can sell several kinds of sacola, so the pin
   // carries the total count rather than a price that would misrepresent it.
@@ -123,7 +133,7 @@ export function MapView({ sacolas }: { sacolas: Sacola[] }) {
           onClick={() => setFolhaAberta(true)}
           className="pointer-events-auto relative flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[14px] bg-white shadow-[0_6px_18px_rgba(0,0,0,0.10)]"
         >
-          {filtros.length > 0 && (
+          {(filtros.length > 0 || categorias.length > 0) && (
             <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-terracotta" />
           )}
           <svg width="20" height="20" viewBox="0 0 22 22" aria-hidden="true">
@@ -137,35 +147,8 @@ export function MapView({ sacolas }: { sacolas: Sacola[] }) {
         </button>
       </div>
 
-      <div className="absolute left-5 top-[78px] z-[600] flex gap-2">
-        <button
-          type="button"
-          onClick={() => alternar("abertas")}
-          aria-pressed={filtros.includes("abertas")}
-          className={`inline-flex h-8 items-center rounded-full px-3 text-[12.5px] leading-none ${
-            filtros.includes("abertas")
-              ? "bg-brand-dark font-bold text-white shadow-[0_4px_12px_rgba(0,0,0,0.14)]"
-              : "bg-white font-semibold text-charcoal shadow-[0_4px_12px_rgba(0,0,0,0.10)]"
-          }`}
-        >
-          Abertas agora
-        </button>
-        <button
-          type="button"
-          onClick={() => alternar("preco20")}
-          aria-pressed={filtros.includes("preco20")}
-          className={`inline-flex h-8 items-center rounded-full px-3 text-[12.5px] leading-none ${
-            filtros.includes("preco20")
-              ? "bg-brand-dark font-bold text-white shadow-[0_4px_12px_rgba(0,0,0,0.14)]"
-              : "bg-white font-semibold text-charcoal shadow-[0_4px_12px_rgba(0,0,0,0.10)]"
-          }`}
-        >
-          Até R$ 20
-        </button>
-      </div>
-
-      {/* Filter sheet — the chips above are shortcuts into the same state.
-          Raio and categoria belong here too, once they exist. */}
+      {/* Every filter lives here, so the map surface stays uncluttered.
+          Raio is the one still missing. */}
       {folhaAberta && (
         <div className="absolute inset-0 z-[1100]">
           <button
@@ -215,10 +198,46 @@ export function MapView({ sacolas }: { sacolas: Sacola[] }) {
               </button>
             ))}
 
+            <div className="mt-4">
+              <span className="mb-2 block text-[13px] font-bold leading-none text-[#4a4a44]">
+                Categoria
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIAS.map((c) => {
+                  const on = categorias.includes(c.id);
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() =>
+                        setCategorias((xs) =>
+                          on ? xs.filter((x) => x !== c.id) : [...xs, c.id],
+                        )
+                      }
+                      aria-pressed={on}
+                      className={`inline-flex h-9 items-center rounded-full px-3.5 text-[13px] ${
+                        on
+                          ? "bg-brand-dark font-bold text-white"
+                          : "border-[1.5px] border-sage-line bg-white font-semibold text-charcoal"
+                      }`}
+                    >
+                      {c.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-xs text-muted">
+                Sem seleção, mostramos todas as categorias.
+              </p>
+            </div>
+
             <div className="mt-4 flex gap-2.5">
               <button
                 type="button"
-                onClick={() => setFiltros([])}
+                onClick={() => {
+                  setFiltros([]);
+                  setCategorias([]);
+                }}
                 className="flex h-12 flex-1 items-center justify-center rounded-[14px] border-[1.5px] border-sage-line bg-white text-[15px] font-semibold text-charcoal"
               >
                 Limpar
