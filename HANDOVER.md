@@ -109,8 +109,6 @@ Reintroduce these only when the data exists to support them:
   nothing.
 - **P4's comparisons** ("média do RS: 89%", "sábado rende 2,3×") — need
   aggregate data across many establishments.
-- **Review counts / real ratings** — the `reviews` table exists but is empty.
-  `avaliacao` is still hardcoded to 4.8 in `src/lib/sacolas.ts`.
 - **P1's discount alert** ("baixar para R$ 16,90?") — needs a per-day price
   override, because price lives on `bags` (the template), not on `listings`
   (the day). That changes pricing across the consumer app.
