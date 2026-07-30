@@ -133,8 +133,18 @@ export async function publicarSacola(
     quantidade_disponivel: quantidade,
     status: "ativa",
   });
-  if (listErr)
-    return { error: "Falha ao publicar a oferta: " + listErr.message };
+  if (listErr) {
+    // 23505 is the unique index from 0022: this bag is already on sale for
+    // this exact window. Naming it beats a raw Postgres message, and it tells
+    // the shop the useful thing — change the window, or add stock to the one
+    // already published.
+    return {
+      error:
+        listErr.code === "23505"
+          ? "Essa sacola já está publicada para essa janela. Escolha outro horário, ou edite a que já está no ar."
+          : "Falha ao publicar a oferta: " + listErr.message,
+    };
+  }
 
   redirect("/parceiro?publicada=1");
 }
@@ -339,7 +349,15 @@ export async function publicarModeloHoje(formData: FormData) {
     quantidade_disponivel: quantidade,
     status: "ativa",
   });
-  if (error) redirect("/parceiro/perfil?erro=1");
+  // Same unique index: the one-tap path lands on the existing "duplicada"
+  // message, which already says to use the full form for a second batch.
+  if (error) {
+    redirect(
+      error.code === "23505"
+        ? "/parceiro/perfil?erro=duplicada"
+        : "/parceiro/perfil?erro=1",
+    );
+  }
 
   redirect("/parceiro?publicado=1");
 }
