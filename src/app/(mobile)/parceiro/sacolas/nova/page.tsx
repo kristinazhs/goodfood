@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { CriarSacolaForm } from "@/components/parceiro/criar-sacola-form";
-import { getModelos } from "@/lib/parceiro";
+import { getLoja, getModelos } from "@/lib/parceiro";
 
 export const dynamic = "force-dynamic";
 
@@ -9,10 +10,14 @@ export default async function PublicarSacola({
 }: {
   searchParams: Promise<{ modelo?: string }>;
 }) {
-  const [{ modelo }, modelos] = await Promise.all([
+  // The shop's id is needed for the photo path: uploads are filed under it,
+  // and the storage policy refuses any other folder.
+  const [{ modelo }, modelos, loja] = await Promise.all([
     searchParams,
     getModelos(),
+    getLoja(),
   ]);
+  if (!loja) redirect("/parceiro/entrar");
 
   return (
     <main className="flex flex-1 flex-col pb-0 pt-3.5">
@@ -37,7 +42,11 @@ export default async function PublicarSacola({
         </h1>
       </div>
 
-      <CriarSacolaForm modelos={modelos} modeloInicial={modelo} />
+      <CriarSacolaForm
+        modelos={modelos}
+        modeloInicial={modelo}
+        estabelecimentoId={loja.id}
+      />
     </main>
   );
 }

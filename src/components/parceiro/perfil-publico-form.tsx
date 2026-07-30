@@ -54,10 +54,13 @@ export function PerfilPublicoForm({
   descricao: descricaoInicial,
   fotoUrl: fotoInicial,
   horarios: horariosIniciais,
+  estabelecimentoId,
 }: {
   descricao: string | null;
   fotoUrl: string | null;
   horarios: Horarios;
+  /** Photos are filed under this id — it is what the storage policy checks. */
+  estabelecimentoId: string;
 }) {
   const [state, action, pending] = useActionState<PublishState, FormData>(
     salvarPerfilPublico,
@@ -84,7 +87,9 @@ export function PerfilPublicoForm({
     setEnviando(true);
     const supabase = createSupabaseBrowserClient();
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const caminho = `${crypto.randomUUID()}.${ext}`;
+    // Filed under the shop's id. The storage policy only lets you write into
+    // the folder of a shop you own, so the path is the permission check.
+    const caminho = `${estabelecimentoId}/${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage
       .from("lojas")
       .upload(caminho, file, { upsert: false, contentType: file.type });

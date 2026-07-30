@@ -51,10 +51,13 @@ const ROTULO = "mb-[7px] block text-[13px] font-bold leading-none text-[#4a4a44]
 export function CriarSacolaForm({
   modelos,
   modeloInicial,
+  estabelecimentoId,
 }: {
   modelos: Modelo[];
   /** Arriving from "Editar" on P5 — open with that model already applied. */
   modeloInicial?: string;
+  /** Photos are filed under this id — it is what the storage policy checks. */
+  estabelecimentoId: string;
 }) {
   const [state, action, pending] = useActionState<PublishState, FormData>(
     publicarSacola,
@@ -137,7 +140,9 @@ export function CriarSacolaForm({
     setEnviandoFoto(true);
     const supabase = createSupabaseBrowserClient();
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const caminho = `${crypto.randomUUID()}.${ext}`;
+    // Filed under the shop's id. The storage policy only lets you write into
+    // the folder of a shop you own, so the path is the permission check.
+    const caminho = `${estabelecimentoId}/${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage
       .from("sacolas")
       .upload(caminho, file, { upsert: false, contentType: file.type });

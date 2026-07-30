@@ -35,6 +35,7 @@ export default async function PerfilPublico() {
         descricao={loja.descricao}
         fotoUrl={loja.fotoUrl}
         horarios={loja.horarios}
+        estabelecimentoId={loja.id}
       />
     </main>
   );
