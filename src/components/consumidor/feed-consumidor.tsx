@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import { CategoryRow } from "@/components/consumidor/category-row";
 import { BuscaC1 } from "@/components/consumidor/feed-busca";
 import { IconPin } from "@/components/ui/icons";
-import { ORIGEM } from "@/lib/distancia";
 import type { CategoriaId, Sacola } from "@/lib/types";
 
 // Owns the two states of the home screen: the feed, and search (C1a/C1b).
@@ -15,11 +14,14 @@ export function FeedConsumidor({
   primeiroNome,
   cat,
   todas,
+  enderecoLabel,
   children,
 }: {
   primeiroNome: string | null;
   cat: CategoriaId;
   todas: Sacola[];
+  /** The address every distance below is measured from. */
+  enderecoLabel: string;
   children: React.ReactNode;
 }) {
   const [buscando, setBuscando] = useState(false);
@@ -53,10 +55,10 @@ export function FeedConsumidor({
 
         {/* The origin every distance on this screen is measured from.
             PLACEHOLDER: the address is the design's, because there's no
-            saved-addresses table yet — see ORIGEM in lib/distancia.ts. */}
+            principal saved address (C7), or the default when there is none. */}
         <p className="mt-[7px] flex h-6 items-center gap-[5px] text-[13px] font-semibold text-muted">
           <IconPin active size={14} />
-          {ORIGEM.label}
+          {enderecoLabel}
           <span className="text-[#8d8d84]">▾</span>
         </p>
       </div>

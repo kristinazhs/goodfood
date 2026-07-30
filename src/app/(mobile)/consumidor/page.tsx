@@ -3,6 +3,7 @@ import { FeedConsumidor } from "@/components/consumidor/feed-consumidor";
 import { SpotlightCard } from "@/components/consumidor/spotlight-card";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { getCurrentProfile } from "@/lib/auth";
+import { getOrigem } from "@/lib/enderecos";
 import { navConsumidor } from "@/lib/nav";
 import { escolherDestaque, getSacolasDisponiveis } from "@/lib/sacolas";
 import type { CategoriaId } from "@/lib/types";
@@ -22,9 +23,12 @@ export default async function ConsumidorHome({
 }: {
   searchParams: Promise<{ cat?: string; cancelado?: string }>;
 }) {
+  // The origin has to be resolved before the sacolas: every distance on the
+  // feed is measured from it.
+  const origem = await getOrigem();
   const [params, todas, sessao] = await Promise.all([
     searchParams,
-    getSacolasDisponiveis(),
+    getSacolasDisponiveis(origem),
     getCurrentProfile(),
   ]);
 
@@ -51,7 +55,12 @@ export default async function ConsumidorHome({
   return (
     <>
       <main className="flex flex-1 flex-col">
-        <FeedConsumidor primeiroNome={primeiroNome} cat={cat} todas={todas}>
+        <FeedConsumidor
+          primeiroNome={primeiroNome}
+          cat={cat}
+          todas={todas}
+          enderecoLabel={origem.label}
+        >
           {/* Where a cancellation lands: the evening just freed up, so the
               useful next thing is what else is available now. */}
           {params.cancelado === "1" && (

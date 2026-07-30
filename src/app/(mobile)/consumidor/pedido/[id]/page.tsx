@@ -4,6 +4,7 @@ import { BottomNav } from "@/components/ui/bottom-nav";
 import { CompartilharPedido } from "@/components/consumidor/compartilhar-pedido";
 import { contagemRetirada, horaMinutoSP } from "@/lib/datas";
 import { minutosAPe } from "@/lib/distancia";
+import { getOrigem } from "@/lib/enderecos";
 import { brl } from "@/lib/format";
 import { navConsumidor } from "@/lib/nav";
 import { CancelarPedido } from "@/components/consumidor/cancelar-pedido";
@@ -33,7 +34,8 @@ export default async function PedidoConfirmacao({
   if (!pedido) notFound();
 
   const contagem = contagemRetirada(pedido.janelaInicio, pedido.janelaFim);
-  const minutos = minutosAPe(pedido.lat, pedido.lng);
+  const origem = await getOrigem();
+  const minutos = minutosAPe(pedido.lat, pedido.lng, origem);
   const pagoAs = horaMinutoSP(pedido.reservadoEm);
 
   // Free cancellation runs for 15 minutes from the reservation.

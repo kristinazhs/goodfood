@@ -1,12 +1,14 @@
 import { MapView } from "@/components/consumidor/map-view";
 import { BottomNav } from "@/components/ui/bottom-nav";
+import { getOrigem } from "@/lib/enderecos";
 import { navConsumidor } from "@/lib/nav";
 import { getSacolasDisponiveis } from "@/lib/sacolas";
 
 export const dynamic = "force-dynamic";
 
 export default async function Descobrir() {
-  const sacolas = await getSacolasDisponiveis();
+  const origem = await getOrigem();
+  const sacolas = await getSacolasDisponiveis(origem);
 
   return (
     <>
@@ -19,7 +21,7 @@ export default async function Descobrir() {
             Nenhuma sacola disponível agora.
           </div>
         ) : (
-          <MapView sacolas={sacolas} />
+          <MapView sacolas={sacolas} origem={origem} />
         )}
       </main>
       <BottomNav items={navConsumidor} />

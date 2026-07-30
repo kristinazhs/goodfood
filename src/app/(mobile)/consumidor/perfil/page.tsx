@@ -4,6 +4,7 @@ import { BottomNav } from "@/components/ui/bottom-nav";
 import { getCurrentProfile } from "@/lib/auth";
 import { signOut } from "@/lib/auth-actions";
 import { getAvaliacaoPendente, getMinhasAvaliacoes } from "@/lib/avaliacoes";
+import { getOrigem } from "@/lib/enderecos";
 import { navConsumidor } from "@/lib/nav";
 import { calcularImpacto, getMeusPedidos } from "@/lib/pedidos";
 
@@ -17,11 +18,12 @@ export default async function Perfil({
 }: {
   searchParams: Promise<{ avaliado?: string; erro?: string }>;
 }) {
+  const origem = await getOrigem();
   const [{ avaliado, erro }, sessao, pedidos, pendente, avaliacoes] =
     await Promise.all([
       searchParams,
       getCurrentProfile(),
-      getMeusPedidos(),
+      getMeusPedidos(origem),
       getAvaliacaoPendente(),
       getMinhasAvaliacoes(),
     ]);
@@ -151,15 +153,22 @@ export default async function Perfil({
         </div>
 
         <div className="flex flex-col gap-2.5 px-5">
-          {/* No chevron where there's nowhere to go yet. */}
-          <div className="rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5">
-            <div className="text-sm font-bold leading-[1.3]">
-              Endereços salvos
-            </div>
-            <div className="mt-0.5 text-[12.5px] font-medium leading-[1.35] text-muted">
-              Em breve — hoje a busca parte de Bom Fim
-            </div>
-          </div>
+          <Link
+            href="/consumidor/perfil/enderecos"
+            className="flex min-h-11 items-center gap-3 rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold leading-[1.3]">
+                Endereços salvos
+              </span>
+              <span className="mt-0.5 block truncate text-[12.5px] font-medium leading-[1.35] text-muted">
+                {origem.label}
+              </span>
+            </span>
+            <span className="shrink-0 text-base font-bold leading-none text-[#8d8d84]">
+              ›
+            </span>
+          </Link>
 
           <div className="rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5">
             <div className="text-sm font-bold leading-[1.3]">

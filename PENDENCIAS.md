@@ -6,6 +6,7 @@ Levantado a partir do código em 2026-07-28, depois das 16 telas do design v2.
 
 Tipo:
 
+- ✅ **feito** — resolvido depois do levantamento inicial
 - 🟡 **placeholder** — aparece na tela mas não tem nada por trás
 - ⚪ **não existe** — falta construir
 - 🔴 **defeito** — está errado, não só ausente
@@ -31,8 +32,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
-| 🟡 | **Endereço "Av. Osvaldo Aranha, 540"** | Fixo no código (`ORIGEM`). Não é clicável e não há tabela de endereços salvos. |
-| 🔵 | **Distâncias e tempo a pé** | Cálculo real a partir das coordenadas reais das lojas — mas sempre a partir daquele endereço fixo. Só valem para quem está no Bom Fim. Tempo a pé assume 80 m/min. |
+| 🔵 | **Distâncias e tempo a pé** | Agora medidas do endereço que a pessoa salvou e marcou como principal (C7). Quem está deslogado ou não salvou nenhum cai no endereço padrão do Bom Fim — e o rótulo na tela diz qual endereço está sendo usado. Tempo a pé assume 80 m/min. |
 | 🟡 | **Fotos das sacolas** | Placeholder listrado quando a loja não subiu foto. O upload já funciona (P3). |
 | 🔴 | **"Disponível hoje" é texto fixo** | A janela pode ser de amanhã (a migration 0008 empurra para o dia seguinte). O app pode dizer "hoje" para comida que só sai amanhã. |
 
@@ -41,13 +41,13 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
 | 🔵 | Buscas recentes | Ficam no `localStorage` do aparelho. Não seguem o usuário entre celulares. |
-| ⚪ | Página de loja | "Lojas" nos resultados leva para uma *sacola*, porque não existe página por estabelecimento. |
+| ⚪ | Página de loja na busca | A página existe agora (`/loja/[id]`) e o nome da loja no detalhe da sacola leva até ela. Falta ligar os resultados de busca "Lojas" nela. |
 
 ## C2 — Descobrir (mapa)
 
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
-| ⚪ | **Filtro de raio** | O filtro tem janela, preço e categoria. Falta o raio — só faz sentido junto com endereço do usuário. |
+| ⚪ | **Filtro de raio** | O filtro tem janela, preço e categoria. Falta o raio. Agora é possível: o endereço do usuário existe (C7). |
 | 🔴 | **"Meu local" não atualiza as distâncias** | Centraliza o mapa e marca sua posição, mas os "310m" continuam medidos do endereço fixo. |
 | 🟣 | Mapa (CARTO) | Camada gratuita com atribuição. Conferir os termos antes de uso comercial. |
 
@@ -55,7 +55,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
-| ⚪ | **Foto da loja (topo)** | As sacolas têm foto; **estabelecimentos não têm coluna de foto nenhuma**. |
+| 🟡 | **Foto da loja (topo)** | A coluna existe (`establishments.foto_url`, migration 0019) e a loja sobe a foto no Perfil público. Falta usá-la no topo do C3, que ainda mostra o padrão listrado. |
 | 🔴 | **Pode mostrar janela vencida** | Se a sacola não tem oferta ativa, a tela cai para qualquer oferta antiga e mostra o horário de ontem como se fosse hoje. O botão recusa, mas só depois. |
 
 ## C4 — Reserva + pagamento
@@ -88,7 +88,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
-| ⚪ | **Endereços salvos** | Marcado "em breve". É o item de maior alavancagem: resolve também o endereço do C1, o raio do C2 e todas as distâncias. |
+| ✅ | **Endereços salvos** | Feito. Cadastrar, editar, remover e escolher qual vale. O principal é a origem de todas as distâncias do app. |
 | ⚪ | **Formas de pagamento** | Depende do provedor. |
 | ⚪ | **Notificações** | Não existe infraestrutura de push. É um projeto à parte, não uma tela. |
 | 🟡 | **Ajuda e contato / Enviar feedback** | Hoje são links `mailto:` para contato@goodfood.app — não são formulários no app. O e-mail precisa existir e ser monitorado. |
@@ -102,7 +102,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
 | ⚪ | **Alerta de desconto** ("baixar para R$ 16,90?") | Precisa de preço por dia: hoje o preço mora no modelo (`bags`), não na oferta do dia (`listings`). Mexe no preço em todo o app do consumidor. |
-| 🔵 | "aberta" no cabeçalho | Deduzido de existir oferta ativa. O interruptor abrir/fechar do design nunca foi feito (falta coluna `establishments.aberta`). |
+| ✅ | "aberta" no cabeçalho | Agora lê o horário cadastrado (`establishments.horarios`), mostra "aberta até 19h30" / "fechada · abre 07h00", e avisa quando uma sacola cai fora do horário. Loja sem horário não recebe rótulo nenhum. |
 
 ## P2 — Retirada (leitura de código)
 
@@ -123,16 +123,15 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | --- | --- | --- |
 | 🟡 | **A tela inteira** | Todos os números vêm de `lib/parceiro-mock.ts`. Rotulada "Dados de exemplo" na própria tela. Feita para mostrar a parceiros. |
 | 🔴 | **Chips 7 dias / 30 dias / Ano** | São texto, não filtram nada. |
-| 🔴 | **Botão "Responder"** | Não faz nada ao ser tocado. Precisa de coluna de resposta nas avaliações. |
+| ✅ | **Botão "Responder"** | Feito, na tela Avaliações (G), com avaliações reais. A resposta aparece para o cliente. |
 | ⚪ | "média do RS: 89%", "sábado rende 2,3×" | Precisam de dados agregados de várias lojas. Não dá para calcular com uma. |
 
 ## P5 — Loja
 
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
-| ⚪ | **Foto da loja** | Mesma coluna faltante do C3. |
-| ⚪ | **Perfil público** | "Em breve", sem destino. |
-| ⚪ | **Repasse e dados bancários** | "Ainda não configurado". Depende do provedor. |
+| ✅ | **Perfil público** | Feito: foto, descrição e horários, com página pública em `/loja/[id]`. |
+| 🟡 | **Repasse e dados bancários** | A tela existe e salva (tabela `dados_bancarios`, só a própria loja lê). Nenhum repasse acontece — depende do provedor. |
 
 ## P6 — Cadastrar meu negócio
 
@@ -149,8 +148,8 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
 | 🔴 | **Erro de consulta vira tela vazia** | Onze funções leem `const { data } = await …` e nunca olham o `error`. Se a consulta falha, aparece "Nenhuma sacola disponível agora" em vez de um aviso de erro. Foi assim que o botão "meu local" escondeu a própria falha. |
-| ⚪ | **Foto do estabelecimento** | Não existe coluna. Afeta C3 e P5. |
-| ⚪ | **Página de loja** | Não existe. Afeta busca (C1b) e histórico (C6). |
+| ✅ | **Foto do estabelecimento** | Coluna `establishments.foto_url` + bucket `lojas` (0019). Falta usar no topo do C3. |
+| 🟡 | **Página de loja** | Existe: `/loja/[id]`. Ligada no detalhe da sacola. Falta ligar na busca (C1b) e no histórico (C6). |
 | 🟡 | Catálogo de demonstração | As quatro lojas e suas sacolas são fictícias. A migration 0008 renova (as janelas expiram e o feed esvazia). |
 | 🟡 | `/painel` (desktop do parceiro) | Totalmente em dados fictícios. Não fez parte do redesenho. |
 | 🟡 | `/admin` (painel interno) | Totalmente em dados fictícios. Não fez parte do redesenho. |

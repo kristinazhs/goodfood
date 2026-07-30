@@ -3,6 +3,7 @@ import { FotoSacola } from "@/components/consumidor/foto-sacola";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { contagemRetirada, diaMes, mesPorExtenso } from "@/lib/datas";
 import { brl } from "@/lib/format";
+import { getOrigem } from "@/lib/enderecos";
 import { navConsumidor } from "@/lib/nav";
 import {
   calcularImpacto,
@@ -41,7 +42,11 @@ export default async function Pedidos({
 }: {
   searchParams: Promise<{ aba?: string }>;
 }) {
-  const [{ aba }, pedidos] = await Promise.all([searchParams, getMeusPedidos()]);
+  const origem = await getOrigem();
+  const [{ aba }, pedidos] = await Promise.all([
+    searchParams,
+    getMeusPedidos(origem),
+  ]);
 
   const ativos = pedidos.filter(estaAtivo);
   const historico = pedidos.filter((p) => !estaAtivo(p));

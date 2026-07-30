@@ -3,7 +3,7 @@
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect, useRef, useState } from "react";
-import { ORIGEM } from "@/lib/distancia";
+import type { Origem } from "@/lib/distancia";
 
 // Basemap. CARTO "Positron" is a deliberately minimal style — pale, few
 // labels, no POI clutter — which is far closer to the design than the
@@ -50,10 +50,13 @@ function pinIcon(p: PontoMapa, ativo: boolean) {
 
 export default function LeafletMap({
   pontos,
+  origem,
   lojaSelecionada,
   onSelect,
 }: {
   pontos: PontoMapa[];
+  /** Where "você" is — the person's principal saved address. */
+  origem: Origem;
   lojaSelecionada: string | null;
   onSelect: (loja: string) => void;
 }) {
@@ -68,7 +71,7 @@ export default function LeafletMap({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     const map = L.map(containerRef.current, {
-      center: [ORIGEM.lat, ORIGEM.lng],
+      center: [origem.lat, origem.lng],
       zoom: 15,
       zoomControl: false,
       attributionControl: true,
@@ -80,7 +83,7 @@ export default function LeafletMap({
     }).addTo(map);
 
     // Where the search is measured from (the address in the header).
-    L.marker([ORIGEM.lat, ORIGEM.lng], {
+    L.marker([origem.lat, origem.lng], {
       interactive: false,
       icon: L.divIcon({
         className: "mv-pin-wrap",
@@ -99,7 +102,8 @@ export default function LeafletMap({
       mapRef.current = null;
       markersRef.current = {};
     };
-  }, []);
+    // Rebuilt when the origin changes — the "you are here" marker moves.
+  }, [origem.lat, origem.lng]);
 
   // (Re)build pins when the set of shops changes.
   useEffect(() => {
@@ -123,7 +127,7 @@ export default function LeafletMap({
     if (pts.length === 1) {
       map.setView(pts[0], 16);
     } else if (pts.length > 1) {
-      map.fitBounds(L.latLngBounds([...pts, [ORIGEM.lat, ORIGEM.lng]]), {
+      map.fitBounds(L.latLngBounds([...pts, [origem.lat, origem.lng]]), {
         padding: [70, 70],
         maxZoom: 16,
       });

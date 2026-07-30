@@ -1,12 +1,18 @@
 // Distance from the person to the shop — the "· 450 m" on every card.
 //
-// The shops' lat/lng are real (geocoded on signup, and used by the map). What
-// we don't have yet is the PERSON's location: there's no saved-addresses table
-// and we don't ask for geolocation on the feed. So the origin below is the
-// address the design shows, as a placeholder, and every distance is measured
-// from it. When saved addresses exist, only ORIGEM changes.
+// The origin used to be this constant for everybody, so "450 m" was only true
+// for someone standing in the Bom Fim. It is now whichever address the person
+// saved and marked as principal (see lib/enderecos.ts); this stays as the
+// fallback for a visitor who is signed out or hasn't saved one yet, because a
+// feed with no distances at all is worse than one measured from the centre.
 
-export const ORIGEM = {
+export interface Origem {
+  label: string;
+  lat: number;
+  lng: number;
+}
+
+export const ORIGEM_PADRAO: Origem = {
   label: "Av. Osvaldo Aranha, 540",
   // Approximate — Av. Osvaldo Aranha between the park and Rua Padre Chagas.
   lat: -30.0338,
@@ -49,9 +55,10 @@ export function formatarDistancia(metros: number): string {
 export function distanciaAte(
   lat: number | null | undefined,
   lng: number | null | undefined,
+  origem: Origem = ORIGEM_PADRAO,
 ): string {
   if (lat == null || lng == null) return "";
-  return formatarDistancia(metrosEntre(ORIGEM.lat, ORIGEM.lng, lat, lng));
+  return formatarDistancia(metrosEntre(origem.lat, origem.lng, lat, lng));
 }
 
 /**
@@ -61,8 +68,9 @@ export function distanciaAte(
 export function minutosAPe(
   lat: number | null | undefined,
   lng: number | null | undefined,
+  origem: Origem = ORIGEM_PADRAO,
 ): number | null {
   if (lat == null || lng == null) return null;
-  const m = metrosEntre(ORIGEM.lat, ORIGEM.lng, lat, lng);
+  const m = metrosEntre(origem.lat, origem.lng, lat, lng);
   return Math.max(1, Math.round(m / 80));
 }

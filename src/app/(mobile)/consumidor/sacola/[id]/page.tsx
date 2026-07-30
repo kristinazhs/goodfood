@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ReserveBar } from "@/components/consumidor/reserve-bar";
 import { horaCorteReserva, reservasEncerradas } from "@/lib/datas";
 import { minutosAPe } from "@/lib/distancia";
+import { getOrigem } from "@/lib/enderecos";
 import { brl } from "@/lib/format";
 import { getSacolaPorId } from "@/lib/sacolas";
 
@@ -25,7 +26,8 @@ export default async function SacolaDetalhe({
   searchParams: Promise<{ de?: string }>;
 }) {
   const [{ id }, { de }] = await Promise.all([params, searchParams]);
-  const sacola = await getSacolaPorId(id);
+  const origem = await getOrigem();
+  const sacola = await getSacolaPorId(id, origem);
   if (!sacola) notFound();
 
   // Back respects where you came from, instead of always going home.
@@ -37,7 +39,7 @@ export default async function SacolaDetalhe({
     ? Math.round((1 - sacola.preco / sacola.precoOriginal) * 100)
     : 0;
 
-  const minutos = minutosAPe(sacola.lat, sacola.lng);
+  const minutos = minutosAPe(sacola.lat, sacola.lng, origem);
   const corte = sacola.janelaFim ? horaCorteReserva(sacola.janelaFim) : null;
   const fechada = reservasEncerradas(sacola.janelaFim);
   const esgotada = sacola.disponivel === 0;

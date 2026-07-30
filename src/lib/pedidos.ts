@@ -1,5 +1,5 @@
 import { horaMinutoSP } from "./datas";
-import { distanciaAte } from "./distancia";
+import { distanciaAte, ORIGEM_PADRAO, type Origem } from "./distancia";
 import { createSupabaseServerClient } from "./supabase-server";
 
 export type PedidoStatus = "reservado" | "retirado" | "nao_retirado" | "cancelado";
@@ -125,7 +125,9 @@ export async function getPedidoDetalhe(
 }
 
 // The logged-in consumer's own orders, newest first.
-export async function getMeusPedidos(): Promise<PedidoResumo[]> {
+export async function getMeusPedidos(
+  origem: Origem = ORIGEM_PADRAO,
+): Promise<PedidoResumo[]> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -158,6 +160,7 @@ export async function getMeusPedidos(): Promise<PedidoResumo[]> {
       distancia: distanciaAte(
         o.listing.establishment.lat,
         o.listing.establishment.lng,
+        origem,
       ),
       janela: `${horaMinutoSP(o.listing.janela_inicio)} – ${horaMinutoSP(o.listing.janela_fim)}`,
       janelaInicio: o.listing.janela_inicio,

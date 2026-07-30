@@ -1,5 +1,5 @@
 import { getNotasPorLoja, type NotaLoja } from "@/lib/avaliacoes";
-import { distanciaAte } from "@/lib/distancia";
+import { distanciaAte, ORIGEM_PADRAO, type Origem } from "@/lib/distancia";
 import type { Horarios } from "@/lib/horarios";
 import { createSupabaseClient } from "@/lib/supabase";
 import type { CategoriaId, ConteudoSacola, Sacola } from "@/lib/types";
@@ -81,6 +81,7 @@ function toSacola(
   est: EstablishmentRow,
   listing: ListingRow | null,
   nota?: NotaLoja,
+  origem: Origem = ORIGEM_PADRAO,
 ): Sacola {
   const preco = Number(bag.preco);
   const precoOriginal =
@@ -94,7 +95,7 @@ function toSacola(
     nome: bag.nome,
     loja: est.nome,
     lojaId: est.id,
-    distancia: distanciaAte(est.lat, est.lng),
+    distancia: distanciaAte(est.lat, est.lng, origem),
     emoji: bag.emoji ?? "🛍️",
     corThumb: bag.cor_thumb ?? "#E4EDE3",
     fotoUrl: bag.foto_url,
@@ -127,7 +128,9 @@ function toSacola(
 }
 
 // The consumer feed: every bag with stock available right now.
-export async function getSacolasDisponiveis(): Promise<Sacola[]> {
+export async function getSacolasDisponiveis(
+  origem: Origem = ORIGEM_PADRAO,
+): Promise<Sacola[]> {
   const supabase = createSupabaseClient();
   const { data, error } = await supabase
     .from("listings")
@@ -148,7 +151,13 @@ export async function getSacolasDisponiveis(): Promise<Sacola[]> {
     ...new Set(rows.map((r) => r.establishment.id)),
   ]);
   return rows.map((row) =>
-    toSacola(row.bag, row.establishment, row, notas.get(row.establishment.id)),
+    toSacola(
+      row.bag,
+      row.establishment,
+      row,
+      notas.get(row.establishment.id),
+      origem,
+    ),
   );
 }
 
@@ -201,7 +210,10 @@ export function escolherDestaque(
 }
 
 // One sacola for the detail / checkout / payment screens, by bag id.
-export async function getSacolaPorId(id: string): Promise<Sacola | undefined> {
+export async function getSacolaPorId(
+  id: string,
+  origem: Origem = ORIGEM_PADRAO,
+): Promise<Sacola | undefined> {
   if (!UUID_RE.test(id)) return undefined; // stale/non-uuid url -> not found
 
   const supabase = createSupabaseClient();
@@ -230,7 +242,13 @@ export async function getSacolaPorId(id: string): Promise<Sacola | undefined> {
     null;
 
   const notas = await getNotasPorLoja([bag.establishment.id]);
-  return toSacola(bag, bag.establishment, ativa, notas.get(bag.establishment.id));
+  return toSacola(
+    bag,
+    bag.establishment,
+    ativa,
+    notas.get(bag.establishment.id),
+    origem,
+  );
 }
 
 // ---- H: the public page of one shop -------------------------------------
