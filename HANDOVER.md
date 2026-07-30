@@ -1,8 +1,11 @@
 # GoodFood — handover
 
-Written 2026-07-28, at the end of the design-v2 redesign work. This file
-exists so a fresh Claude Code session (or a new developer) can pick the
-project up without the previous conversation.
+Written 2026-07-28 at the end of the design-v2 redesign; **updated
+2026-07-30** after a long session of bug-fixing and follow-up features
+(migrations 0019–0024). This file exists so a fresh Claude Code session (or
+a new developer) can pick the project up without the previous conversation.
+
+Read this, then `PENDENCIAS.md`. Trust both over any assumption.
 
 ---
 
@@ -67,6 +70,33 @@ to do.**
 `PENDENCIAS.md`: placeholders, dead controls, missing functions and known
 defects. Read that file before planning any work.
 
+### What changed on 2026-07-30
+
+A "before I show this to partners" pass. Everything below is done, pushed
+and verified in the browser unless stated:
+
+- **Saved addresses (C7)** exist and drive *every* distance in the app. With
+  no saved address the app shows **no distance at all** and the header asks
+  for one — it never invents a location. The address button on the feed
+  opens a picker (Casa / Trabalho / write a new one).
+- **Public shop page** at `/loja/[id]`, editable by the shop under Loja →
+  Perfil público (photo, description, hours). Linked from the sacola detail,
+  search results and order history.
+- **Reviews are real on the partner side** and can be answered. The reply is
+  written through `responder_avaliacao()` so a shop can never edit the
+  customer's rating or words. Consumers see the reply in Pedidos.
+- **"Aberta" reads the registered schedule**, and P1 warns when a published
+  window falls outside opening hours.
+- **Shops can publish for TOMORROW** (today + tomorrow only). The feed groups
+  Hoje / Amanhã; urgency ("última unidade") is today-only.
+- **A published offer keeps its own terms** — see Product decisions.
+- **Payout details** page (`dados_bancarios`), stored but not wired to any
+  provider.
+- **CPF + phone required** at signup and in Dados pessoais.
+- Bug fixes: the splash animation, losing your sacola when logging in,
+  duplicate React keys, sold-out map pins, the model-rewriting bug, models
+  that could not be deleted.
+
 ### Ratings are real
 
 The `reviews` table existed from migration 0001 and nothing ever wrote to
@@ -99,6 +129,29 @@ atomically and the listing auto-closes when it hits zero.
   confirms one.
 - **The bag type (categoria) lives on the sacola, not the shop.** The consumer
   filter reads the sacola. P6 no longer asks for a shop-level type.
+- **A published offer carries its own terms** (migration 0024). `listings`
+  stores nome, preço, categoria, conteúdos, alérgenos, foto and peso as they
+  were *when it was published*. Editing the model afterwards only affects the
+  NEXT one. This is not a nicety: it stops a price changing under someone who
+  already paid, and stops an allergen list — a safety declaration — being
+  rewritten retroactively.
+- **The customer works with OFFERS, not templates.** `/consumidor/sacola/[id]`
+  and the reservation key on the `listing` id. Keying on the bag meant two
+  live windows of one sacola resolved to whichever the lookup picked.
+- **A model is one you chose to keep** (migration 0023, `bags.modelo`).
+  Publishing creates a bag because a listing needs one; that is not a model.
+  "Remover dos modelos" clears the flag — it never deletes the bag, because
+  `bags → listings` is ON DELETE CASCADE and would take published offers with
+  it.
+- **Publishing is capped at today + tomorrow.** Surplus food is unpredictable;
+  a shop promising a bag four days out will cancel, and cancellations are what
+  destroy trust in this category.
+- **Cancellation stays a flat 15 minutes**, including for next-day pickups
+  (decided 2026-07-30; Food to Save gives 5).
+- **CPF and telefone are REQUIRED at signup** (decided 2026-07-30). This
+  reverses the earlier decision that kept the phone out of signup — the
+  comment about it in `auth-actions.ts` is stale. CPF is validated by its
+  check digits, not against the Receita.
 
 ## Things deliberately left out, and why
 
@@ -116,8 +169,9 @@ Reintroduce these only when the data exists to support them:
   `src/lib/auth-actions.ts`. Supabase builds a valid-looking OAuth URL even
   when the provider is disabled, so without the flag the user lands on raw
   JSON at supabase.co. Flip it only after enabling Google in Supabase.
-- **Open/close shop switch**, **saved addresses**, **payout/bank details** —
-  all shown as "em breve" rather than as dead controls.
+- **Open/close shop switch** — still absent; "aberta" is derived from the
+  registered schedule instead. Saved addresses and payout details are now
+  **built** (see 2026-07-30 above).
 
 ## Known gotchas
 
@@ -148,14 +202,30 @@ Reintroduce these only when the data exists to support them:
 | 0016 | `establishments.horarios` (jsonb, per weekday) + `whatsapp` |
 | 0017 | Removes duplicate listings of the same bag on the same day |
 | 0018 | `orders.metodo_pagamento` + `cancelar_reserva()` (15-min window, restores stock) |
+| 0019 | `enderecos` table · `establishments.descricao`/`foto_url` · `reviews.resposta` + `responder_avaliacao()` · `dados_bancarios` table · `lojas` bucket |
+| 0020 | Data API grants missed in 0019 (RLS narrows rows; it does not grant reach) |
+| 0021 | `profiles.cpf`, unique where present |
+| 0022 | Partial unique index: one live offer per bag per window |
+| 0023 | `bags.modelo` — a model is one you chose to keep |
+| 0024 | `listings` carries its own nome/preço/categoria/conteúdos/alérgenos/foto/peso |
 
 All have been run against the live database.
+
+**Two rules learned the hard way:**
+- RLS decides *which rows*; a table also needs a `grant` for the Data API to
+  reach it at all (0020 exists because 0019 forgot).
+- Anything private must not live on `establishments` — that table has a
+  `public read` policy, which is why payout details got their own table.
 
 ## Pre-launch housekeeping
 
 - Re-enable Supabase email confirmation.
 - Delete test accounts and their sacolas (`kristina.teste`, `padaria.teste`,
   `padaria.mapa`, `padaria.aranha`, plus the partner account Kristina made).
+- Test data created on 2026-07-30 while verifying fixes, all removable from
+  the partner screens: model **"Cute dog EDITADO" (R$99)** (edited to prove
+  the price freeze), offer **"Pão de amanhã cedo"** (tomorrow 07h00–09h00),
+  and a second **"Cute dog"** at R$25 (20h30–21h30).
 - Write real `/termos`, `/privacidade` and `/contrato-parceria` — all three
   are placeholders saying the documents are being prepared.
 - Tighten the storage policy: any signed-in user can currently upload to the
@@ -164,3 +234,79 @@ All have been run against the live database.
   not part of this redesign.
 - Decide the commission rate.
 - Decide the payment provider (Mercado Pago vs Pagar.me, marketplace split).
+
+---
+
+## Branches — where things stand, and what to do next
+
+**Today:** `main` is the old pre-redesign app and auto-deploys to production.
+`design-v2` holds *everything* — all 16 redesigned screens and migrations
+0006–0024 — and **has never been merged**. The two have diverged enormously.
+
+That means the live site is months behind the real product, and `design-v2`
+is not a "feature branch" any more; it *is* the app.
+
+### The immediate decision
+
+The database is shared: migrations 0006–0024 have already been run against
+the one live Supabase project. So `main` is not just old code — it is old
+code pointing at a **newer database**. It has not broken yet only because
+nobody uses it, and because most migrations only add things. Leaving that
+gap open indefinitely is the risk, not merging.
+
+Suggested order:
+
+1. Reset and repopulate the data (below) and test both sides on `design-v2`.
+2. When happy, merge `design-v2` → `main` **once**, as one big merge. After
+   that, production and the product are the same thing again.
+3. Only then adopt branch discipline, because from that point branches are
+   cheap and short-lived.
+
+### What discipline to adopt afterwards
+
+The advice Kristina was given — `main` + `dev`, branch off `dev` — is the
+classic "git flow". It is designed for teams shipping versioned releases with
+QA gates. For one person with Vercel, it usually adds a merge step without
+adding safety.
+
+What Vercel already gives, free:
+
+- every branch pushed gets its **own preview URL**
+- `main` is production
+
+So the lighter shape is:
+
+```
+main ────────●──────────●────────►  production
+              \        /
+               ●──────●              feature branch, own preview URL
+```
+
+- one short-lived branch per change (`fix/foto-do-topo`, `feat/raio-no-mapa`)
+- test it on its preview URL
+- merge into `main` when it works; delete the branch
+
+Add a permanent `dev` branch only if a moment arrives where several changes
+must sit finished-but-unreleased at the same time. That is a real need in a
+team with release trains; it is rare for one person.
+
+**The one rule that matters more than the branch shape:** a migration must be
+run before the code that reads it is merged into `main`, or production breaks
+with Postgres error 42703. Keep hand-running the SQL first.
+
+## Next steps, in order
+
+1. **Clean-up migration** for the 2026-07-30 test data (or delete it by hand
+   from the partner screens).
+2. **Reset and repopulate Supabase** to test both sides deliberately. Notes:
+   - `auth.users` is separate from `public.profiles`; deleting an account is
+     done in the Supabase Auth dashboard, and the profile follows via the
+     0002 trigger.
+   - Order of deletion matters: `orders` → `listings` → `bags`, because
+     `orders.listing_id` is ON DELETE RESTRICT (deliberate — an order is the
+     record that money moved).
+   - Photos live in the `sacolas` and `lojas` storage buckets and are not
+     removed by deleting rows.
+   - Migration 0008 is the idempotent demo seed; it can be re-run any time.
+3. **Merge `design-v2` → `main`** once testing passes.
+4. Then work through `PENDENCIAS.md`.
