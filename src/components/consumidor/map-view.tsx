@@ -7,7 +7,7 @@ import { FotoSacola } from "@/components/consumidor/foto-sacola";
 import type { PontoMapa } from "@/components/consumidor/leaflet-map";
 import type { Origem } from "@/lib/distancia";
 import { brl } from "@/lib/format";
-import { escolherNoMapa } from "@/lib/mapa";
+import { escolherLojaNoMapa } from "@/lib/mapa";
 import type { Sacola } from "@/lib/types";
 
 const LeafletMap = dynamic(() => import("./leaflet-map"), {
@@ -80,16 +80,16 @@ export function MapView({
     return [...porLoja.values()];
   }, [visiveis]);
 
-  // The card shows the shop's most urgent sacola. With nothing tapped yet the
-  // map still opens on a decision rather than an empty sheet: the soonest
-  // window wins, matching the order the feed uses.
-  const { selecionada, esgotada } = useMemo(
-    () => escolherNoMapa(visiveis, lojaSelecionada),
+  // The card describes the SHOP, not one of its sacolas. Showing a single
+  // sacola meant the map picked one for you and hid the rest — a bakery with
+  // four kinds looked like a bakery with one.
+  const loja = useMemo(
+    () => escolherLojaNoMapa(visiveis, lojaSelecionada),
     [visiveis, lojaSelecionada],
   );
 
   // Which pin reads as selected, including the default one.
-  const lojaAtiva = selecionada?.loja ?? null;
+  const lojaAtiva = loja?.nome ?? null;
 
   function alternar(id: FiltroId) {
     setFiltros((f) => (f.includes(id) ? f.filter((x) => x !== id) : [...f, id]));
@@ -104,9 +104,9 @@ export function MapView({
     );
   }
 
-  const rota = selecionada
+  const rota = loja
     ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-        `${selecionada.endereco || selecionada.loja}, Porto Alegre`,
+        `${loja.endereco || loja.nome}, Porto Alegre`,
       )}`
     : "#";
 
@@ -262,61 +262,88 @@ export function MapView({
         </div>
       )}
 
-      {/* the C1 card, so the same object reads the same way on both screens */}
-      {selecionada && (
+      {/* A SHOP plaque: name, how much it has, and a way in. Choosing which
+          sacola happens on the shop's own page, where all of them are. */}
+      {loja && (
         <div className="absolute inset-x-4 bottom-4 z-[1000] rounded-[20px] bg-white p-3.5 shadow-[0_-2px_24px_rgba(0,0,0,0.14)]">
           <div className="flex gap-[13px]">
             <FotoSacola
-              src={selecionada.fotoUrl}
-              quantidade={selecionada.disponivel}
-              alt={selecionada.nome}
+              src={loja.fotoUrl}
               size={72}
+              radius={16}
+              legenda={"foto\nloja"}
+              alt=""
             />
             <div className="flex min-w-0 flex-1 flex-col">
               <div className="truncate font-display text-base font-semibold leading-[1.3]">
-                {selecionada.nome}
+                {loja.nome}
               </div>
               <div className="mt-0.5 truncate text-[13px] font-medium leading-[1.3] text-muted">
-                {selecionada.loja}
-                {selecionada.distancia ? ` · ${selecionada.distancia}` : ""}
+                {loja.distancia}
+                {/* No star until the shop actually has reviews. */}
+                {loja.avaliacao != null && (
+                  <>
+                    {loja.distancia ? " · " : ""}★{" "}
+                    {loja.avaliacao.toFixed(1).replace(".", ",")}
+                    {loja.avaliacoesTotal > 0 ? ` (${loja.avaliacoesTotal})` : ""}
+                  </>
+                )}
               </div>
               <div className="mt-auto flex items-center gap-[7px] pt-[9px]">
-                <span className="inline-flex h-[26px] items-center whitespace-nowrap rounded-lg bg-sage px-[9px] text-xs font-bold leading-none text-brand-dark">
-                  {selecionada.janela}
-                </span>
+                {loja.esgotada ? (
+                  <span className="inline-flex h-[26px] items-center whitespace-nowrap rounded-lg bg-[#f2efe8] px-[9px] text-xs font-bold leading-none text-muted">
+                    esgotada hoje
+                  </span>
+                ) : (
+                  <span className="inline-flex h-[26px] items-center whitespace-nowrap rounded-lg bg-sage px-[9px] text-xs font-bold leading-none text-brand-dark">
+                    {loja.janela}
+                  </span>
+                )}
               </div>
             </div>
           </div>
 
-          <div className="mt-3 flex items-baseline gap-2">
-            {selecionada.precoOriginal > selecionada.preco && (
-              <span className="text-[11px] font-medium leading-none text-[#8d8d84] line-through">
-                {brl(selecionada.precoOriginal)}
-              </span>
-            )}
-            <span className="font-display text-[17px] font-bold leading-none">
-              {brl(selecionada.preco)}
-            </span>
-          </div>
-
-          {esgotada && (
+          {loja.esgotada ? (
             <p className="mt-2.5 text-[12.5px] font-medium leading-[1.4] text-muted">
               Tudo reservado nesta loja hoje. Toque em outro pin para ver o que
               ainda tem perto de você.
             </p>
+          ) : (
+            <div className="mt-3 flex items-baseline justify-between gap-2">
+              <span className="text-[12.5px] font-semibold leading-none text-muted">
+                {loja.variedades === 1
+                  ? "1 tipo de sacola"
+                  : `${loja.variedades} tipos de sacola`}
+                {" · "}
+                {loja.quantidade === 1
+                  ? "1 disponível"
+                  : `${loja.quantidade} disponíveis`}
+              </span>
+              <span className="shrink-0 text-right">
+                <span className="block text-[11px] font-medium leading-none text-[#8d8d84]">
+                  a partir de
+                </span>
+                <span className="mt-0.5 block font-display text-[17px] font-bold leading-none">
+                  {brl(loja.precoMin)}
+                </span>
+              </span>
+            </div>
           )}
 
           <div className="mt-3 flex gap-2.5">
-            {esgotada ? (
-              <span className="flex h-12 flex-1 items-center justify-center rounded-[14px] bg-sage text-[15px] font-bold text-muted">
-                Esgotada hoje
-              </span>
+            {loja.esgotada ? (
+              <Link
+                href={`/loja/${loja.id}?de=mapa`}
+                className="flex h-12 flex-1 items-center justify-center rounded-[14px] bg-sage text-[15px] font-bold text-brand-dark transition-transform active:scale-[0.98]"
+              >
+                Ver a loja
+              </Link>
             ) : (
               <Link
-                href={`/consumidor/sacola/${selecionada.id}?de=mapa`}
+                href={`/loja/${loja.id}?de=mapa`}
                 className="flex h-12 flex-1 items-center justify-center rounded-[14px] bg-brand text-[15px] font-bold text-white transition-transform active:scale-[0.98]"
               >
-                Ver sacola
+                Ver sacolas
               </Link>
             )}
             <a

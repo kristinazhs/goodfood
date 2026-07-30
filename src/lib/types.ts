@@ -19,6 +19,8 @@ export interface Sacola {
   emoji: string;
   /** The shop that sells it — links to its public page. */
   lojaId: string;
+  /** The SHOP's photo (not the bag's) — used by the map's shop plaque. */
+  lojaFotoUrl: string | null;
   corThumb: string;
   /** Shop-window photo; null falls back to the striped placeholder. */
   fotoUrl: string | null;

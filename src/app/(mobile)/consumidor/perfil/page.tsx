@@ -1,9 +1,7 @@
 import Link from "next/link";
-import { AvaliarForm } from "@/components/consumidor/avaliar-form";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { getCurrentProfile } from "@/lib/auth";
 import { signOut } from "@/lib/auth-actions";
-import { getAvaliacaoPendente, getMinhasAvaliacoes } from "@/lib/avaliacoes";
 import { getOrigem } from "@/lib/enderecos";
 import { navConsumidor } from "@/lib/nav";
 import { calcularImpacto, getMeusPedidos } from "@/lib/pedidos";
@@ -16,17 +14,14 @@ export const dynamic = "force-dynamic";
 export default async function Perfil({
   searchParams,
 }: {
-  searchParams: Promise<{ avaliado?: string; erro?: string }>;
+  searchParams: Promise<Record<string, never>>;
 }) {
   const origem = await getOrigem();
-  const [{ avaliado, erro }, sessao, pedidos, pendente, avaliacoes] =
-    await Promise.all([
-      searchParams,
-      getCurrentProfile(),
-      getMeusPedidos(origem),
-      getAvaliacaoPendente(),
-      getMinhasAvaliacoes(),
-    ]);
+  const [, sessao, pedidos] = await Promise.all([
+    searchParams,
+    getCurrentProfile(),
+    getMeusPedidos(origem),
+  ]);
 
   const nome = sessao?.profile?.nome ?? "Você";
   const email = sessao?.email ?? "";
@@ -57,17 +52,6 @@ export default async function Perfil({
           </Link>
         </div>
 
-        {avaliado && (
-          <p className="mx-5 mt-4 rounded-xl bg-sage px-3.5 py-3 text-[13px] font-bold text-brand-dark">
-            Obrigado! Sua avaliação ajuda a loja e quem vem depois.
-          </p>
-        )}
-        {erro && (
-          <p className="mx-5 mt-4 rounded-xl bg-alert-bg px-3.5 py-3 text-[13px] font-semibold text-alert">
-            Não foi possível salvar a avaliação. Tente novamente.
-          </p>
-        )}
-
         {/* Impact at the top, not the bottom: it's the reason people return. */}
         {impacto.kg > 0 && (
           <div className="mx-5 mt-[18px] flex items-center gap-3.5 rounded-[18px] bg-sage p-4">
@@ -89,63 +73,6 @@ export default async function Perfil({
               </div>
             </div>
           </div>
-        )}
-
-        {pendente && (
-          <>
-            <div className="px-5 pb-2.5 pt-[22px] text-xs font-extrabold uppercase leading-none tracking-[0.7px] text-muted">
-              Avaliar retirada
-            </div>
-            <div className="px-5">
-              <AvaliarForm pendente={pendente} />
-            </div>
-          </>
-        )}
-
-        {avaliacoes.length > 0 && (
-          <>
-            <div className="px-5 pb-2.5 pt-[22px] text-xs font-extrabold uppercase leading-none tracking-[0.7px] text-muted">
-              Suas avaliações · {avaliacoes.length}
-            </div>
-            <div className="flex flex-col gap-2.5 px-5">
-              {/* By shop, exactly as the partner sees them on P4. */}
-              {avaliacoes.map((a) => (
-                <div
-                  key={a.id}
-                  className="rounded-2xl border-[1.5px] border-sage-line bg-white p-[13px]"
-                >
-                  <div className="flex items-center justify-between gap-2.5">
-                    <span className="min-w-0 truncate text-[13.5px] font-bold leading-[1.3]">
-                      {a.loja}
-                    </span>
-                    <span className="shrink-0 text-[12.5px] font-medium leading-none text-muted">
-                      {a.quando}
-                    </span>
-                  </div>
-                  <div className="mt-[5px] text-[13px] font-bold leading-none tracking-[1px] text-terracotta">
-                    {"★".repeat(a.nota)}
-                    {"☆".repeat(5 - a.nota)}
-                  </div>
-                  {a.comentario && (
-                    <p className="mt-2 text-[13px] leading-[1.5] text-[#4a4a44]">
-                      {a.comentario}
-                    </p>
-                  )}
-                  {/* Answering is only worth doing if the customer sees it. */}
-                  {a.resposta && (
-                    <div className="mt-2.5 rounded-xl bg-sage px-3 py-2.5">
-                      <div className="text-[11.5px] font-extrabold uppercase leading-none tracking-[0.5px] text-brand-dark">
-                        Resposta de {a.loja}
-                      </div>
-                      <p className="mt-1.5 text-[13px] leading-[1.5] text-brand-dark">
-                        {a.resposta}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </>
         )}
 
         <div className="px-5 pb-2.5 pt-[22px] text-xs font-extrabold uppercase leading-none tracking-[0.7px] text-muted">

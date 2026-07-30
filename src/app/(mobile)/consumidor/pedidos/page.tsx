@@ -4,6 +4,8 @@ import { BottomNav } from "@/components/ui/bottom-nav";
 import { contagemRetirada, diaMes, mesPorExtenso } from "@/lib/datas";
 import { brl } from "@/lib/format";
 import { getOrigem } from "@/lib/enderecos";
+import { AvaliarForm } from "@/components/consumidor/avaliar-form";
+import { getAvaliacaoPendente, getMinhasAvaliacoes } from "@/lib/avaliacoes";
 import { navConsumidor } from "@/lib/nav";
 import {
   calcularImpacto,
@@ -40,12 +42,14 @@ function porMes(pedidos: PedidoResumo[]): [string, PedidoResumo[]][] {
 export default async function Pedidos({
   searchParams,
 }: {
-  searchParams: Promise<{ aba?: string }>;
+  searchParams: Promise<{ aba?: string; avaliado?: string; erro?: string }>;
 }) {
   const origem = await getOrigem();
-  const [{ aba }, pedidos] = await Promise.all([
+  const [{ aba, avaliado, erro }, pedidos, pendente, avaliacoes] = await Promise.all([
     searchParams,
     getMeusPedidos(origem),
+    getAvaliacaoPendente(),
+    getMinhasAvaliacoes(),
   ]);
 
   const ativos = pedidos.filter(estaAtivo);
@@ -216,6 +220,74 @@ export default async function Pedidos({
                 </div>
               </div>
             ))
+          )}
+
+          {avaliado && (
+            <p className="mt-4 rounded-xl bg-sage px-3.5 py-3 text-[13px] font-bold text-brand-dark">
+              Obrigado! Sua avaliação ajuda a loja e quem vem depois.
+            </p>
+          )}
+          {erro && (
+            <p className="mt-4 rounded-xl bg-alert-bg px-3.5 py-3 text-[13px] font-semibold text-alert">
+              Não foi possível salvar a avaliação. Tente novamente.
+            </p>
+          )}
+
+          {pendente && (
+            <>
+              <div className="px-5 pb-2.5 pt-[22px] text-xs font-extrabold uppercase leading-none tracking-[0.7px] text-muted">
+                Avaliar retirada
+              </div>
+              <div className="px-5">
+                <AvaliarForm pendente={pendente} />
+              </div>
+            </>
+          )}
+
+          {avaliacoes.length > 0 && (
+            <>
+              <div className="px-5 pb-2.5 pt-[22px] text-xs font-extrabold uppercase leading-none tracking-[0.7px] text-muted">
+                Suas avaliações · {avaliacoes.length}
+              </div>
+              <div className="flex flex-col gap-2.5 px-5">
+                {/* By shop, exactly as the partner sees them on P4. */}
+                {avaliacoes.map((a) => (
+                  <div
+                    key={a.id}
+                    className="rounded-2xl border-[1.5px] border-sage-line bg-white p-[13px]"
+                  >
+                    <div className="flex items-center justify-between gap-2.5">
+                      <span className="min-w-0 truncate text-[13.5px] font-bold leading-[1.3]">
+                        {a.loja}
+                      </span>
+                      <span className="shrink-0 text-[12.5px] font-medium leading-none text-muted">
+                        {a.quando}
+                      </span>
+                    </div>
+                    <div className="mt-[5px] text-[13px] font-bold leading-none tracking-[1px] text-terracotta">
+                      {"★".repeat(a.nota)}
+                      {"☆".repeat(5 - a.nota)}
+                    </div>
+                    {a.comentario && (
+                      <p className="mt-2 text-[13px] leading-[1.5] text-[#4a4a44]">
+                        {a.comentario}
+                      </p>
+                    )}
+                    {/* Answering is only worth doing if the customer sees it. */}
+                    {a.resposta && (
+                      <div className="mt-2.5 rounded-xl bg-sage px-3 py-2.5">
+                        <div className="text-[11.5px] font-extrabold uppercase leading-none tracking-[0.5px] text-brand-dark">
+                          Resposta de {a.loja}
+                        </div>
+                        <p className="mt-1.5 text-[13px] leading-[1.5] text-brand-dark">
+                          {a.resposta}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
 
           {/* The reason people come back. Counts collected orders only. */}

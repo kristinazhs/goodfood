@@ -3,6 +3,7 @@ import { BagCard } from "@/components/consumidor/bag-card";
 import { FotoSacola } from "@/components/consumidor/foto-sacola";
 import { BackButton } from "@/components/ui/back-button";
 import { comHora, diaSemanaSP, estadoDaLoja } from "@/lib/horarios";
+import { getOrigem } from "@/lib/enderecos";
 import { getLojaPublica } from "@/lib/sacolas";
 
 export const dynamic = "force-dynamic";
@@ -23,11 +24,15 @@ const DIAS = [
 
 export default async function PaginaLoja({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ de?: string }>;
 }) {
-  const { id } = await params;
-  const loja = await getLojaPublica(id);
+  const [{ id }, { de }] = await Promise.all([params, searchParams]);
+  // Back respects where you came from, instead of always going home.
+  const voltarPara = de === "mapa" ? "/consumidor/descobrir" : "/consumidor";
+  const loja = await getLojaPublica(id, await getOrigem());
   if (!loja) notFound();
 
   const estado = estadoDaLoja(loja.horarios);
@@ -36,7 +41,7 @@ export default async function PaginaLoja({
   return (
     <main className="flex flex-1 flex-col pb-8">
       <div className="px-5 pt-5">
-        <BackButton href="/consumidor" />
+        <BackButton href={voltarPara} />
       </div>
 
       <div className="flex items-center gap-3.5 px-5 pt-4">

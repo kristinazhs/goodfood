@@ -62,7 +62,7 @@ export async function avaliarPedido(formData: FormData) {
   const comentario = String(formData.get("comentario") ?? "").trim();
 
   if (!orderId || nota < 1 || nota > 5) {
-    redirect("/consumidor/perfil?erro=avaliacao");
+    redirect("/consumidor/pedidos?erro=avaliacao");
   }
 
   const supabase = await createSupabaseServerClient();
@@ -86,7 +86,7 @@ export async function avaliarPedido(formData: FormData) {
   } | null;
 
   if (!o || o.consumer_id !== user.id || o.status !== "retirado") {
-    redirect("/consumidor/perfil?erro=avaliacao");
+    redirect("/consumidor/pedidos?erro=avaliacao");
   }
 
   const { error } = await supabase.from("reviews").insert({
@@ -96,9 +96,9 @@ export async function avaliarPedido(formData: FormData) {
     nota,
     comentario: comentario || null,
   });
-  if (error) redirect("/consumidor/perfil?erro=avaliacao");
+  if (error) redirect("/consumidor/pedidos?erro=avaliacao");
 
-  redirect("/consumidor/perfil?avaliado=1");
+  redirect("/consumidor/pedidos?avaliado=1");
 }
 
 /**

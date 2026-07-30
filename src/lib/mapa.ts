@@ -1,33 +1,82 @@
 import type { Sacola } from "./types";
 
 /**
- * Which sacola the map's bottom card shows, and whether the selected shop is
- * sold out.
- *
- * "Most urgent wins" alone surfaced bags with nothing left — including as the
- * card the map opens on, before anything is tapped. A shop can still be
- * selected when it is sold out (a pin you can see but can't touch reads as a
- * bug, and someone may want the shop for tomorrow), but the card then says so
- * instead of offering a reservation nobody can make.
+ * The map is a map of SHOPS, not of sacolas — one pin per shop, because a
+ * shop can sell several kinds. The card used to show a single sacola, which
+ * meant the map quietly picked one for you and hid the rest: a bakery with
+ * four kinds looked like a bakery with one. It now describes the shop and
+ * lets you go in and choose.
  */
-export function escolherNoMapa(
+export interface LojaNoMapa {
+  id: string;
+  nome: string;
+  fotoUrl: string | null;
+  distancia: string;
+  endereco: string;
+  avaliacao: number | null;
+  avaliacoesTotal: number;
+  /** Units on the shelf across every sacola this shop has right now. */
+  quantidade: number;
+  /** How many different sacolas are actually buyable — "3 tipos". */
+  variedades: number;
+  /** Cheapest bag on offer, for "a partir de R$ 21,90". */
+  precoMin: number;
+  /** The soonest pickup window still open at this shop. */
+  janela: string;
+  esgotada: boolean;
+}
+
+function porUrgencia(a: Sacola, b: Sacola): number {
+  return (a.janelaFim ?? "").localeCompare(b.janelaFim ?? "");
+}
+
+/**
+ * Which shop the bottom card describes. With nothing tapped the map still
+ * opens on a decision rather than an empty sheet: the shop with the soonest
+ * window wins, matching the order the feed uses — but never a sold-out one,
+ * which is what used to happen when "most urgent" was applied to sacolas.
+ *
+ * A sold-out shop can still be selected by tapping its pin — one you can see
+ * but can't touch reads as a bug, and the shop may be worth finding for
+ * tomorrow — but the card says so instead of offering a reservation.
+ */
+export function escolherLojaNoMapa(
   visiveis: Sacola[],
   lojaSelecionada: string | null,
-): { selecionada: Sacola | null; esgotada: boolean } {
-  const candidatas = lojaSelecionada
-    ? visiveis.filter((s) => s.loja === lojaSelecionada)
-    : visiveis;
+): LojaNoMapa | null {
+  let nome = lojaSelecionada;
+  if (!nome) {
+    const ordenadas = [...visiveis].sort(porUrgencia);
+    const preferida =
+      ordenadas.find((s) => s.disponivel > 0) ?? ordenadas[0] ?? null;
+    nome = preferida?.loja ?? null;
+  }
+  if (!nome) return null;
 
-  const porUrgencia = [...candidatas].sort((a, b) =>
-    (a.janelaFim ?? "").localeCompare(b.janelaFim ?? ""),
-  );
+  const sacolas = visiveis.filter((s) => s.loja === nome);
+  if (sacolas.length === 0) return null;
 
-  const selecionada =
-    porUrgencia.find((s) => s.disponivel > 0) ?? porUrgencia[0] ?? null;
-  if (!selecionada) return { selecionada: null, esgotada: false };
+  const comEstoque = sacolas.filter((s) => s.disponivel > 0);
+  // Describe the shop from a bag you could actually buy, when there is one.
+  const base = [...(comEstoque.length > 0 ? comEstoque : sacolas)].sort(
+    porUrgencia,
+  )[0];
 
-  const esgotada = !visiveis.some(
-    (s) => s.loja === selecionada.loja && s.disponivel > 0,
-  );
-  return { selecionada, esgotada };
+  return {
+    id: base.lojaId,
+    nome,
+    fotoUrl: base.lojaFotoUrl,
+    distancia: base.distancia,
+    endereco: base.endereco,
+    avaliacao: base.avaliacao,
+    avaliacoesTotal: base.avaliacoesTotal,
+    quantidade: sacolas.reduce((n, s) => n + s.disponivel, 0),
+    variedades: comEstoque.length,
+    precoMin:
+      comEstoque.length > 0
+        ? Math.min(...comEstoque.map((s) => s.preco))
+        : base.preco,
+    janela: base.janela,
+    esgotada: comEstoque.length === 0,
+  };
 }

@@ -28,6 +28,7 @@ interface EstablishmentRow {
   bairro: string | null;
   lat: number | null;
   lng: number | null;
+  foto_url: string | null;
 }
 
 interface ListingRow {
@@ -95,6 +96,7 @@ function toSacola(
     nome: bag.nome,
     loja: est.nome,
     lojaId: est.id,
+    lojaFotoUrl: est.foto_url ?? null,
     distancia: distanciaAte(est.lat, est.lng, origem),
     emoji: bag.emoji ?? "🛍️",
     corThumb: bag.cor_thumb ?? "#E4EDE3",
@@ -137,7 +139,7 @@ export async function getSacolasDisponiveis(
     .select(
       `id, janela_inicio, janela_fim, quantidade_disponivel, quantidade_total, status,
        bag:bags!inner ( id, nome, descricao, categoria, preco, preco_original, emoji, cor_thumb, conteudos, alergenos, foto_url ),
-       establishment:establishments!inner ( id, nome, endereco, bairro, lat, lng )`,
+       establishment:establishments!inner ( id, nome, endereco, bairro, lat, lng, foto_url )`,
     )
     .eq("status", "ativa")
     .gt("quantidade_disponivel", 0)
@@ -221,7 +223,7 @@ export async function getSacolaPorId(
     .from("bags")
     .select(
       `id, nome, descricao, categoria, preco, preco_original, emoji, cor_thumb, conteudos, alergenos, foto_url,
-       establishment:establishments!inner ( id, nome, endereco, bairro, lat, lng ),
+       establishment:establishments!inner ( id, nome, endereco, bairro, lat, lng, foto_url ),
        listings ( id, janela_inicio, janela_fim, quantidade_disponivel, quantidade_total, status )`,
     )
     .eq("id", id)
@@ -269,6 +271,7 @@ export interface LojaPublica {
 
 export async function getLojaPublica(
   id: string,
+  origem: Origem = ORIGEM_PADRAO,
 ): Promise<LojaPublica | null> {
   const supabase = createSupabaseClient();
 
@@ -285,7 +288,7 @@ export async function getLojaPublica(
 
   // Its sacolas on sale right now — same rules as the feed, so a shop page
   // can never advertise something the feed would refuse to sell.
-  const todas = await getSacolasDisponiveis();
+  const todas = await getSacolasDisponiveis(origem);
 
   return {
     id: est.id,
