@@ -64,7 +64,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | --- | --- | --- |
 | 🟡 | **Pagamento** | Nada é cobrado. O método escolhido é gravado (`orders.metodo_pagamento`) para a integração futura. A tela avisa isso. |
 | 🟣 | Provedor de pagamento | Mercado Pago × Pagar.me ainda não decidido. |
-| 🔴 | **Reservar deslogado perde a sacola** | Manda para o login e volta para o feed — a pessoa já tinha escolhido quantidade e apertado pagar. |
+| ✅ | **Reservar deslogado perde a sacola** | Corrigido. A causa estava no middleware, que apagava a query string em todo redirecionamento. O destino agora viaja como `?next=`, pelo login e pelo cadastro. |
 | 🔴 | "Hoje, 18h40 – 19h00" | Texto fixo, mesmo problema do C1. |
 
 ## C5 — Código de retirada
@@ -147,7 +147,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
-| 🔴 | **Erro de consulta vira tela vazia** | Onze funções leem `const { data } = await …` e nunca olham o `error`. Se a consulta falha, aparece "Nenhuma sacola disponível agora" em vez de um aviso de erro. Foi assim que o botão "meu local" escondeu a própria falha. |
+| 🔴 | **Erro de consulta vira tela vazia** | Ainda vale para a maioria das funções: leem `const { data } = await …` e nunca olham o `error`, então uma falha aparece como "nada disponível". As novas (`getEnderecos`, `getAvaliacoes`, `getDadosBancarios`, `getLojaPublica`) já lançam erro em vez de mentir. Falta varrer as antigas. |
 | ✅ | **Foto do estabelecimento** | Coluna `establishments.foto_url` + bucket `lojas` (0019). Falta usar no topo do C3. |
 | 🟡 | **Página de loja** | Existe: `/loja/[id]`. Ligada no detalhe da sacola. Falta ligar na busca (C1b) e no histórico (C6). |
 | 🟡 | Catálogo de demonstração | As quatro lojas e suas sacolas são fictícias. A migration 0008 renova (as janelas expiram e o feed esvazia). |
@@ -178,3 +178,11 @@ faixa de preço comparando a grandeza errada · QR falso · nota ★ fixa em 4,8
 reserva aceita depois do prazo que a tela prometia · abertura que saltava em vez
 de deslizar (o verde ia direto de `100dvh` para `auto`, que não é animável, e o
 logo trocava de alinhamento em vez de se mover).
+
+Na leva de 2026-07-29 (lista "antes dos parceiros"): pin de loja esgotada que
+abria uma sacola impossível de reservar · cancelamento sem confirmação, e que
+caía em Pedidos em vez do Início · Dados pessoais sem barra de abas · Perfil
+deslogado mostrando um perfil vazio · cadastro de negócio sem nenhuma
+confirmação · avaliações repetidas em Desempenho e Avaliações · "categoria" no
+Perfil público, que não é atributo de loja · "Salvar modelo" que voltava para o
+próprio formulário.
