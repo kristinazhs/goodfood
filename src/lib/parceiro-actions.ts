@@ -110,16 +110,43 @@ export async function publicarSacola(
     foto_url: fotoUrl || null,
   };
 
-  // 1. The bag (recurring template) — reused when publishing a saved model.
+  // 1. The bag (recurring template).
+  //
+  // Publishing NEVER rewrites an existing bag. It used to: picking a model
+  // and then changing anything ran an UPDATE on the shared template, so the
+  // listing ALREADY published from that model silently changed too — its
+  // name and its price, under customers who had already reserved — and the
+  // two listings then rendered identically because they were the same bag.
+  //
+  // So: reuse the model only when the form still matches it exactly.
+  // Otherwise this is a different sacola that merely started from one, and
+  // it gets its own bag. Editing a model is a separate, explicit act.
   let bagIdFinal = bagId;
   if (bagIdFinal) {
-    const { error: upErr } = await supabase
+    const { data: modelo } = await supabase
       .from("bags")
-      .update(campos)
+      .select("nome, descricao, categoria, preco, preco_original, conteudos, alergenos, foto_url")
       .eq("id", bagIdFinal)
-      .eq("establishment_id", est.id); // never touch another shop's model
-    if (upErr)
-      return { error: "Falha ao atualizar o modelo: " + upErr.message };
+      .eq("establishment_id", est.id) // never read another shop's model
+      .maybeSingle();
+
+    const igual =
+      modelo != null &&
+      modelo.nome === campos.nome &&
+      (modelo.descricao ?? null) === campos.descricao &&
+      modelo.categoria === campos.categoria &&
+      Number(modelo.preco) === campos.preco &&
+      (modelo.preco_original == null ? null : Number(modelo.preco_original)) ===
+        campos.preco_original &&
+      (modelo.foto_url ?? null) === campos.foto_url &&
+      JSON.stringify(modelo.conteudos ?? []) === JSON.stringify(campos.conteudos) &&
+      JSON.stringify(modelo.alergenos ?? []) === JSON.stringify(campos.alergenos);
+
+    if (!igual) bagIdFinal = ""; // falls through to "create a new bag"
+  }
+
+  if (bagIdFinal) {
+    // Unchanged: publish another window of the very same sacola.
   } else {
     const { data: bag, error: bagErr } = await supabase
       .from("bags")
@@ -539,10 +566,14 @@ export async function encerrarOuApagarListing(formData: FormData) {
   )?.establishment?.owner_id;
   if (!listing || dono !== user.id) redirect("/parceiro");
 
+  // Only orders that still HOLD a bag can block removal. A cancelled one was
+  // refunded and nobody is waiting on it — counting it was why a listing with
+  // a single cancelled order got closed instead of deleted.
   const { count } = await supabase
     .from("orders")
     .select("id", { count: "exact", head: true })
-    .eq("listing_id", listingId);
+    .eq("listing_id", listingId)
+    .neq("status", "cancelado");
 
   if ((count ?? 0) > 0) {
     // Someone is holding one: close it instead of deleting it.
@@ -553,9 +584,23 @@ export async function encerrarOuApagarListing(formData: FormData) {
     redirect(error ? `/parceiro/sacolas/${listingId}?erro=1` : "/parceiro?encerrada=1");
   }
 
-  const { error } = await supabase
-    .from("listings")
-    .delete()
-    .eq("id", listingId);
+  const { error } = await supabase.from("listings").delete().eq("id", listingId);
+
+  // A cancelled order still references the row, and orders.listing_id is ON
+  // DELETE RESTRICT — deliberately, because an order is the record that money
+  // moved. So the delete can fail even though nobody is holding a bag. Close
+  // it instead: the offer leaves the app either way, and the record survives.
+  if (error?.code === "23503") {
+    const { error: fecharErr } = await supabase
+      .from("listings")
+      .update({ status: "encerrada", quantidade_disponivel: 0 })
+      .eq("id", listingId);
+    redirect(
+      fecharErr
+        ? `/parceiro/sacolas/${listingId}?erro=1`
+        : "/parceiro?encerrada=1",
+    );
+  }
+
   redirect(error ? `/parceiro/sacolas/${listingId}?erro=1` : "/parceiro?apagada=1");
 }

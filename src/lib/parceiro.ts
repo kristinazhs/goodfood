@@ -107,6 +107,11 @@ export async function getPainelParceiro(): Promise<PainelParceiro> {
     // Tomorrow too, now that a shop can publish for it — otherwise a bag
     // published for tomorrow vanished from its own shop's screen.
     .in("data", [hojeSP(), amanhaSP()])
+    // "Sacolas publicadas" means on sale. A withdrawn offer is not, and
+    // leaving it here is what made a sacola the shop had just removed keep
+    // showing up next to its live twin. Sold-out ones stay: "0 resta" is
+    // information, not clutter.
+    .neq("status", "encerrada")
     .order("janela_fim", { ascending: true });
   const listings = (listingsData ?? []) as unknown as ListingRow[];
   const ids = listings.map((l) => l.id);
