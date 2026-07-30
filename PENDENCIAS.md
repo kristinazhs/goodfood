@@ -140,6 +140,8 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
 | 🔴 | **CNPJ não é conferido** | Não valida formato, não consulta a Receita, não impede duplicado — duas lojas podem usar o mesmo. O CPF do consumidor já é validado (dígitos verificadores) e é único; vale fazer o mesmo aqui. |
+| 🔴 | **`bairro` nunca é preenchido** | O cadastro grava `endereco`, `lat` e `lng`, mas não o bairro — e não há tela que o edite depois. Só que o bairro **aparece** no feed, no detalhe, no mapa e no histórico (`[endereco, bairro].join(" — ")`). Loja cadastrada pelo P6 fica sem bairro para sempre. Os valores "Petropolis" que existiam vieram digitados à mão no editor do Supabase. |
+| 🔴 | **Uma conta pode ter duas lojas** | Nada impede. Quando acontece, o Perfil público edita a **mais antiga** (`order created_at asc limit 1`, `parceiro-actions.ts:493`) e a segunda fica inalcançável. A migration 0014 já tinha esbarrado nisso. Faltam duas coisas: recusar o segundo cadastro, ou assumir várias lojas por conta e deixar escolher. |
 | 🟣 | **Comissão** | Retirada da tela até você definir a taxa. Pagamentos não conseguem dividir sem ela. |
 | 🟡 | Contrato de parceria | Página placeholder. |
 
