@@ -37,8 +37,9 @@ Auth, RLS, Storage) · Leaflet + CARTO tiles for the map · Vercel.
 
 ## Where the work stands
 
-`main` holds the previous, working version. **All redesign work is on the
-`design-v2` branch** and has never been merged.
+**`design-v2` was merged into `main` on 2026-07-30** and is live. The
+redesign *is* the product now; there is no longer a "previous version"
+running anywhere. Work from `main` and branch off it.
 
 ### Design source
 
@@ -208,8 +209,21 @@ Reintroduce these only when the data exists to support them:
 | 0022 | Partial unique index: one live offer per bag per window |
 | 0023 | `bags.modelo` — a model is one you chose to keep |
 | 0024 | `listings` carries its own nome/preço/categoria/conteúdos/alérgenos/foto/peso |
+| 0025 | `reservar_sacola()` charges the OFFER's price, not the model's |
+| 0026 | Deliberate reset: test data cleared, demo catalog restored |
 
 All have been run against the live database.
+
+`supabase/inventario.sql` is not a migration — it is a read-only listing of
+every account, shop, model, offer, order and stored photo, in one query.
+Run it before any clean-up so the deleting is done with the contents in view.
+
+**0025 is the lesson worth remembering.** 0024 froze each offer's terms onto
+the listing and moved every *screen* to `listings.preco` — but not
+`reservar_sacola()`, which kept reading `bags.preco`. So the half that showed
+the price was fixed and the half that took the money was not: edit a model
+after publishing and the customer was charged a price they were never shown.
+When a value moves table, the RPCs move with it, not just the queries.
 
 **Two rules learned the hard way:**
 - RLS decides *which rows*; a table also needs a `grant` for the Data API to
@@ -220,12 +234,12 @@ All have been run against the live database.
 ## Pre-launch housekeeping
 
 - Re-enable Supabase email confirmation.
-- Delete test accounts and their sacolas (`kristina.teste`, `padaria.teste`,
-  `padaria.mapa`, `padaria.aranha`, plus the partner account Kristina made).
-- Test data created on 2026-07-30 while verifying fixes, all removable from
-  the partner screens: model **"Cute dog EDITADO" (R$99)** (edited to prove
-  the price freeze), offer **"Pão de amanhã cedo"** (tomorrow 07h00–09h00),
-  and a second **"Cute dog"** at R$25 (20h30–21h30).
+- Delete the remaining test accounts. As of 2026-07-30 the database holds
+  `kristina.teste` (consumer), `kristina.parceira` (partner, owns Domenica),
+  `oksanapteste` and `varvarazteste`. The three `padaria.*` accounts and all
+  test sacolas were removed by migration 0026.
+- The whole demo catalog — four fictional shops in Bom Fim and Moinhos —
+  is still what the live site shows.
 - Write real `/termos`, `/privacidade` and `/contrato-parceria` — all three
   are placeholders saying the documents are being prepared.
 - Tighten the storage policy: any signed-in user can currently upload to the
@@ -239,30 +253,20 @@ All have been run against the live database.
 
 ## Branches — where things stand, and what to do next
 
-**Today:** `main` is the old pre-redesign app and auto-deploys to production.
-`design-v2` holds *everything* — all 16 redesigned screens and migrations
-0006–0024 — and **has never been merged**. The two have diverged enormously.
+**Done, 2026-07-30:** `design-v2` was merged into `main` as one merge commit
+(`f854f8c`) and pushed. Production and the product are the same thing again.
 
-That means the live site is months behind the real product, and `design-v2`
-is not a "feature branch" any more; it *is* the app.
+For most of this project the two had swapped places: `main` was the old
+pre-redesign app, while `design-v2` held all 16 screens and migrations
+0006–0026 and *was* the product. Because the Supabase project is shared and
+those migrations had long since been run, `main` was not merely old code — it
+was old code pointing at a **newer database**, and it had not broken only
+because nobody was using it. That gap was the risk; merging closed it.
 
-### The immediate decision
+`design-v2` still exists and is now identical to `main`. It can be deleted
+whenever; nothing points at it.
 
-The database is shared: migrations 0006–0024 have already been run against
-the one live Supabase project. So `main` is not just old code — it is old
-code pointing at a **newer database**. It has not broken yet only because
-nobody uses it, and because most migrations only add things. Leaving that
-gap open indefinitely is the risk, not merging.
-
-Suggested order:
-
-1. Reset and repopulate the data (below) and test both sides on `design-v2`.
-2. When happy, merge `design-v2` → `main` **once**, as one big merge. After
-   that, production and the product are the same thing again.
-3. Only then adopt branch discipline, because from that point branches are
-   cheap and short-lived.
-
-### What discipline to adopt afterwards
+### The discipline to keep from here
 
 The advice Kristina was given — `main` + `dev`, branch off `dev` — is the
 classic "git flow". It is designed for teams shipping versioned releases with
@@ -294,19 +298,34 @@ team with release trains; it is rare for one person.
 run before the code that reads it is merged into `main`, or production breaks
 with Postgres error 42703. Keep hand-running the SQL first.
 
+That rule has teeth now. Until 2026-07-30 `main` was a branch nobody visited,
+so getting the order wrong cost nothing. It is the live site today: merging
+code that reads a column before the SQL has been run takes the real app down
+for everyone.
+
+## Resetting the data again
+
+Migration 0026 is the reset, and it is re-runnable. Things it exists to
+remember:
+
+- `auth.users` is separate from `public.profiles`; deleting an account is done
+  in the Supabase **Auth dashboard**, and the profile follows via the 0002
+  trigger. Delete accounts *after* clearing their shops and orders — otherwise
+  the cascade hits `orders.listing_id` and the delete fails on a foreign key.
+- Order of deletion matters: `orders` → `listings` → `bags` → `establishments`,
+  because `orders.listing_id` is ON DELETE RESTRICT (deliberate — an order is
+  the record that money moved).
+- Photos live in the `sacolas` and `lojas` buckets and are **not** removed by
+  deleting rows. Clear them in Storage if you want them gone.
+- `janela_hoje()` (from 0008) gives a clock time today, or tomorrow if it has
+  already passed. Use it for any seeded window; that is what keeps the demo
+  from going stale and from producing 23h10–01h10 windows.
+
 ## Next steps, in order
 
-1. **Clean-up migration** for the 2026-07-30 test data (or delete it by hand
-   from the partner screens).
-2. **Reset and repopulate Supabase** to test both sides deliberately. Notes:
-   - `auth.users` is separate from `public.profiles`; deleting an account is
-     done in the Supabase Auth dashboard, and the profile follows via the
-     0002 trigger.
-   - Order of deletion matters: `orders` → `listings` → `bags`, because
-     `orders.listing_id` is ON DELETE RESTRICT (deliberate — an order is the
-     record that money moved).
-   - Photos live in the `sacolas` and `lojas` storage buckets and are not
-     removed by deleting rows.
-   - Migration 0008 is the idempotent demo seed; it can be re-run any time.
-3. **Merge `design-v2` → `main`** once testing passes.
-4. Then work through `PENDENCIAS.md`.
+1. **Legal texts** — `/termos`, `/privacidade` and `/contrato-parceria` are
+   placeholders and are now publicly reachable on the live site.
+2. **Tighten the `sacolas` storage policy** — any signed-in user can upload.
+3. Work through `PENDENCIAS.md`.
+4. The two decisions that unblock payments: **commission rate** and
+   **provider** (Mercado Pago vs Pagar.me).

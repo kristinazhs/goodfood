@@ -168,8 +168,8 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | Textos jurídicos | `/termos`, `/privacidade` e `/contrato-parceria` são placeholders. |
 | Confirmação de e-mail | Desligada no Supabase por conveniência. Religar. |
 | Política do Storage | Qualquer usuário logado pode subir arquivo no bucket `sacolas`. Restringir por loja. |
-| Contas de teste | `kristina.teste`, `padaria.teste`, `padaria.mapa`, `padaria.aranha` e a conta de parceiro criada nos testes. Apagar. |
-| `design-v2` nunca foi para o ar | O redesenho só existe no localhost e na preview da Vercel. |
+| Contas de teste | ✅ Limpas em 30/07. Ficaram `kristina.teste` (consumidor), `kristina.parceira` (parceira, dona da Domenica), `oksanapteste` e `varvarazteste`. Apagar todas antes do lançamento real. |
+| ~~`design-v2` nunca foi para o ar~~ | ✅ Fundido no `main` em 30/07 (`f854f8c`). O redesenho **é** o site publicado — os placeholders desta lista estão no ar. |
 | Comissão e provedor | As duas decisões que travam pagamentos. |
 
 ---
