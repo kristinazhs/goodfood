@@ -43,13 +43,23 @@ export async function updateSession(request: NextRequest) {
   }
 
   // --- Consumer actions that require an account --------------------------
+  // Perfil is here too: tapping it signed out used to land on a profile with
+  // nobody in it, which reads as a broken screen rather than a locked one.
   const consumerProtected = [
     "/consumidor/checkout",
     "/consumidor/pagamento",
     "/consumidor/pedidos",
+    "/consumidor/perfil",
   ];
   if (consumerProtected.some((p) => path.startsWith(p)) && !user) {
-    return redirectTo(request, response, "/consumidor/entrar");
+    // Carry where they were going. Losing it is what made someone who had
+    // already chosen a sacola and pressed Pagar come back to an empty feed.
+    return redirectTo(
+      request,
+      response,
+      "/consumidor/entrar",
+      path + request.nextUrl.search,
+    );
   }
 
   return response;
@@ -60,10 +70,11 @@ function redirectTo(
   request: NextRequest,
   current: NextResponse,
   pathname: string,
+  next?: string,
 ) {
   const url = request.nextUrl.clone();
   url.pathname = pathname;
-  url.search = "";
+  url.search = next ? `?next=${encodeURIComponent(next)}` : "";
   const res = NextResponse.redirect(url);
   current.cookies.getAll().forEach((cookie) => res.cookies.set(cookie));
   return res;

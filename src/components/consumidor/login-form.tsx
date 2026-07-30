@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { Field } from "@/components/ui/field";
 import { signInConsumer, type AuthState } from "@/lib/auth-actions";
 
-export function LoginForm() {
+export function LoginForm({ next }: { next?: string }) {
   const [state, action, pending] = useActionState<AuthState, FormData>(
     signInConsumer,
     {},
@@ -12,6 +12,7 @@ export function LoginForm() {
 
   return (
     <form action={action}>
+      {next && <input type="hidden" name="next" value={next} />}
       <div className="mt-6 flex flex-col gap-3.5">
         <Field label="E-mail" name="email" type="email" placeholder="voce@email.com" required />
         <Field label="Senha" name="senha" type="password" placeholder="••••••••" required />

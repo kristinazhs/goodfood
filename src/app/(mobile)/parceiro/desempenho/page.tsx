@@ -1,144 +1,118 @@
-import { PeriodChips } from "@/components/parceiro/period-chips";
-import { BackButton } from "@/components/ui/back-button";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { navParceiro } from "@/lib/nav";
+import { METRICAS, PERIODOS, REPASSE, SEMANA } from "@/lib/parceiro-mock";
 
-const vendasPorDia = [
-  { dia: "Seg", altura: 38 },
-  { dia: "Ter", altura: 52 },
-  { dia: "Qua", altura: 30 },
-  { dia: "Qui", altura: 65 },
-  { dia: "Sex", altura: 58 },
-  { dia: "Sáb", altura: 100, destaque: true },
-  { dia: "Dom", altura: 72 },
-];
+// P4 — how much did I sell. The reviews used to be repeated at the bottom of
+// this screen; Avaliações owns them, and showing the same list in two places
+// only made it unclear which one was the real one.
+//
+// DEMO SCREEN: every number here comes from lib/parceiro-mock.ts. See that
+// file for why it isn't wired to Supabase yet.
 
-const stats = [
-  { valor: "61", label: "sacolas vendidas" },
-  { valor: "R$ 22,01", label: "ticket médio" },
-  { valor: "4,8 ★", label: "avaliação média" },
-  { valor: "94%", label: "taxa de retirada" },
-];
-
-const impacto = [
-  { num: "84kg", label: "comida resgatada" },
-  { num: "312", label: "sacolas no total" },
-  { num: "201kg", label: "CO₂ evitado" },
-];
+const TOM: Record<string, string> = {
+  brand: "text-brand-dark",
+  muted: "text-muted",
+  alerta: "text-terracotta-dark",
+};
 
 export default function Desempenho() {
   return (
     <>
-      <main className="flex-1">
-        <div className="flex items-center justify-between px-5 pb-1.5 pt-5">
-          <BackButton href="/parceiro" />
-          <h1 className="font-display text-lg font-semibold">Desempenho</h1>
-          <span className="w-[38px]" />
-        </div>
+      <main className="flex-1 pb-6">
+        <div className="px-5 pt-[18px]">
+          <h1 className="font-display text-[23px] font-semibold">Desempenho</h1>
+          {/* Says plainly that these are sample numbers, so a partner being
+              shown the app doesn't read them as their own. */}
+          <p className="mt-1 text-[12.5px] font-medium leading-[1.4] text-muted">
+            Dados de exemplo — sua loja verá os números reais.
+          </p>
 
-        <PeriodChips />
-
-        <div className="relative mx-5 mt-3.5 overflow-hidden rounded-[20px] bg-brand p-5">
-          <span className="absolute -right-[30px] -top-10 h-[110px] w-[110px] rounded-full bg-white/[0.05]" />
-          <span className="absolute -bottom-[30px] -left-5 h-[70px] w-[70px] rounded-full bg-white/[0.05]" />
-          <div className="relative z-[2] text-[11.5px] text-mint">
-            Faturado nos últimos 7 dias
-          </div>
-          <div className="relative z-[2] mt-1 font-display text-[30px] font-bold text-white">
-            R$ 1.342,60
-          </div>
-          <div className="relative z-[2] mt-1.5 text-xs font-bold text-[#BFE3CC]">
-            ↑ 18% vs. semana anterior
-          </div>
-        </div>
-
-        <div className="mx-5 mt-4 rounded-[18px] border-[1.5px] border-sage-line bg-white p-4">
-          <div className="mb-3.5 flex items-baseline justify-between">
-            <span className="font-display text-[14.5px] font-semibold">
-              Vendas por dia
-            </span>
-            <span className="text-[10.5px] text-muted">sacolas vendidas</span>
-          </div>
-          <div className="flex h-[90px] items-end gap-2">
-            {vendasPorDia.map((v) => (
-              <div
-                key={v.dia}
-                className="flex h-full flex-1 flex-col items-center justify-end gap-1.5"
+          <div className="mt-3 flex gap-2">
+            {PERIODOS.map((p, i) => (
+              <span
+                key={p}
+                className={`inline-flex h-[34px] items-center rounded-full px-[13px] text-[12.5px] ${
+                  i === 0
+                    ? "bg-brand-dark font-bold text-white"
+                    : "border-[1.5px] border-sage-line bg-white font-semibold text-charcoal"
+                }`}
               >
-                <div
-                  className={`w-full rounded-t-[5px] rounded-b-sm ${
-                    v.destaque ? "bg-brand" : "bg-sage"
+                {p}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="mx-5 mt-4 rounded-[20px] border-[1.5px] border-sage-line bg-white p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-xs font-bold uppercase leading-none tracking-[0.7px] text-muted">
+                {REPASSE.titulo}
+              </div>
+              <div className="mt-2 font-display text-[32px] font-bold leading-none">
+                {REPASSE.valor}
+              </div>
+              <div className="mt-1.5 text-[13px] font-semibold leading-none text-brand-dark">
+                {REPASSE.variacao}
+              </div>
+            </div>
+            <span className="inline-flex h-[26px] shrink-0 items-center rounded-lg bg-sage px-[9px] text-xs font-bold leading-none text-brand-dark">
+              {REPASSE.sacolas}
+            </span>
+          </div>
+
+          {/* The chart concludes something: the best day is marked, not left
+              for the reader to spot. */}
+          <div className="mt-[18px] flex h-24 items-end gap-2">
+            {SEMANA.map((d) => (
+              <div
+                key={d.dia}
+                className="flex h-full flex-1 flex-col items-center justify-end gap-[7px]"
+              >
+                <span
+                  className={`w-full rounded-t-[5px] rounded-b-[3px] ${
+                    d.destaque ? "bg-brand" : "bg-sage"
                   }`}
-                  style={{ height: `${v.altura}%`, minHeight: 4 }}
+                  style={{ height: `${d.altura}%` }}
                 />
-                <span className="text-[9.5px] font-semibold text-muted">
-                  {v.dia}
+                <span
+                  className={`text-[11.5px] leading-none ${
+                    d.destaque
+                      ? "font-bold text-charcoal"
+                      : "font-semibold text-muted"
+                  }`}
+                >
+                  {d.dia}
                 </span>
               </div>
             ))}
           </div>
+          <p className="mt-3 text-[12.5px] font-semibold leading-[1.4] text-brand-dark">
+            Sábado rende 2,3× a média — vale publicar mais sacolas nesse dia.
+          </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5 px-5 pt-4">
-          {stats.map((s) => (
+        {/* Every number carries a comparison: "28 sacolas" alone leads to no
+            decision. */}
+        <div className="grid grid-cols-2 gap-2.5 px-5 pt-3.5">
+          {METRICAS.map((m) => (
             <div
-              key={s.label}
-              className="rounded-[14px] border-[1.5px] border-sage-line bg-white px-3.5 py-[13px]"
+              key={m.rotulo}
+              className="rounded-2xl border-[1.5px] border-sage-line bg-white p-[13px]"
             >
-              <div className="font-display text-lg font-bold">{s.valor}</div>
-              <div className="mt-0.5 text-[10.5px] text-muted">{s.label}</div>
+              <div className="font-display text-xl font-bold">{m.valor}</div>
+              <div className="mt-[3px] text-[12.5px] font-semibold leading-[1.3] text-muted">
+                {m.rotulo}
+              </div>
+              <div
+                className={`mt-1.5 text-xs font-semibold leading-none ${TOM[m.tom]}`}
+              >
+                {m.nota}
+              </div>
             </div>
           ))}
         </div>
 
-        <div className="px-5 pb-2.5 pt-[18px] text-[11.5px] font-bold uppercase tracking-[0.6px] text-muted">
-          Seu impacto total
-        </div>
-        <div className="mx-5 rounded-2xl bg-sage p-4">
-          <div className="flex">
-            {impacto.map((i) => (
-              <div key={i.label} className="flex-1 text-center">
-                <div className="font-display text-lg font-bold text-brand-dark">
-                  {i.num}
-                </div>
-                <div className="mt-[3px] text-[10px] leading-[1.3] text-muted">
-                  {i.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="px-5 pb-2.5 pt-[18px] text-[11.5px] font-bold uppercase tracking-[0.6px] text-muted">
-          Mais vendida da semana
-        </div>
-        <div className="mx-5 flex items-center gap-3 rounded-2xl border-[1.5px] border-sage-line bg-white px-3.5 py-[13px]">
-          <span className="blob-b flex h-[50px] w-[50px] shrink-0 items-center justify-center bg-sage text-[21px]">
-            🥐
-          </span>
-          <div className="flex-1">
-            <div className="font-display text-sm font-semibold">
-              Sacola Surpresa Doce
-            </div>
-            <div className="mt-0.5 text-[11.5px] font-semibold text-muted">
-              22 vendidas · R$ 613,80 gerados
-            </div>
-          </div>
-          <span className="shrink-0 text-xl">🏆</span>
-        </div>
-
-        <div className="mx-5 mb-6 mt-4 flex items-start gap-2.5 rounded-2xl bg-amber-bg p-3.5">
-          <span className="text-lg">🌱</span>
-          <div>
-            <div className="text-[12.5px] font-extrabold leading-[1.3] text-[#8a6a14]">
-              Você está entre os 15% melhores parceiros do RS
-            </div>
-            <div className="mt-1 text-[11.5px] leading-[1.4] text-[#9a7d2e]">
-              Continue assim — sua nota e taxa de retirada estão acima da média
-              da plataforma.
-            </div>
-          </div>
-        </div>
       </main>
       <BottomNav items={navParceiro} />
     </>

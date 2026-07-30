@@ -1,135 +1,166 @@
 import Link from "next/link";
 import { BottomNav } from "@/components/ui/bottom-nav";
-import { signOut } from "@/lib/auth-actions";
 import { getCurrentProfile } from "@/lib/auth";
+import { signOut } from "@/lib/auth-actions";
+import { getOrigem } from "@/lib/enderecos";
 import { navConsumidor } from "@/lib/nav";
+import { calcularImpacto, getMeusPedidos } from "@/lib/pedidos";
 
 export const dynamic = "force-dynamic";
 
-const secoes = [
-  {
-    emoji: "👤",
-    titulo: "Dados pessoais",
-    sub: "Nome, e-mail e telefone",
-    href: "/consumidor/perfil/editar",
-  },
-  {
-    emoji: "💳",
-    titulo: "Formas de pagamento",
-    sub: "Pix e cartões salvos",
-    emBreve: true,
-  },
-  {
-    emoji: "🔔",
-    titulo: "Notificações",
-    sub: "Alertas de sacolas perto de você",
-    emBreve: true,
-  },
-  {
-    emoji: "📍",
-    titulo: "Endereços",
-    sub: "Bom Fim, Porto Alegre",
-    emBreve: true,
-  },
-];
+// C7 — impact first, because it's what brings someone back; then the rating
+// they owe, then their own reviews, then the quiet account rows.
 
-export default async function PerfilConsumidor() {
-  const sessao = await getCurrentProfile();
+export default async function Perfil({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, never>>;
+}) {
+  const origem = await getOrigem();
+  const [, sessao, pedidos] = await Promise.all([
+    searchParams,
+    getCurrentProfile(),
+    getMeusPedidos(origem),
+  ]);
+
+  const nome = sessao?.profile?.nome ?? "Você";
+  const email = sessao?.email ?? "";
+  const inicial = nome.trim().charAt(0).toUpperCase() || "?";
+  // Same numbers as C6 — one arithmetic, so the app never shows two totals.
+  const impacto = calcularImpacto(pedidos);
 
   return (
     <>
-      <main className="flex-1">
-        <div className="px-5 pb-4 pt-6">
-          <div className="flex items-center gap-3.5">
-            <span className="blob-a flex h-[64px] w-[64px] items-center justify-center bg-sage text-[28px]">
-              👤
-            </span>
+      <main className="flex-1 pb-6">
+        <div className="flex items-center gap-3.5 px-5 pt-5">
+          <span className="blob-a-active flex h-16 w-16 shrink-0 items-center justify-center bg-sage font-display text-2xl font-bold text-brand-dark">
+            {inicial}
+          </span>
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate font-display text-xl font-semibold leading-[1.2]">
+              {nome}
+            </h1>
+            <p className="mt-[3px] truncate text-[12.5px] font-medium leading-[1.3] text-muted">
+              {email}
+            </p>
+          </div>
+          <Link
+            href="/consumidor/perfil/editar"
+            className="flex h-[38px] shrink-0 items-center rounded-full border-[1.5px] border-sage-line bg-white px-[13px] text-[12.5px] font-bold text-brand-dark"
+          >
+            Editar
+          </Link>
+        </div>
+
+        {/* Impact at the top, not the bottom: it's the reason people return. */}
+        {impacto.kg > 0 && (
+          <div className="mx-5 mt-[18px] flex items-center gap-3.5 rounded-[18px] bg-sage p-4">
             <div>
-              <h1 className="font-display text-xl font-bold">
-                {sessao?.profile?.nome ?? "Visitante"}
-              </h1>
-              <div className="mt-0.5 text-xs text-muted">
-                {sessao?.email ?? "Você não está conectada"}
+              <div className="font-display text-[19px] font-bold text-brand-dark">
+                {impacto.kg.toFixed(1).replace(".", ",")} kg
+              </div>
+              <div className="mt-0.5 text-[12.5px] font-semibold leading-[1.3] text-[#4a4a44]">
+                de comida que você salvou
+              </div>
+            </div>
+            <div className="h-[38px] w-px bg-sage-line" />
+            <div>
+              <div className="font-display text-[19px] font-bold text-brand-dark">
+                R$ {Math.round(impacto.economizado)}
+              </div>
+              <div className="mt-0.5 text-[12.5px] font-semibold leading-[1.3] text-[#4a4a44]">
+                economizados em {impacto.ano}
               </div>
             </div>
           </div>
+        )}
+
+        <div className="px-5 pb-2.5 pt-[22px] text-xs font-extrabold uppercase leading-none tracking-[0.7px] text-muted">
+          Conta
         </div>
 
-        {sessao ? (
-          <>
-            <div className="flex flex-col gap-2.5 px-5">
-              {secoes.map((s) => {
-                const inner = (
-                  <>
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-sage text-base">
-                      {s.emoji}
-                    </span>
-                    <span className="flex-1">
-                      <span className="block text-[13px] font-bold">
-                        {s.titulo}
-                      </span>
-                      <span className="mt-[1px] block text-[11.5px] text-muted">
-                        {s.sub}
-                      </span>
-                    </span>
-                    {s.emBreve ? (
-                      <span className="rounded-full bg-sage px-2 py-0.5 text-[10px] font-bold text-muted">
-                        em breve
-                      </span>
-                    ) : (
-                      <span className="text-muted">›</span>
-                    )}
-                  </>
-                );
-                return s.href ? (
-                  <Link
-                    key={s.titulo}
-                    href={s.href}
-                    className="flex items-center gap-3 rounded-[14px] border-[1.5px] border-sage-line bg-white p-3.5 text-left"
-                  >
-                    {inner}
-                  </Link>
-                ) : (
-                  <div
-                    key={s.titulo}
-                    className="flex items-center gap-3 rounded-[14px] border-[1.5px] border-sage-line bg-white p-3.5 text-left opacity-70"
-                  >
-                    {inner}
-                  </div>
-                );
-              })}
-            </div>
+        <div className="flex flex-col gap-2.5 px-5">
+          <Link
+            href="/consumidor/perfil/enderecos"
+            className="flex min-h-11 items-center gap-3 rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold leading-[1.3]">
+                Endereços salvos
+              </span>
+              <span className="mt-0.5 block truncate text-[12.5px] font-medium leading-[1.35] text-muted">
+                {origem?.label ?? "Nenhum endereço salvo"}
+              </span>
+            </span>
+            <span className="shrink-0 text-base font-bold leading-none text-[#8d8d84]">
+              ›
+            </span>
+          </Link>
 
-            <div className="px-5 pb-6 pt-5">
-              <form action={signOut}>
-                <button
-                  type="submit"
-                  className="w-full rounded-[14px] border-[1.5px] border-sage-line bg-white p-[13px] text-center text-[13px] font-bold text-alert"
-                >
-                  Sair da conta
-                </button>
-              </form>
+          <div className="rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5">
+            <div className="text-sm font-bold leading-[1.3]">
+              Formas de pagamento
             </div>
-          </>
-        ) : (
-          <div className="px-5 pt-4">
-            <p className="text-[13px] leading-[1.5] text-muted">
-              Entre ou crie uma conta para reservar sacolas e ver seus pedidos.
-            </p>
-            <Link
-              href="/consumidor/entrar"
-              className="mt-4 block w-full rounded-[14px] bg-brand p-4 text-center text-[15px] font-bold text-white"
-            >
-              Entrar
-            </Link>
-            <Link
-              href="/consumidor/cadastro"
-              className="mt-2.5 block w-full rounded-[14px] border-[1.5px] border-sage-line bg-white p-[13px] text-center text-[13px] font-bold text-brand-dark"
-            >
-              Criar conta
-            </Link>
+            <div className="mt-0.5 text-[12.5px] font-medium leading-[1.35] text-muted">
+              Em breve — nenhuma cobrança real acontece ainda
+            </div>
           </div>
-        )}
+
+          <div className="rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5">
+            <div className="text-sm font-bold leading-[1.3]">Notificações</div>
+            <div className="mt-0.5 text-[12.5px] font-medium leading-[1.35] text-muted">
+              Sacolas novas por perto, lembrete de retirada · em breve
+            </div>
+          </div>
+
+          <a
+            href="mailto:contato@goodfood.app?subject=Ajuda%20com%20um%20pedido"
+            className="flex min-h-11 items-center gap-3 rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold leading-[1.3]">
+                Ajuda e contato
+              </span>
+              <span className="mt-0.5 block truncate text-[12.5px] font-medium leading-[1.35] text-muted">
+                Dúvidas sobre um pedido
+              </span>
+            </span>
+            <span className="shrink-0 text-base font-bold leading-none text-[#8d8d84]">
+              ›
+            </span>
+          </a>
+
+          {/* Feedback about the app is a separate path from rating a shop —
+              mixing them contaminates the partner's score with product
+              problems they can't fix. */}
+          <a
+            href="mailto:contato@goodfood.app?subject=Feedback%20do%20app"
+            className="flex min-h-11 items-center gap-3 rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold leading-[1.3]">
+                Enviar feedback do app
+              </span>
+              <span className="mt-0.5 block truncate text-[12.5px] font-medium leading-[1.35] text-muted">
+                O que faltou, o que atrapalhou — chega direto no time
+              </span>
+            </span>
+            <span className="shrink-0 text-base font-bold leading-none text-[#8d8d84]">
+              ›
+            </span>
+          </a>
+
+          {/* Grey, not alarm-coloured, and away from feedback: leaving is
+              destructive, not urgent. */}
+          <form action={signOut} className="pt-1">
+            <button
+              type="submit"
+              className="h-11 w-full text-[13.5px] font-semibold text-muted"
+            >
+              Sair
+            </button>
+          </form>
+        </div>
       </main>
       <BottomNav items={navConsumidor} />
     </>

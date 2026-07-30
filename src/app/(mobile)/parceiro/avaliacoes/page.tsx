@@ -1,71 +1,66 @@
+import Link from "next/link";
+import { AvaliacaoCard } from "@/components/parceiro/avaliacao-card";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { navParceiro } from "@/lib/nav";
+import { getAvaliacoes } from "@/lib/parceiro";
 
-const avaliacoes = [
-  {
-    nome: "Carla S.",
-    estrelas: "★★★★★",
-    sacola: "Sacola Surpresa Doce",
-    texto:
-      "Veio croissant, pão de fermentação e dois muffins. Valeu muito a pena!",
-    data: "Hoje",
-  },
-  {
-    nome: "João P.",
-    estrelas: "★★★★☆",
-    sacola: "Sacola Mista Pães",
-    texto: "Pães fresquinhos e atendimento rápido na retirada.",
-    data: "Ontem",
-  },
-  {
-    nome: "Fernanda L.",
-    estrelas: "★★★★★",
-    sacola: "Sacola Manhã",
-    texto: "Melhor surpresa da semana. Já virou rotina de sábado.",
-    data: "28 jun",
-  },
-];
+export const dynamic = "force-dynamic";
 
-export default function Avaliacoes() {
+// The reviews half of P4 on its own, since the partner nav keeps a separate
+// Avaliações tab. Real reviews now — the screen was mock, which is why
+// "Responder" did nothing: there was no review to answer.
+
+export default async function Avaliacoes() {
+  const { itens, media, total, semResposta } = await getAvaliacoes();
+
   return (
     <>
-      <main className="flex-1">
-        <div className="px-5 pb-4 pt-6">
-          <h1 className="font-display text-[22px] font-semibold">Avaliações</h1>
-          <p className="mt-1 text-xs text-muted">
-            O que os clientes estão dizendo sobre suas sacolas.
+      <main className="flex-1 pb-6">
+        <div className="px-5 pt-[18px]">
+          <h1 className="font-display text-[23px] font-semibold">Avaliações</h1>
+          <p className="mt-1 text-[12.5px] font-medium leading-[1.4] text-muted">
+            {semResposta > 0
+              ? `${semResposta} ${
+                  semResposta === 1
+                    ? "avaliação ainda sem resposta"
+                    : "avaliações ainda sem resposta"
+                }.`
+              : "Todas as avaliações já foram respondidas."}
           </p>
         </div>
 
-        <div className="mx-5 mb-4 flex items-center gap-4 rounded-[18px] border-[1.5px] border-sage-line bg-white p-4">
-          <div className="font-display text-[34px] font-bold">4,8</div>
-          <div>
-            <div className="text-sm font-bold text-terracotta">★★★★★</div>
-            <div className="mt-0.5 text-[11.5px] text-muted">
-              132 avaliações no total
-            </div>
-          </div>
+        <div className="flex items-center justify-between px-5 pb-2.5 pt-4">
+          <span className="text-xs font-extrabold uppercase leading-none tracking-[0.7px] text-muted">
+            Suas avaliações
+          </span>
+          <span className="text-[12.5px] font-semibold leading-none text-muted">
+            {media === null
+              ? "sem notas ainda"
+              : `${media.toFixed(1).replace(".", ",")} · ${total} no total`}
+          </span>
         </div>
 
-        <div className="flex flex-col gap-2.5 px-5 pb-6">
-          {avaliacoes.map((a) => (
-            <div
-              key={a.nome}
-              className="rounded-[14px] border-[1.5px] border-sage-line bg-white p-3.5"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-[13px] font-bold">{a.nome}</span>
-                <span className="text-[11px] text-muted">{a.data}</span>
-              </div>
-              <div className="mt-0.5 text-xs text-terracotta">{a.estrelas}</div>
-              <p className="mt-1.5 text-[12.5px] leading-[1.5] text-muted">
-                {a.texto}
-              </p>
-              <span className="mt-2 inline-block rounded-md bg-sage px-2 py-1 text-[10.5px] font-bold text-brand-dark">
-                {a.sacola}
-              </span>
-            </div>
-          ))}
+        {itens.length === 0 ? (
+          <p className="px-5 py-10 text-center text-sm leading-[1.5] text-muted">
+            Ainda não há avaliações.
+            <br />
+            Elas aparecem aqui depois que um cliente retira a sacola.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2.5 px-5">
+            {itens.map((a) => (
+              <AvaliacaoCard key={a.id} a={a} />
+            ))}
+          </div>
+        )}
+
+        <div className="px-5 pt-4">
+          <Link
+            href="/parceiro/desempenho"
+            className="text-[13px] font-bold text-brand-dark"
+          >
+            Ver desempenho da semana ›
+          </Link>
         </div>
       </main>
       <BottomNav items={navParceiro} />

@@ -1,127 +1,162 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BottomNav } from "@/components/ui/bottom-nav";
+import { CompartilharPedido } from "@/components/consumidor/compartilhar-pedido";
+import { contagemRetirada, diaRelativoSP, horaMinutoSP } from "@/lib/datas";
+import { minutosAPe } from "@/lib/distancia";
+import { getOrigem } from "@/lib/enderecos";
 import { brl } from "@/lib/format";
+import { navConsumidor } from "@/lib/nav";
+import { CancelarPedido } from "@/components/consumidor/cancelar-pedido";
 import { getPedidoDetalhe } from "@/lib/pedidos";
 
 export const dynamic = "force-dynamic";
 
-const qrMatrix = [
-  "111011101",
-  "101001011",
-  "111010110",
-  "000111001",
-  "110100111",
-  "011001010",
-  "111010011",
-  "101001110",
-  "111011010",
-];
+// C5 — celebrate first, then become the pickup screen in the same scroll.
+// The praise doesn't cost an extra tap or a throwaway screen.
 
-function QrPlaceholder() {
-  return (
-    <svg viewBox="0 0 9 9" className="h-[120px] w-[120px]" aria-hidden>
-      {qrMatrix.flatMap((row, y) =>
-        row.split("").map((cel, x) =>
-          cel === "1" ? (
-            <rect key={`${x}-${y}`} x={x} y={y} width="0.92" height="0.92" fill="#23231F" />
-          ) : null,
-        ),
-      )}
-    </svg>
-  );
-}
+const JANELA_CANCELAMENTO_MIN = 15;
+
+const NOME_METODO: Record<string, string> = {
+  cartao: "Cartão de crédito",
+  pix: "Pix",
+};
 
 export default async function PedidoConfirmacao({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ erro?: string }>;
 }) {
-  const { id } = await params;
+  const [{ id }, { erro }] = await Promise.all([params, searchParams]);
   const pedido = await getPedidoDetalhe(id);
   if (!pedido) notFound();
 
+  const contagem = contagemRetirada(pedido.janelaInicio, pedido.janelaFim);
+  const origem = await getOrigem();
+  const minutos = minutosAPe(pedido.lat, pedido.lng, origem);
+  const pagoAs = horaMinutoSP(pedido.reservadoEm);
+  // Both days are read from the order, not assumed. An order from three weeks
+  // ago used to say the pickup and the payment both happened "hoje".
+  const diaRetirada = diaRelativoSP(pedido.janelaInicio);
+  const diaPagamento = diaRelativoSP(pedido.reservadoEm);
+
+  // Free cancellation runs for 15 minutes from the reservation.
+  const limite =
+    new Date(pedido.reservadoEm).getTime() + JANELA_CANCELAMENTO_MIN * 60_000;
+  const podeCancelar = pedido.status === "reservado" && Date.now() < limite;
+  const horaLimite = horaMinutoSP(new Date(limite).toISOString());
+
+  const rota = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+    `${pedido.endereco || pedido.loja}, Porto Alegre`,
+  )}`;
+
   return (
-    <main className="flex-1 px-5 pb-8">
-      <div className="pt-8 text-center">
-        <span className="blob-a mx-auto flex h-[64px] w-[64px] items-center justify-center bg-sage text-[28px]">
-          ✅
-        </span>
-        <h1 className="mt-3.5 font-display text-[22px] font-bold">
-          Pedido confirmado!
-        </h1>
-        <p className="mt-1.5 text-[13px] text-muted">
-          {pedido.loja} · Retirada entre {pedido.janela}
-        </p>
-      </div>
+    <>
+      <main className="flex-1 pb-6">
+        <div className="px-5 pt-6 text-center">
+          <h1 className="font-display text-[23px] font-bold leading-[1.2]">
+            Pedido confirmado!
+          </h1>
+          <p className="mt-1.5 text-[13px] font-medium leading-[1.45] text-muted">
+            Retire {diaRetirada} entre {pedido.janela}
+            {contagem ? ` · ${contagem}` : ""}
+          </p>
+          <p className="mt-0.5 text-[12.5px] font-medium leading-[1.4] text-muted">
+            {pedido.loja} · {pedido.endereco}
+          </p>
+        </div>
 
-      <div className="mt-6 rounded-[18px] border-[1.5px] border-sage-line bg-white p-5 text-center">
-        <div className="text-[11.5px] font-bold uppercase tracking-[0.6px] text-muted">
-          Código de retirada
-        </div>
-        <div className="mt-1.5 font-display text-[30px] font-bold tracking-[2px]">
-          {pedido.codigo}
-        </div>
-        <div className="mt-3 flex justify-center">
-          <QrPlaceholder />
-        </div>
-        <div className="mt-3 text-xs text-muted">
-          Mostre este código no balcão ao retirar sua sacola.
-        </div>
-      </div>
+        {erro && (
+          <p className="mx-5 mt-4 rounded-xl bg-alert-bg px-3.5 py-3 text-[13px] font-semibold text-alert">
+            Não foi possível cancelar. O prazo de 15 minutos pode ter passado.
+          </p>
+        )}
 
-      <div className="mt-4 flex items-center gap-[13px] rounded-2xl border-[1.5px] border-sage-line bg-white p-[11px]">
-        <span
-          className="blob-b flex h-[54px] w-[54px] shrink-0 items-center justify-center text-[23px]"
-          style={{ background: pedido.corThumb }}
-        >
-          {pedido.emoji}
-        </span>
-        <div className="flex-1">
-          <div className="font-display text-sm font-semibold">
-            {pedido.nomeSacola}
+        {/* The code is read at a counter, in a hurry, in bad light. */}
+        <div className="mx-5 mt-5 rounded-[20px] border-2 border-brand bg-white px-5 py-6 text-center">
+          <div className="text-xs font-extrabold uppercase leading-none tracking-[0.7px] text-muted">
+            Mostre no balcão
           </div>
-          <div className="mt-0.5 text-[11px] text-muted">
-            {pedido.qtd} {pedido.qtd > 1 ? "unidades" : "unidade"}
+          <div className="mt-3 font-display text-[40px] font-bold leading-none tracking-[3px]">
+            {pedido.codigo}
           </div>
+          <p className="mt-3 text-[12.5px] font-medium leading-[1.4] text-muted">
+            O balcão digita esse código para confirmar a retirada.
+          </p>
         </div>
-        <span className="font-display text-[15px] font-bold">
-          {brl(pedido.total)}
-        </span>
-      </div>
 
-      {pedido.endereco && (
-        <div className="mt-4 flex items-start gap-3 rounded-[14px] border-[1.5px] border-sage-line bg-white p-3.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] bg-sage text-base">
-            📍
+        <div className="mx-5 mt-3 flex items-center gap-3 rounded-2xl border-[1.5px] border-sage-line bg-white p-[13px]">
+          <div className="min-w-0 flex-1">
+            <div className="text-[13.5px] font-bold leading-[1.3]">
+              {pedido.endereco}
+            </div>
+            {minutos != null && (
+              <div className="mt-0.5 text-[12.5px] font-medium leading-[1.3] text-muted">
+                {minutos} min a pé · aberto até {pedido.janela.split("–")[1]?.trim()}
+              </div>
+            )}
+          </div>
+          <a
+            href={rota}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-9 shrink-0 items-center rounded-full border-[1.5px] border-sage-line bg-white px-3 text-[13px] font-bold text-brand-dark"
+          >
+            Rota
+          </a>
+        </div>
+
+        {/* The money already left, so the screen says so rather than implying
+            something is still owed at the counter. */}
+        <div className="mx-5 mt-3 flex items-center justify-between gap-3 rounded-2xl border-[1.5px] border-sage-line bg-white p-[13px]">
+          <div className="min-w-0">
+            <div className="text-[13.5px] font-bold leading-[1.3]">
+              Total pago
+            </div>
+            <div className="mt-0.5 truncate text-[12.5px] font-medium leading-[1.3] text-muted">
+              {pedido.metodo ? NOME_METODO[pedido.metodo] : "Pagamento"} ·{" "}
+              {diaPagamento}, {pagoAs}
+            </div>
+          </div>
+          <span className="shrink-0 font-display text-lg font-bold">
+            {brl(pedido.total)}
           </span>
-          <div className="flex-1">
-            <div className="text-[13px] font-bold">{pedido.endereco}</div>
-            <div className="mt-[3px] text-xs text-muted">{pedido.loja}</div>
-          </div>
-          <button className="rounded-full bg-sage px-3 py-[7px] text-[11.5px] font-bold text-brand-dark">
-            Como chegar
-          </button>
         </div>
-      )}
 
-      <div className="mt-3 flex items-start gap-[9px] rounded-[14px] bg-sage px-[13px] py-3 text-[11.5px] leading-[1.5] text-brand-dark">
-        💳{" "}
-        <span>
-          <b>{brl(pedido.total)}</b> serão cobrados na retirada, ou ao final da
-          janela caso não compareça. Cancelamento grátis até 17h00.
-        </span>
-      </div>
+        {/* With payment at reservation, handing the pickup to someone else is
+            the only path that still saves the money — so it leads. */}
+        <CompartilharPedido
+          dia={diaRetirada}
+          codigo={pedido.codigo}
+          nomeSacola={pedido.nomeSacola}
+          loja={pedido.loja}
+          endereco={pedido.endereco}
+          janela={pedido.janela}
+        />
 
-      <button className="mt-3 w-full rounded-[14px] border-[1.5px] border-sage-line bg-white p-[13px] text-[13px] font-bold">
-        🤝 Pedir para um amigo retirar
-      </button>
+        <div className="mx-5 mt-3">
+          {podeCancelar ? (
+            <CancelarPedido orderId={pedido.id} horaLimite={horaLimite} />
+          ) : pedido.status === "reservado" ? (
+            <p className="text-center text-[12.5px] font-medium leading-[1.4] text-muted">
+              O prazo de cancelamento encerrou às {horaLimite}. Não vai
+              conseguir ir? Passe a retirada para alguém.
+            </p>
+          ) : null}
+        </div>
 
-      <Link
-        href="/consumidor/pedidos"
-        className="mt-2.5 block w-full rounded-[14px] bg-brand p-3.5 text-center text-sm font-bold text-white"
-      >
-        Ver meus pedidos
-      </Link>
-    </main>
+        <div className="px-5 pt-5 text-center">
+          <Link
+            href="/consumidor/pedidos"
+            className="text-[13px] font-bold text-brand-dark"
+          >
+            Ver meus pedidos
+          </Link>
+        </div>
+      </main>
+      <BottomNav items={navConsumidor} />
+    </>
   );
 }

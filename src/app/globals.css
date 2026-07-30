@@ -49,7 +49,16 @@ body {
   border-radius: 48% 52% 53% 47% / 44% 47% 53% 56%;
 }
 
-/* Leaflet price pins (Descobrir map) */
+/* Descobrir map — the tiles are toned down to the app's palette so the map
+   reads as part of the product rather than a generic embed. */
+.mv-tiles {
+  /* Positron is already very light, so the earlier brightness lift washed it
+     out. Keep the warmth, but let streets and labels hold their edges. */
+  filter: saturate(0.8) contrast(1.14) brightness(0.97) sepia(0.12);
+}
+
+/* Stock pins. A shop can sell several kinds of sacola, so a price on the pin
+   would lie — the count doesn't. Same plaque as the cards in C1. */
 .mv-pin-wrap {
   background: transparent;
   border: none;
@@ -58,34 +67,42 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 11px 5px 5px;
+  height: 30px;
+  padding: 0 11px;
   border-radius: 999px;
   font-family: var(--font-inter), sans-serif;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
   line-height: 1;
   white-space: nowrap;
   color: #134d29;
   background: #ffffff;
-  border: 2px solid #ffffff;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
   transform: translate(-50%, calc(-100% - 6px));
 }
 .mv-pin-active {
+  height: 36px;
+  gap: 6px;
+  padding: 0 13px;
+  font-size: 14px;
   color: #ffffff;
   background: #1a6b3a;
-  border-color: #134d29;
+  border: 2px solid #134d29;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
 }
-.mv-pin-emoji {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #e4ede3;
-  font-size: 13px;
+/* Sold out — present but plainly unavailable. */
+.mv-pin-vazio {
+  color: #8d8d84;
+  background: #efece5;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
 }
-.mv-pin-active .mv-pin-emoji {
-  background: rgba(255, 255, 255, 0.25);
+/* Where the person is searching from. */
+.mv-origem {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #1d5a96;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }

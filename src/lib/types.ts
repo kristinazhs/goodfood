@@ -1,4 +1,9 @@
-export type CategoriaId = "tudo" | "padaria" | "refeicao" | "mercado";
+export type CategoriaId =
+  | "tudo"
+  | "padaria"
+  | "doceria"
+  | "refeicao"
+  | "mercado";
 
 export interface ConteudoSacola {
   emoji: string;
@@ -7,22 +12,52 @@ export interface ConteudoSacola {
 }
 
 export interface Sacola {
+  /**
+   * The LISTING id — one published offer. This is what /consumidor/sacola/[id]
+   * resolves and what a reservation keys on. It used to be the bag id, which
+   * meant two live windows of the same sacola both resolved to whichever the
+   * lookup picked: invisible while they showed the same thing, wrong the
+   * moment their prices differ.
+   */
   id: string;
+  /** The template it was published from — for "publicar de novo". */
+  bagId: string;
   nome: string;
   loja: string;
   distancia: string;
   emoji: string;
+  /** The shop that sells it — links to its public page. */
+  lojaId: string;
+  /** The SHOP's photo (not the bag's) — used by the map's shop plaque. */
+  lojaFotoUrl: string | null;
   corThumb: string;
+  /** Shop-window photo; null falls back to the striped placeholder. */
+  fotoUrl: string | null;
   precoOriginal: number;
   preco: number;
   desconto: string;
   janela: string;
+  /** "hoje" | "amanhã" | "02 ago" — which day the window falls on. */
+  dia: string;
+  /** True when the pickup is today. Urgency and "hoje" labels depend on it. */
+  ehHoje: boolean;
   janelaNota: string;
   timer: string;
-  avaliacao: number;
+  /** Units on the shelf right now (drives the stock plaque on the card). */
+  disponivel: number;
+  /** How many were published today — "resta 1 de 8 hoje". */
+  total: number;
+  /** ISO start/end of the pickup window; null when there's no active listing. */
+  janelaInicio: string | null;
+  janelaFim: string | null;
+  /** Real average, or null when the shop has no reviews yet. */
+  avaliacao: number | null;
+  avaliacoesTotal: number;
   endereco: string;
   descricao: string;
   conteudos: ConteudoSacola[];
+  /** Declared allergens, e.g. ["gluten","leite"]. Empty when none declared. */
+  alergenos: string[];
   categoria: Exclude<CategoriaId, "tudo">;
   destaque?: boolean;
   lat?: number | null;
@@ -41,7 +76,12 @@ export interface SacolaLoja {
   retirada: number;
   naoRetirada: number;
   receita: number;
+  /** "hoje" | "amanhã" — which day this offer's window falls on. */
+  dia: string;
+  ehHoje: boolean;
   alerta?: boolean;
+  /** True when this window falls outside the shop's registered hours. */
+  foraDoHorario?: boolean;
 }
 
 // pedido recebido pelo estabelecimento (visão do painel)
