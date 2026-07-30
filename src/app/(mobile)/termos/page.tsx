@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AvisoDemo } from "@/components/ui/em-breve";
 
 // Placeholder. The consent checkbox on C0b links here, so the link has to
 // lead somewhere real — but the actual terms are a legal document that has
@@ -22,10 +23,13 @@ export default function Termos() {
         </svg>
       </Link>
 
-      <h1 className="mt-[18px] font-display text-[26px] font-bold leading-[1.15]">
+      <h1 className="mt-[18px] mb-3 font-display text-[26px] font-bold leading-[1.15]">
         Termos de uso
       </h1>
-      <p className="mt-3 text-sm leading-[1.6] text-muted">
+      <AvisoDemo titulo="Documento ainda não escrito">
+        Esta página não tem valor legal hoje. Não aceite nada com base nela.
+      </AvisoDemo>
+      <p className="text-sm leading-[1.6] text-muted">
         Os termos de uso do GoodFood estão sendo preparados e serão publicados
         aqui antes do lançamento. Enquanto isso, o aplicativo é um protótipo:
         os dados são fictícios e nenhuma reserva gera cobrança real.

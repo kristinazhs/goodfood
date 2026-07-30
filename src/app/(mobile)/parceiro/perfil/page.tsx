@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FotoSacola } from "@/components/consumidor/foto-sacola";
 import { BottomNav } from "@/components/ui/bottom-nav";
+import { LinhaEmBreve, SeloEmBreve } from "@/components/ui/em-breve";
 import { signOut } from "@/lib/auth-actions";
 import { brl } from "@/lib/format";
 import { navParceiro } from "@/lib/nav";
@@ -246,27 +247,16 @@ export default async function Loja({
                   : "Deixe pronto para quando os repasses começarem"}
               </span>
             </span>
-            <span className="shrink-0 text-base font-bold leading-none text-[#8d8d84]">
-              ›
-            </span>
+            {/* Still a real link: the form genuinely saves. It is the PAYOUT
+                that does not exist, so the pill marks the outcome, not the
+                screen. */}
+            <SeloEmBreve>Sem repasse</SeloEmBreve>
           </Link>
 
-          <a
-            href="mailto:contato@goodfood.app?subject=Ajuda%20para%20parceiros"
-            className="flex min-h-11 items-center gap-3 rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5"
-          >
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-bold leading-[1.3]">
-                Ajuda para parceiros
-              </span>
-              <span className="mt-0.5 block truncate text-[12.5px] font-medium leading-[1.35] text-muted">
-                Falar com o time
-              </span>
-            </span>
-            <span className="shrink-0 text-base font-bold leading-none text-[#8d8d84]">
-              ›
-            </span>
-          </a>
+          <LinhaEmBreve
+            titulo="Ajuda para parceiros"
+            detalhe="Falar com o time"
+          />
 
           {/* Not in the design, but a partner needs a way out. Grey, not
               alarm-coloured: leaving is destructive, not urgent. */}

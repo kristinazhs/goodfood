@@ -139,11 +139,31 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
-| 🔴 | **CNPJ não é conferido** | Não valida formato, não consulta a Receita, não impede duplicado — duas lojas podem usar o mesmo. O CPF do consumidor já é validado (dígitos verificadores) e é único; vale fazer o mesmo aqui. |
+| 🔴 | **CNPJ não é conferido** | Não valida formato, não consulta a Receita, não impede duplicado — duas lojas podem usar o mesmo, e o campo nem é obrigatório. O CPF do consumidor já é validado (dígitos verificadores) e é único; vale fazer o mesmo aqui. **Em 30/07 o formulário passou a avisar que não conferimos** — o aviso é o curativo, não a solução. Fazer de verdade precisa de migration (not null + único) e vai recusar loja já cadastrada sem CNPJ. |
+| 🔴 | **Endereço não é conferido** | O cadastro já geocodifica, mas **em silêncio**: endereço que o geocoder não acha grava `lat`/`lng` nulos e a loja simplesmente nunca aparece no mapa, sem avisar ninguém. O formulário passou a dizer que não validamos (30/07); falta mostrar o resultado ("achamos este endereço — confere?") e recusar o que não resolve. Não precisa de migration. |
 | 🔴 | **`bairro` nunca é preenchido** | O cadastro grava `endereco`, `lat` e `lng`, mas não o bairro — e não há tela que o edite depois. Só que o bairro **aparece** no feed, no detalhe, no mapa e no histórico (`[endereco, bairro].join(" — ")`). Loja cadastrada pelo P6 fica sem bairro para sempre. Os valores "Petropolis" que existiam vieram digitados à mão no editor do Supabase. |
 | 🔴 | **Uma conta pode ter duas lojas** | Nada impede. Quando acontece, o Perfil público edita a **mais antiga** (`order created_at asc limit 1`, `parceiro-actions.ts:493`) e a segunda fica inalcançável. A migration 0014 já tinha esbarrado nisso. Faltam duas coisas: recusar o segundo cadastro, ou assumir várias lojas por conta e deixar escolher. |
 | 🟣 | **Comissão** | Retirada da tela até você definir a taxa. Pagamentos não conseguem dividir sem ela. |
 | 🟡 | Contrato de parceria | Página placeholder. |
+
+---
+
+# COMO O QUE NÃO EXISTE APARECE NA TELA
+
+Desde 30/07 há **um** jeito só de dizer "isso ainda não funciona", em
+`src/components/ui/em-breve.tsx`:
+
+| Peça | Onde usar |
+| --- | --- |
+| `<SeloEmBreve>` | pílula âmbar num botão ou linha que aparece mas não age |
+| `<LinhaEmBreve>` | linha de ajustes tracejada, apagada, sem toque |
+| `<AvisoDemo>` | faixa no topo de uma página que vale ler mas não é real |
+
+Âmbar é "em obra" e só isso — vermelho é para o que deu errado, e nada
+disso deu errado. **Nada foi escondido**: quem vê o Desempenho entende o que
+o produto vai ser; quem encontra um espaço vazio só acha que a tela quebrou.
+
+Quando uma função ficar pronta, apagar o uso da peça é a limpeza inteira.
 
 ---
 

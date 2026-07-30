@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CodigoForm } from "@/components/parceiro/codigo-form";
 import { BottomNav } from "@/components/ui/bottom-nav";
+import { SeloEmBreve } from "@/components/ui/em-breve";
 import { entregarSacola } from "@/lib/parceiro-actions";
 import { getPedidoPorCodigo } from "@/lib/parceiro";
 import { brl } from "@/lib/format";
@@ -57,8 +58,9 @@ export default async function Retirada({
               strokeLinecap="round"
             />
           </svg>
-          <span className="text-[13px] font-semibold text-muted">
-            Leitura por câmera em breve
+          <span className="flex items-center gap-2 text-[13px] font-semibold text-muted">
+            Leitura por câmera
+            <SeloEmBreve />
           </span>
           <span className="text-xs text-muted">
             Digite o código do cliente abaixo

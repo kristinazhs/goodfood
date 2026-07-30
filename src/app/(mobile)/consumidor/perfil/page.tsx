@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BottomNav } from "@/components/ui/bottom-nav";
+import { LinhaEmBreve } from "@/components/ui/em-breve";
 import { getCurrentProfile } from "@/lib/auth";
 import { signOut } from "@/lib/auth-actions";
 import { getOrigem } from "@/lib/enderecos";
@@ -97,58 +98,32 @@ export default async function Perfil({
             </span>
           </Link>
 
-          <div className="rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5">
-            <div className="text-sm font-bold leading-[1.3]">
-              Formas de pagamento
-            </div>
-            <div className="mt-0.5 text-[12.5px] font-medium leading-[1.35] text-muted">
-              Em breve — nenhuma cobrança real acontece ainda
-            </div>
-          </div>
+          <LinhaEmBreve
+            titulo="Formas de pagamento"
+            detalhe="Depende da escolha do provedor de pagamento"
+          />
 
-          <div className="rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5">
-            <div className="text-sm font-bold leading-[1.3]">Notificações</div>
-            <div className="mt-0.5 text-[12.5px] font-medium leading-[1.35] text-muted">
-              Sacolas novas por perto, lembrete de retirada · em breve
-            </div>
-          </div>
+          <LinhaEmBreve
+            titulo="Notificações"
+            detalhe="Sacolas novas por perto, lembrete de retirada"
+          />
 
-          <a
-            href="mailto:contato@goodfood.app?subject=Ajuda%20com%20um%20pedido"
-            className="flex min-h-11 items-center gap-3 rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5"
-          >
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-bold leading-[1.3]">
-                Ajuda e contato
-              </span>
-              <span className="mt-0.5 block truncate text-[12.5px] font-medium leading-[1.35] text-muted">
-                Dúvidas sobre um pedido
-              </span>
-            </span>
-            <span className="shrink-0 text-base font-bold leading-none text-[#8d8d84]">
-              ›
-            </span>
-          </a>
+          {/* These two were mailto: links to contato@goodfood.app, an address
+              that nobody reads yet. A tester who writes to it and gets no
+              answer learns something worse than "not built": they learn the
+              team ignores them. */}
+          <LinhaEmBreve
+            titulo="Ajuda e contato"
+            detalhe="Dúvidas sobre um pedido"
+          />
 
           {/* Feedback about the app is a separate path from rating a shop —
               mixing them contaminates the partner's score with product
               problems they can't fix. */}
-          <a
-            href="mailto:contato@goodfood.app?subject=Feedback%20do%20app"
-            className="flex min-h-11 items-center gap-3 rounded-2xl border-[1.5px] border-sage-line bg-white px-[15px] py-3.5"
-          >
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-bold leading-[1.3]">
-                Enviar feedback do app
-              </span>
-              <span className="mt-0.5 block truncate text-[12.5px] font-medium leading-[1.35] text-muted">
-                O que faltou, o que atrapalhou — chega direto no time
-              </span>
-            </span>
-            <span className="shrink-0 text-base font-bold leading-none text-[#8d8d84]">
-              ›
-            </span>
-          </a>
+          <LinhaEmBreve
+            titulo="Enviar feedback do app"
+            detalhe="O que faltou, o que atrapalhou"
+          />
 
           {/* Grey, not alarm-coloured, and away from feedback: leaving is
               destructive, not urgent. */}

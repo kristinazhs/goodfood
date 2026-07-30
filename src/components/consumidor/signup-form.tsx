@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
+import { SeloEmBreve } from "@/components/ui/em-breve";
 import { formatarCPF, formatarTelefone } from "@/lib/cpf";
+import { GOOGLE_ATIVO } from "@/lib/flags";
 import {
   signInWithGoogle,
   signUpConsumer,
@@ -105,24 +107,31 @@ export function SignupForm({ next }: { next?: string }) {
   return (
     <>
       {/* Social first: one tap for most people. The e-mail path below stays
-          complete for anyone who prefers it. */}
+          complete for anyone who prefers it.
+
+          While the provider is off, the button is disabled rather than live:
+          it used to look completely ready and only admitted otherwise after
+          you tapped it, which reads as a broken app rather than an
+          unfinished one. Same flag the server action checks, so enabling
+          Google in Supabase and flipping GOOGLE_ATIVO restores both at once. */}
       <form action={googleAction} className="mt-5">
         <button
           type="submit"
-          disabled={googlePending}
-          className="flex h-[52px] w-full items-center justify-center gap-2.5 rounded-[14px] border-[1.5px] border-sage-line bg-white text-[14.5px] font-bold text-charcoal disabled:opacity-60"
+          disabled={googlePending || !GOOGLE_ATIVO}
+          className="flex h-[52px] w-full items-center justify-center gap-2.5 rounded-[14px] border-[1.5px] border-sage-line bg-white text-[14.5px] font-bold text-charcoal disabled:cursor-not-allowed disabled:border-dashed disabled:bg-white/60 disabled:text-[#8d8d84]"
         >
           <span className="flex h-[22px] w-[22px] items-center justify-center rounded-full bg-sage text-xs font-extrabold leading-none text-brand-dark">
             G
           </span>
           {googlePending ? "Abrindo…" : "Continuar com Google"}
+          {!GOOGLE_ATIVO && <SeloEmBreve />}
         </button>
       </form>
 
       <div className="mt-[18px] flex items-center gap-2.5">
         <span className="h-px flex-1 bg-[#e0dbd0]" />
         <span className="text-xs font-semibold leading-none text-[#8d8d84]">
-          ou com e-mail
+          {GOOGLE_ATIVO ? "ou com e-mail" : "use e-mail por enquanto"}
         </span>
         <span className="h-px flex-1 bg-[#e0dbd0]" />
       </div>

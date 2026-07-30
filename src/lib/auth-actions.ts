@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { apenasDigitos, cpfValido, telefoneValido } from "./cpf";
+import { GOOGLE_ATIVO } from "./flags";
 import { geocodarEndereco } from "./geocode";
 import { createSupabaseServerClient } from "./supabase-server";
 
@@ -105,20 +106,6 @@ export async function signUpConsumer(
 
   redirect(destinoSeguro(formData.get("next")));
 }
-
-/**
- * Is the Google provider configured in Supabase?
- *
- * Flip to true ONLY after enabling it in Supabase → Authentication →
- * Providers → Google, with a client ID/secret from Google Cloud.
- *
- * This flag is needed because signInWithOAuth() happily builds an authorize
- * URL even when the provider is off — the failure only happens after the
- * browser has already left the app, and Supabase answers with raw JSON
- * ("Unsupported provider: provider is not enabled"). Sending someone to that
- * is worse than telling them here.
- */
-const GOOGLE_ATIVO = false;
 
 export async function signInWithGoogle(
   _prev: AuthState,

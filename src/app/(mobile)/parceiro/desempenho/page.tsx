@@ -1,4 +1,5 @@
 import { BottomNav } from "@/components/ui/bottom-nav";
+import { AvisoDemo } from "@/components/ui/em-breve";
 import { navParceiro } from "@/lib/nav";
 import { METRICAS, PERIODOS, REPASSE, SEMANA } from "@/lib/parceiro-mock";
 
@@ -21,13 +22,17 @@ export default function Desempenho() {
       <main className="flex-1 pb-6">
         <div className="px-5 pt-[18px]">
           <h1 className="font-display text-[23px] font-semibold">Desempenho</h1>
-          {/* Says plainly that these are sample numbers, so a partner being
-              shown the app doesn't read them as their own. */}
-          <p className="mt-1 text-[12.5px] font-medium leading-[1.4] text-muted">
-            Dados de exemplo — sua loja verá os números reais.
-          </p>
+          {/* Was a faint grey line that read like a footnote. A tester skimmed
+              past it and took the numbers for their own. */}
+          <div className="mt-3">
+            <AvisoDemo titulo="Tela de demonstração">
+              Todos os números desta tela são fictícios, iguais para qualquer
+              loja. Os filtros de período também não funcionam ainda. Serve
+              para mostrar como o acompanhamento vai ser.
+            </AvisoDemo>
+          </div>
 
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 flex gap-2 opacity-60">
             {PERIODOS.map((p, i) => (
               <span
                 key={p}

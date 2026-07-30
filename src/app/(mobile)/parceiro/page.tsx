@@ -182,7 +182,10 @@ export default async function ParceiroHoje({
                 strokeLinecap="round"
               />
             </svg>
-            Escanear código
+            {/* Was "Escanear código", which promises a camera that does not
+                exist yet — the shop taps it expecting to scan and finds a
+                keypad. The button does exactly what it says now. */}
+            Digitar código
           </Link>
         </div>
 

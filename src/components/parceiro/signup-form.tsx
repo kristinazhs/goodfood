@@ -85,8 +85,16 @@ export function ParceiroSignupForm() {
             className={CAMPO}
           />
           {/* Each field says why it exists — a business form without
-              justification reads as suspicion. */}
-          <span className={AJUDA}>Usado só para o repasse e a nota fiscal</span>
+              justification reads as suspicion.
+
+              Not verified yet: no format check, no Receita lookup, no
+              uniqueness. Said out loud so a tester doesn't assume a typo was
+              caught. Making it required + validated is its own job — see
+              PENDENCIAS. */}
+          <span className={AJUDA}>
+            Usado só para o repasse e a nota fiscal ·{" "}
+            <b className="font-bold">ainda não conferimos o número</b>
+          </span>
         </label>
 
         <label className="block">
@@ -111,8 +119,13 @@ export function ParceiroSignupForm() {
             placeholder="ex. Rua Padre Chagas, 314"
             className={CAMPO}
           />
+          {/* The address IS geocoded here, but silently: an address that
+              can't be found stores null coordinates and the shop simply never
+              appears on the map, with nothing said. Warn rather than pretend
+              it was checked. */}
           <span className={AJUDA}>
-            Aparece no mapa e no código de retirada do cliente
+            Aparece no mapa e no código de retirada do cliente ·{" "}
+            <b className="font-bold">confira você mesmo, não validamos</b>
           </span>
         </label>
 

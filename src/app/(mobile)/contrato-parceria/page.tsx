@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AvisoDemo } from "@/components/ui/em-breve";
 
 // Placeholder — the partner signup links here from its consent checkbox, so
 // the link has to lead somewhere real. The contract itself is a legal
@@ -22,10 +23,14 @@ export default function ContratoParceria() {
         </svg>
       </Link>
 
-      <h1 className="mt-[18px] font-display text-[26px] font-bold leading-[1.15]">
+      <h1 className="mt-[18px] mb-3 font-display text-[26px] font-bold leading-[1.15]">
         Contrato de parceria
       </h1>
-      <p className="mt-3 text-sm leading-[1.6] text-muted">
+      <AvisoDemo titulo="Contrato ainda não escrito">
+        Nada aqui obriga ninguém. A taxa de comissão ainda não foi definida, e
+        nenhum repasse acontece.
+      </AvisoDemo>
+      <p className="text-sm leading-[1.6] text-muted">
         O contrato de parceria do GoodFood está sendo preparado e será
         publicado aqui antes do lançamento. Ele detalhará a comissão por sacola
         vendida, o prazo de repasse e as responsabilidades de cada lado.
