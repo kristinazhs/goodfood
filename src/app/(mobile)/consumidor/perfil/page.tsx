@@ -89,7 +89,7 @@ export default async function Perfil({
                 Endereços salvos
               </span>
               <span className="mt-0.5 block truncate text-[12.5px] font-medium leading-[1.35] text-muted">
-                {origem.label}
+                {origem?.label ?? "Nenhum endereço salvo"}
               </span>
             </span>
             <span className="shrink-0 text-base font-bold leading-none text-[#8d8d84]">

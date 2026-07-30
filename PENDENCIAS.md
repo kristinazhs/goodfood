@@ -32,8 +32,8 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
-| 🔵 | **Distâncias e tempo a pé** | Agora medidas do endereço que a pessoa salvou e marcou como principal (C7). Quem está deslogado ou não salvou nenhum cai no endereço padrão do Bom Fim — e o rótulo na tela diz qual endereço está sendo usado. Tempo a pé assume 80 m/min. |
-| 🟡 | **Fotos das sacolas** | Placeholder listrado quando a loja não subiu foto. O upload já funciona (P3). |
+| 🔵 | **Distâncias e tempo a pé** | Medidas do endereço que a pessoa salvou e marcou como principal (C7). Sem endereço salvo **não aparecem** — o app não sabe onde a pessoa está e não inventa. O cabeçalho pede o endereço em vez de mostrar um. Tempo a pé assume 80 m/min. |
+| 🟡 | **Fotos das sacolas** | Placeholder listrado só quando a loja não subiu foto. O destaque e o topo do C3 mostravam o listrado mesmo havendo foto — corrigido. |
 | ✅ | **"Disponível hoje" era texto fixo** | O feed agora separa Hoje e Amanhã, e cada tela lê o dia real da janela. Destaque ("última unidade") é só de hoje. |
 
 ## C1a / C1b — Busca
@@ -55,7 +55,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
-| 🟡 | **Foto da loja (topo)** | A coluna existe (`establishments.foto_url`, migration 0019) e a loja sobe a foto no Perfil público. Falta usá-la no topo do C3, que ainda mostra o padrão listrado. |
+| ⚪ | **Foto da LOJA no C3** | O topo do C3 mostra a foto da sacola (correto). A foto do estabelecimento (`establishments.foto_url`) aparece na página da loja; não é usada no C3. |
 | ✅ | **Podia mostrar janela vencida** | A tela agora resolve uma OFERTA pelo id dela, não "alguma oferta desta sacola". Não há mais para onde cair. |
 
 ## C4 — Reserva + pagamento

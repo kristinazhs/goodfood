@@ -51,12 +51,16 @@ function pinIcon(p: PontoMapa, ativo: boolean) {
 export default function LeafletMap({
   pontos,
   origem,
+  marcarOrigem,
   lojaSelecionada,
   onSelect,
 }: {
   pontos: PontoMapa[];
-  /** Where "você" is — the person's principal saved address. */
+  /** Where the map opens. Also "você" — but only when marcarOrigem. */
   origem: Origem;
+  /** False when no address is saved: centre the map, but don't plant a "you
+      are here" pin on a spot the person never told us about. */
+  marcarOrigem: boolean;
   lojaSelecionada: string | null;
   onSelect: (loja: string) => void;
 }) {
@@ -82,16 +86,20 @@ export default function LeafletMap({
       className: "mv-tiles",
     }).addTo(map);
 
-    // Where the search is measured from (the address in the header).
-    L.marker([origem.lat, origem.lng], {
-      interactive: false,
-      icon: L.divIcon({
-        className: "mv-pin-wrap",
-        iconSize: [16, 16],
-        iconAnchor: [8, 8],
-        html: `<span class="mv-origem"></span>`,
-      }),
-    }).addTo(map);
+    // Where the search is measured from — only when we actually know. With
+    // no saved address the map still opens on the city, but planting a "you
+    // are here" dot would be telling someone where they are.
+    if (marcarOrigem) {
+      L.marker([origem.lat, origem.lng], {
+        interactive: false,
+        icon: L.divIcon({
+          className: "mv-pin-wrap",
+          iconSize: [16, 16],
+          iconAnchor: [8, 8],
+          html: `<span class="mv-origem"></span>`,
+        }),
+      }).addTo(map);
+    }
 
     mapRef.current = map;
     // The container is inside a flex layout; make sure Leaflet measured it.
@@ -103,7 +111,7 @@ export default function LeafletMap({
       markersRef.current = {};
     };
     // Rebuilt when the origin changes — the "you are here" marker moves.
-  }, [origem.lat, origem.lng]);
+  }, [origem.lat, origem.lng, marcarOrigem]);
 
   // (Re)build pins when the set of shops changes.
   useEffect(() => {

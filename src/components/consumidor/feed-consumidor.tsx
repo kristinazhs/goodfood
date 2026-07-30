@@ -22,8 +22,8 @@ export function FeedConsumidor({
   primeiroNome: string | null;
   cat: CategoriaId;
   todas: Sacola[];
-  /** The address every distance below is measured from. */
-  enderecoLabel: string;
+  /** The address distances are measured from — null when none is saved. */
+  enderecoLabel: string | null;
   /** Saved addresses, so the header can switch between them. */
   enderecos: Endereco[];
   children: React.ReactNode;

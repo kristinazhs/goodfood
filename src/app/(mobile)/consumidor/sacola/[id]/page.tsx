@@ -55,14 +55,26 @@ export default async function SacolaDetalhe({
   return (
     <>
       <main className="flex-1">
-        {/* hero — photo slot, striped placeholder until real photos exist */}
-        <div
-          className="relative h-[172px]"
-          style={{
-            background:
-              "repeating-linear-gradient(135deg,#2b7c49 0 12px,#25703f 12px 24px)",
-          }}
-        >
+        {/* hero — the sacola's own photo. It was a striped placeholder even
+            when the shop had uploaded one, on the very screen that decides
+            the purchase. */}
+        <div className="relative h-[172px] overflow-hidden">
+          {sacola.fotoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={sacola.fotoUrl}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : (
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "repeating-linear-gradient(135deg,#2b7c49 0 12px,#25703f 12px 24px)",
+              }}
+            />
+          )}
           <Link
             href={voltarPara}
             aria-label="Voltar"
@@ -84,9 +96,11 @@ export default async function SacolaDetalhe({
               −{pct}% · economize {brl(economia)}
             </span>
           )}
-          <span className="absolute bottom-4 right-4 font-mono text-[11px] leading-none text-mint">
-            foto da loja
-          </span>
+          {!sacola.fotoUrl && (
+            <span className="absolute bottom-4 right-4 font-mono text-[11px] leading-none text-mint">
+              foto sacola
+            </span>
+          )}
         </div>
 
         <div className="px-5 pt-[18px]">

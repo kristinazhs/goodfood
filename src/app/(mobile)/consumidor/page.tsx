@@ -69,7 +69,7 @@ export default async function ConsumidorHome({
           primeiroNome={primeiroNome}
           cat={cat}
           todas={todas}
-          enderecoLabel={origem.label}
+          enderecoLabel={origem?.label ?? null}
           enderecos={enderecos}
         >
           {/* Where a cancellation lands: the evening just freed up, so the

@@ -1,6 +1,6 @@
 import { getNotasPorLoja, type NotaLoja } from "@/lib/avaliacoes";
 import { diaRelativoSP, ehHojeSP } from "@/lib/datas";
-import { distanciaAte, ORIGEM_PADRAO, type Origem } from "@/lib/distancia";
+import { distanciaAte, type Origem } from "@/lib/distancia";
 import type { Horarios } from "@/lib/horarios";
 import { createSupabaseClient } from "@/lib/supabase";
 import type { CategoriaId, ConteudoSacola, Sacola } from "@/lib/types";
@@ -100,7 +100,7 @@ function toSacola(
   est: EstablishmentRow,
   listing: ListingRow,
   nota?: NotaLoja,
-  origem: Origem = ORIGEM_PADRAO,
+  origem: Origem | null = null,
 ): Sacola {
   const preco = Number(listing.preco);
   const precoOriginal =
@@ -153,7 +153,7 @@ function toSacola(
 
 // The consumer feed: every bag with stock available right now.
 export async function getSacolasDisponiveis(
-  origem: Origem = ORIGEM_PADRAO,
+  origem: Origem | null = null,
 ): Promise<Sacola[]> {
   const supabase = createSupabaseClient();
   const { data, error } = await supabase
@@ -248,7 +248,7 @@ export function escolherDestaque(
  */
 export async function getSacolaPorId(
   id: string,
-  origem: Origem = ORIGEM_PADRAO,
+  origem: Origem | null = null,
 ): Promise<Sacola | undefined> {
   if (!UUID_RE.test(id)) return undefined; // stale/non-uuid url -> not found
 
@@ -290,7 +290,7 @@ export interface LojaPublica {
 
 export async function getLojaPublica(
   id: string,
-  origem: Origem = ORIGEM_PADRAO,
+  origem: Origem | null = null,
 ): Promise<LojaPublica | null> {
   const supabase = createSupabaseClient();
 

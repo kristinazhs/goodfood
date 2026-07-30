@@ -22,20 +22,36 @@ export function SpotlightCard({ sacola }: { sacola: Sacola }) {
       href={`/consumidor/sacola/${sacola.id}`}
       className="relative mx-5 block overflow-hidden rounded-[22px] bg-brand transition-transform active:scale-[0.98]"
     >
-      {/* photo slot — striped placeholder until real establishment photos exist */}
-      <div
-        className="flex h-[70px] items-end justify-between px-3 pb-2"
-        style={{
-          background:
-            "repeating-linear-gradient(135deg,#2b7c49 0 10px,#25703f 10px 20px)",
-        }}
-      >
-        <span className="inline-flex h-[26px] items-center rounded-full bg-white px-2.5 text-xs font-extrabold leading-none text-brand-dark">
-          {selo}
-        </span>
-        <span className="font-mono text-[11px] leading-none text-mint">
-          foto da vitrine
-        </span>
+      {/* The sacola's own photo. It was showing a striped placeholder even
+          when the shop had uploaded one — the small cards had it and the
+          biggest card on the screen didn't. */}
+      <div className="relative h-[70px]">
+        {sacola.fotoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={sacola.fotoUrl}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "repeating-linear-gradient(135deg,#2b7c49 0 10px,#25703f 10px 20px)",
+            }}
+          />
+        )}
+        <div className="absolute inset-0 flex items-end justify-between px-3 pb-2">
+          <span className="inline-flex h-[26px] items-center rounded-full bg-white px-2.5 text-xs font-extrabold leading-none text-brand-dark">
+            {selo}
+          </span>
+          {!sacola.fotoUrl && (
+            <span className="font-mono text-[11px] leading-none text-mint">
+              foto sacola
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex items-end justify-between gap-2.5 px-4 pb-3.5 pt-3">

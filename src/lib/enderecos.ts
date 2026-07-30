@@ -1,4 +1,4 @@
-import { ORIGEM_PADRAO, type Origem } from "./distancia";
+import type { Origem } from "./distancia";
 import { createSupabaseServerClient } from "./supabase-server";
 
 // C7 — saved addresses (migration 0019).
@@ -39,25 +39,28 @@ export async function getEnderecos(): Promise<Endereco[]> {
 }
 
 /**
- * Where to measure distances from: the address the person marked as
- * principal, or the default when they are signed out, have saved none, or
- * saved one whose coordinates we couldn't resolve. A feed with no distances
- * would be worse than one measured from the centre — but the label always
- * says which address it is, so the number is never silently wrong.
+ * Where to measure distances from — or null when we genuinely don't know.
+ *
+ * This used to fall back to a fixed address in the Bom Fim and print it in
+ * the header as if it were the person's own. It isn't: someone signed out,
+ * or who has saved nothing, has told us nothing about where they are. The
+ * app then showed them "450 m" as a fact.
+ *
+ * Null is the honest answer, and the rest of the app already knows what to do
+ * with it: distanciaAte() returns "" for a shop with no coordinates on the
+ * same principle — an invented distance is worse than none.
  */
-export async function getOrigem(): Promise<Origem> {
+export async function getOrigem(): Promise<Origem | null> {
   let enderecos: Endereco[] = [];
   try {
     enderecos = await getEnderecos();
   } catch {
-    return ORIGEM_PADRAO;
+    return null;
   }
 
-  const principal =
-    enderecos.find((e) => e.principal) ?? enderecos[0] ?? null;
-  if (!principal || principal.lat == null || principal.lng == null) {
-    return ORIGEM_PADRAO;
-  }
+  const principal = enderecos.find((e) => e.principal) ?? enderecos[0] ?? null;
+  // An address the geocoder couldn't place can't measure anything either.
+  if (!principal || principal.lat == null || principal.lng == null) return null;
 
   return {
     label: principal.endereco,

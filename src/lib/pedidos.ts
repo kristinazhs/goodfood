@@ -1,5 +1,5 @@
 import { horaMinutoSP } from "./datas";
-import { distanciaAte, ORIGEM_PADRAO, type Origem } from "./distancia";
+import { distanciaAte, type Origem } from "./distancia";
 import { createSupabaseServerClient } from "./supabase-server";
 
 export type PedidoStatus = "reservado" | "retirado" | "nao_retirado" | "cancelado";
@@ -130,7 +130,7 @@ export async function getPedidoDetalhe(
 
 // The logged-in consumer's own orders, newest first.
 export async function getMeusPedidos(
-  origem: Origem = ORIGEM_PADRAO,
+  origem: Origem | null = null,
 ): Promise<PedidoResumo[]> {
   const supabase = await createSupabaseServerClient();
   const {

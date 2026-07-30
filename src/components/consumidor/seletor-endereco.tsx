@@ -18,7 +18,8 @@ export function SeletorEndereco({
   label,
   enderecos,
 }: {
-  label: string;
+  /** The saved address, or null when there isn't one. */
+  label: string | null;
   enderecos: Endereco[];
 }) {
   const [aberto, setAberto] = useState(false);
@@ -29,11 +30,19 @@ export function SeletorEndereco({
         type="button"
         onClick={() => setAberto(true)}
         aria-expanded={aberto}
-        aria-label={`Endereço: ${label}. Trocar`}
-        className="mt-[7px] flex h-6 max-w-full items-center gap-[5px] text-[13px] font-semibold text-muted"
+        aria-label={
+          label ? `Endereço: ${label}. Trocar` : "Escolher seu endereço"
+        }
+        className={`mt-[7px] flex h-6 max-w-full items-center gap-[5px] text-[13px] font-semibold ${
+          label ? "text-muted" : "text-brand-dark"
+        }`}
       >
         <IconPin active size={14} />
-        <span className="min-w-0 truncate">{label}</span>
+        {/* Without a saved address we don't know where the person is, so we
+            ask instead of naming a street they never gave us. */}
+        <span className="min-w-0 truncate">
+          {label ?? "Escolha seu endereço"}
+        </span>
         <span className="shrink-0 text-[#8d8d84]">▾</span>
       </button>
 
@@ -57,8 +66,8 @@ export function SeletorEndereco({
             <div className="mt-4 flex flex-col gap-2">
               {enderecos.length === 0 && (
                 <p className="rounded-xl bg-[#f7f5ef] px-3.5 py-3 text-[13px] font-medium leading-[1.45] text-muted">
-                  Você ainda não salvou nenhum endereço. Por enquanto as
-                  distâncias saem do centro de Porto Alegre.
+                  Sem um endereço salvo não dá para calcular a distância até
+                  cada loja — por isso ela não aparece nos cards.
                 </p>
               )}
 

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { FotoSacola } from "@/components/consumidor/foto-sacola";
 import type { PontoMapa } from "@/components/consumidor/leaflet-map";
-import type { Origem } from "@/lib/distancia";
+import { CENTRO_POA, type Origem } from "@/lib/distancia";
 import { brl } from "@/lib/format";
 import { escolherLojaNoMapa } from "@/lib/mapa";
 import type { Sacola } from "@/lib/types";
@@ -40,7 +40,8 @@ export function MapView({
   origem,
 }: {
   sacolas: Sacola[];
-  origem: Origem;
+  /** Null when no address is saved — the map still opens, on the city. */
+  origem: Origem | null;
 }) {
   const [filtros, setFiltros] = useState<FiltroId[]>([]);
   const [categorias, setCategorias] = useState<string[]>([]);
@@ -114,7 +115,8 @@ export function MapView({
     <div className="relative flex-1 overflow-hidden bg-[#eaf0e6]">
       <LeafletMap
         pontos={pontos}
-        origem={origem}
+        origem={origem ?? CENTRO_POA}
+        marcarOrigem={origem != null}
         lojaSelecionada={lojaAtiva}
         onSelect={setLojaSelecionada}
       />
@@ -126,7 +128,9 @@ export function MapView({
             <circle cx="10" cy="10" r="6" fill="none" stroke="#6b6b62" strokeWidth="1.8" />
             <path d="M14.5 14.5 19 19" stroke="#6b6b62" strokeWidth="1.8" strokeLinecap="round" />
           </svg>
-          <span className="truncate text-sm text-muted">{origem.label}</span>
+          <span className="truncate text-sm text-muted">
+            {origem?.label ?? "Escolha um endereço"}
+          </span>
         </div>
         <button
           type="button"

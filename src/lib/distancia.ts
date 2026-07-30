@@ -12,9 +12,13 @@ export interface Origem {
   lng: number;
 }
 
-export const ORIGEM_PADRAO: Origem = {
-  label: "Av. Osvaldo Aranha, 540",
-  // Approximate — Av. Osvaldo Aranha between the park and Rua Padre Chagas.
+/**
+ * Where the MAP opens when we don't know where the person is. Centring a map
+ * somewhere is unavoidable; claiming that spot is your address is not, so
+ * this is never shown as a label and never used to measure a distance.
+ */
+export const CENTRO_POA: Origem = {
+  label: "Porto Alegre",
   lat: -30.0338,
   lng: -51.2131,
 };
@@ -55,9 +59,11 @@ export function formatarDistancia(metros: number): string {
 export function distanciaAte(
   lat: number | null | undefined,
   lng: number | null | undefined,
-  origem: Origem = ORIGEM_PADRAO,
+  origem: Origem | null | undefined,
 ): string {
-  if (lat == null || lng == null) return "";
+  // No origin means we don't know where the person is. Same rule as a shop
+  // with no coordinates: say nothing rather than invent a number.
+  if (!origem || lat == null || lng == null) return "";
   return formatarDistancia(metrosEntre(origem.lat, origem.lng, lat, lng));
 }
 
@@ -68,9 +74,9 @@ export function distanciaAte(
 export function minutosAPe(
   lat: number | null | undefined,
   lng: number | null | undefined,
-  origem: Origem = ORIGEM_PADRAO,
+  origem: Origem | null | undefined,
 ): number | null {
-  if (lat == null || lng == null) return null;
+  if (!origem || lat == null || lng == null) return null;
   const m = metrosEntre(origem.lat, origem.lng, lat, lng);
   return Math.max(1, Math.round(m / 80));
 }
