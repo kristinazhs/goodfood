@@ -81,7 +81,14 @@ export async function salvarEndereco(
 
 export async function definirPrincipal(formData: FormData) {
   const id = String(formData.get("id") ?? "");
-  if (!id) redirect("/consumidor/perfil/enderecos");
+  // Called from the addresses screen AND from the feed's address button, so
+  // it returns to whichever one asked. Same-site paths only.
+  const bruto = String(formData.get("voltar") ?? "");
+  const voltar =
+    bruto.startsWith("/") && !bruto.startsWith("//")
+      ? bruto
+      : "/consumidor/perfil/enderecos?principal=1";
+  if (!id) redirect(voltar);
 
   const supabase = await createSupabaseServerClient();
   const {
@@ -98,7 +105,7 @@ export async function definirPrincipal(formData: FormData) {
 
   // Every distance in the app is measured from here, so the feed has to go.
   revalidatePath("/consumidor");
-  redirect("/consumidor/perfil/enderecos?principal=1");
+  redirect(voltar);
 }
 
 export async function removerEndereco(formData: FormData) {

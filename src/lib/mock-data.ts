@@ -3,6 +3,7 @@ import type { Pedido, PedidoLoja, Sacola, SacolaLoja } from "./types";
 export const sacolas: Sacola[] = [
   {
     id: "surpresa-doce",
+    listingId: "surpresa-doce-l",
     nome: "Sacola Surpresa Doce",
     loja: "Domenica Casa de Pães",
     lojaId: "mock-domenica-casa-de-pães",
@@ -37,6 +38,7 @@ export const sacolas: Sacola[] = [
   },
   {
     id: "almoco-do-dia",
+    listingId: "almoco-do-dia-l",
     nome: "Sacola Almoço do Dia",
     loja: "Madrecita Bistrô",
     lojaId: "mock-madrecita-bistrô",
@@ -70,6 +72,7 @@ export const sacolas: Sacola[] = [
   },
   {
     id: "mista-paes",
+    listingId: "mista-paes-l",
     nome: "Sacola Mista Pães",
     loja: "Panificadora Estrela",
     lojaId: "mock-panificadora-estrela",
@@ -103,6 +106,7 @@ export const sacolas: Sacola[] = [
   },
   {
     id: "frios-laticinios",
+    listingId: "frios-laticinios-l",
     nome: "Sacola Frios e Laticínios",
     loja: "Mercado Zaffari Moinhos",
     lojaId: "mock-mercado-zaffari-moinhos",

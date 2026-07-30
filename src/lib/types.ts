@@ -12,7 +12,14 @@ export interface ConteudoSacola {
 }
 
 export interface Sacola {
+  /** The BAG id — what /consumidor/sacola/[id] resolves. */
   id: string;
+  /**
+   * Today's offer of that bag. NOT the same as `id`: a shop can publish the
+   * same bag for two windows, which made two cards share one React key and
+   * silently drop one of them. Use this wherever a list needs identity.
+   */
+  listingId: string | null;
   nome: string;
   loja: string;
   distancia: string;

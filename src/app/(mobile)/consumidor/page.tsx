@@ -3,7 +3,7 @@ import { FeedConsumidor } from "@/components/consumidor/feed-consumidor";
 import { SpotlightCard } from "@/components/consumidor/spotlight-card";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { getCurrentProfile } from "@/lib/auth";
-import { getOrigem } from "@/lib/enderecos";
+import { getEnderecos, getOrigem } from "@/lib/enderecos";
 import { navConsumidor } from "@/lib/nav";
 import { escolherDestaque, getSacolasDisponiveis } from "@/lib/sacolas";
 import type { CategoriaId } from "@/lib/types";
@@ -26,10 +26,11 @@ export default async function ConsumidorHome({
   // The origin has to be resolved before the sacolas: every distance on the
   // feed is measured from it.
   const origem = await getOrigem();
-  const [params, todas, sessao] = await Promise.all([
+  const [params, todas, sessao, enderecos] = await Promise.all([
     searchParams,
     getSacolasDisponiveis(origem),
     getCurrentProfile(),
+    getEnderecos(),
   ]);
 
   const cat: CategoriaId = CATEGORIAS.includes(params.cat as CategoriaId)
@@ -60,6 +61,7 @@ export default async function ConsumidorHome({
           cat={cat}
           todas={todas}
           enderecoLabel={origem.label}
+          enderecos={enderecos}
         >
           {/* Where a cancellation lands: the evening just freed up, so the
               useful next thing is what else is available now. */}
@@ -109,7 +111,7 @@ export default async function ConsumidorHome({
                   </div>
                   <div className="flex flex-col gap-3 px-5 pb-[18px]">
                     {demais.map((s) => (
-                      <BagCard key={s.id} sacola={s} />
+                      <BagCard key={s.listingId ?? s.id} sacola={s} />
                     ))}
                   </div>
                 </>

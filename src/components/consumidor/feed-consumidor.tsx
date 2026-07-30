@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import { CategoryRow } from "@/components/consumidor/category-row";
 import { BuscaC1 } from "@/components/consumidor/feed-busca";
-import { IconPin } from "@/components/ui/icons";
+import { SeletorEndereco } from "@/components/consumidor/seletor-endereco";
+import type { Endereco } from "@/lib/enderecos";
 import type { CategoriaId, Sacola } from "@/lib/types";
 
 // Owns the two states of the home screen: the feed, and search (C1a/C1b).
@@ -15,6 +16,7 @@ export function FeedConsumidor({
   cat,
   todas,
   enderecoLabel,
+  enderecos,
   children,
 }: {
   primeiroNome: string | null;
@@ -22,6 +24,8 @@ export function FeedConsumidor({
   todas: Sacola[];
   /** The address every distance below is measured from. */
   enderecoLabel: string;
+  /** Saved addresses, so the header can switch between them. */
+  enderecos: Endereco[];
   children: React.ReactNode;
 }) {
   const [buscando, setBuscando] = useState(false);
@@ -53,14 +57,9 @@ export function FeedConsumidor({
           <span className="text-terracotta-dark">a comida boa</span> te espera
         </h1>
 
-        {/* The origin every distance on this screen is measured from.
-            PLACEHOLDER: the address is the design's, because there's no
-            principal saved address (C7), or the default when there is none. */}
-        <p className="mt-[7px] flex h-6 items-center gap-[5px] text-[13px] font-semibold text-muted">
-          <IconPin active size={14} />
-          {enderecoLabel}
-          <span className="text-[#8d8d84]">▾</span>
-        </p>
+        {/* The origin every distance on this screen is measured from — and
+            now a real control, not a ▾ that did nothing. */}
+        <SeletorEndereco label={enderecoLabel} enderecos={enderecos} />
       </div>
 
       <CategoryRow active={cat} aoBuscar={abrir} />

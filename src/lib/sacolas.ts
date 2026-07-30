@@ -93,6 +93,7 @@ function toSacola(
 
   return {
     id: bag.id,
+    listingId: listing?.id ?? null,
     nome: bag.nome,
     loja: est.nome,
     lojaId: est.id,
