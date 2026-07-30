@@ -190,8 +190,10 @@ export default async function ParceiroHoje({
             top of the screen isn't pushed away. */}
         <div className="mt-5 flex items-center justify-between px-5 pb-2.5">
           <span className="text-xs font-extrabold uppercase leading-none tracking-[0.7px] text-muted">
-            Fila de hoje
+            Fila
           </span>
+          {/* Today-scoped on purpose: this is the number the counter acts on
+              right now. Tomorrow's is carried by its own subheading below. */}
           <span className="text-xs font-semibold leading-none text-muted">
             {fila.aguardando} aguardando · {fila.total} hoje
           </span>
@@ -205,8 +207,13 @@ export default async function ParceiroHoje({
           <div className="mx-5 max-h-[280px] overflow-y-auto rounded-[16px] border-[1.5px] border-sage-line bg-white">
             {fila.itens.map((i, idx) => {
               const aguardando = i.status === "reservado";
+              // A subheading rather than a per-row plaque: the row already
+              // carries a status chip, and two chips on a 375px row is a
+              // crowd. Same device as the list below, so the screen reads
+              // the same way twice.
+              const abreDia = idx === 0 || fila.itens[idx - 1].dia !== i.dia;
               const classe = `flex items-center gap-3 px-3.5 py-3 ${
-                idx > 0 ? "border-t border-sage-line" : ""
+                idx > 0 && !abreDia ? "border-t border-sage-line" : ""
               }`;
 
               const conteudo = (
@@ -256,7 +263,24 @@ export default async function ParceiroHoje({
               // Collected and no-show rows stay visible for auditing but are
               // NOT links — there is nothing left to do to them, and a row
               // that reacts to a tap invites one by mistake.
-              return aguardando ? (
+              const cabecalho = abreDia ? (
+                <div
+                  className={`flex items-center justify-between bg-[#f7f5ef] px-3.5 py-1.5 ${
+                    idx > 0 ? "border-t border-sage-line" : ""
+                  }`}
+                >
+                  <span className="text-[11.5px] font-bold capitalize leading-none text-muted">
+                    {i.dia}
+                  </span>
+                  {!i.ehHoje && fila.amanha > 0 && (
+                    <span className="text-[11.5px] font-semibold leading-none text-muted">
+                      {fila.amanha} reserva{fila.amanha === 1 ? "" : "s"}
+                    </span>
+                  )}
+                </div>
+              ) : null;
+
+              const linha = aguardando ? (
                 <Link
                   key={i.id}
                   href={`/parceiro/retirada?codigo=${encodeURIComponent(i.codigo)}`}
@@ -275,13 +299,22 @@ export default async function ParceiroHoje({
                   {conteudo}
                 </div>
               );
+
+              return cabecalho ? (
+                <div key={i.id}>
+                  {cabecalho}
+                  {linha}
+                </div>
+              ) : (
+                linha
+              );
             })}
           </div>
         )}
 
         <div className="mt-5 flex items-center justify-between px-5 pb-2.5">
           <span className="text-xs font-extrabold uppercase leading-none tracking-[0.7px] text-muted">
-            Publicado hoje
+            Sacolas publicadas
           </span>
           <Link
             href="/parceiro/sacolas/nova"
@@ -293,19 +326,20 @@ export default async function ParceiroHoje({
 
         {sacolas.length === 0 ? (
           <p className="px-5 py-8 text-center text-sm leading-[1.5] text-muted">
-            Você ainda não publicou sacolas hoje.
+            Você ainda não publicou sacolas para hoje nem para amanhã.
           </p>
         ) : (
           <div className="flex flex-col gap-3 px-5">
-            {sacolas.map((s) => {
+            {sacolas.map((s, idx) => {
+              // Same subheading device as the queue above.
+              const abreDia = idx === 0 || sacolas[idx - 1].dia !== s.dia;
               const vendidas = s.retirada + s.naoRetirada;
               const total = Math.max(1, vendidas + s.reservada + s.ativa);
               const pct = (n: number) => `${(n / total) * 100}%`;
-              return (
+              const cartao = (
                 <Link
-                  key={s.id}
                   href={`/parceiro/sacolas/${s.id}`}
-                  className="rounded-[18px] border-[1.5px] border-sage-line bg-white p-3.5 transition-transform active:scale-[0.98]"
+                  className="block rounded-[18px] border-[1.5px] border-sage-line bg-white p-3.5 transition-transform active:scale-[0.98]"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -338,6 +372,17 @@ export default async function ParceiroHoje({
                     <span className="text-muted">{s.ativa} resta</span>
                   </div>
                 </Link>
+              );
+
+              return abreDia ? (
+                <div key={s.id}>
+                  <div className="pb-2 pt-1 text-[12.5px] font-bold capitalize leading-none text-muted">
+                    {s.dia}
+                  </div>
+                  {cartao}
+                </div>
+              ) : (
+                <div key={s.id}>{cartao}</div>
               );
             })}
           </div>

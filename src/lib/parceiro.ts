@@ -1,4 +1,11 @@
-import { haQuanto, horaMinutoSP, hojeSP } from "./datas";
+import {
+  amanhaSP,
+  diaRelativoSP,
+  ehHojeSP,
+  haQuanto,
+  horaMinutoSP,
+  hojeSP,
+} from "./datas";
 import { janelaForaDoHorario, type Horarios } from "./horarios";
 import type { PedidoStatus } from "./pedidos";
 import { createSupabaseServerClient } from "./supabase-server";
@@ -97,7 +104,9 @@ export async function getPainelParceiro(): Promise<PainelParceiro> {
        bag:bags!inner ( nome, preco, emoji, cor_thumb )`,
     )
     .eq("establishment_id", est.id)
-    .eq("data", hojeSP())
+    // Tomorrow too, now that a shop can publish for it — otherwise a bag
+    // published for tomorrow vanished from its own shop's screen.
+    .in("data", [hojeSP(), amanhaSP()])
     .order("janela_fim", { ascending: true });
   const listings = (listingsData ?? []) as unknown as ListingRow[];
   const ids = listings.map((l) => l.id);
@@ -156,6 +165,8 @@ export async function getPainelParceiro(): Promise<PainelParceiro> {
       retirada: a.retirada,
       naoRetirada: a.naoRetirada,
       receita: a.receita,
+      dia: diaRelativoSP(l.janela_inicio),
+      ehHoje: ehHojeSP(l.janela_inicio),
       alerta: a.naoRetirada > 0,
       foraDoHorario: janelaForaDoHorario(
         horarios,
@@ -259,12 +270,19 @@ export interface ItemFila {
   status: PedidoStatus;
   /** "18h44" — when it was collected; null while still waiting. */
   retiradoAs: string | null;
+  /** Which day this pickup is for — the queue now spans two. */
+  dia: string;
+  ehHoje: boolean;
 }
 
 export interface FilaHoje {
   itens: ItemFila[];
+  /** Waiting today — the number the counter acts on right now. */
   aguardando: number;
+  /** Reservations for today. The header count stays today-scoped. */
   total: number;
+  /** Reservations already made for tomorrow, counted separately. */
+  amanha: number;
   /** End of the last pickup window still open today. */
   ateAs: string | null;
 }
@@ -277,7 +295,7 @@ interface FilaRow {
   quantidade: number;
   picked_up_at: string | null;
   reserved_at: string;
-  listing: { janela_fim: string; bag: { nome: string } };
+  listing: { janela_inicio: string; janela_fim: string; bag: { nome: string } };
 }
 
 /** "Kristina Zhirosh" -> "Kristina Z." — enough to call out at a counter. */
@@ -290,7 +308,13 @@ export function nomeCurto(nome: string | null): string {
 }
 
 export async function getFilaHoje(): Promise<FilaHoje> {
-  const vaziaFila: FilaHoje = { itens: [], aguardando: 0, total: 0, ateAs: null };
+  const vaziaFila: FilaHoje = {
+    itens: [],
+    aguardando: 0,
+    total: 0,
+    amanha: 0,
+    ateAs: null,
+  };
 
   const supabase = await createSupabaseServerClient();
   const {
@@ -309,17 +333,21 @@ export async function getFilaHoje(): Promise<FilaHoje> {
 
   const { data: listingsData } = await supabase
     .from("listings")
-    .select("id, janela_fim")
+    .select("id, janela_fim, janela_inicio")
     .eq("establishment_id", est.id)
-    .eq("data", hojeSP());
-  const listings = (listingsData ?? []) as { id: string; janela_fim: string }[];
+    .in("data", [hojeSP(), amanhaSP()]);
+  const listings = (listingsData ?? []) as {
+    id: string;
+    janela_fim: string;
+    janela_inicio: string;
+  }[];
   if (listings.length === 0) return vaziaFila;
 
   const { data } = await supabase
     .from("orders")
     .select(
       `id, codigo, cliente_nome, status, quantidade, picked_up_at, reserved_at,
-       listing:listings!inner ( janela_fim, bag:bags!inner ( nome ) )`,
+       listing:listings!inner ( janela_inicio, janela_fim, bag:bags!inner ( nome ) )`,
     )
     .in(
       "listing_id",
@@ -341,19 +369,36 @@ export async function getFilaHoje(): Promise<FilaHoje> {
       qtd: o.quantidade,
       status: o.status,
       retiradoAs: o.picked_up_at ? horaMinutoSP(o.picked_up_at) : null,
+      dia: diaRelativoSP(o.listing.janela_inicio),
+      ehHoje: ehHojeSP(o.listing.janela_inicio),
     }))
-    .sort((a, b) => peso(a.status) - peso(b.status));
+    // Today before tomorrow, and within each day the work first: waiting,
+    // then collected. Tomorrow's can't be handed over yet, so they never
+    // belong above something a customer is standing there for.
+    .sort(
+      (a, b) =>
+        Number(b.ehHoje) - Number(a.ehHoje) || peso(a.status) - peso(b.status),
+    );
 
-  const abertas = listings
+  // "até HH:MM" means today's last open window. Tomorrow's would make the
+  // counter think they are staying open all night.
+  const abertasHoje = listings
+    .filter((l) => ehHojeSP(l.janela_inicio))
     .map((l) => l.janela_fim)
     .filter((f) => new Date(f).getTime() > Date.now())
     .sort();
 
+  const deHoje = itens.filter((i) => i.ehHoje);
+
   return {
     itens,
-    aguardando: itens.filter((i) => i.status === "reservado").length,
-    total: itens.length,
-    ateAs: abertas.length > 0 ? horaMinutoSP(abertas[abertas.length - 1]) : null,
+    aguardando: deHoje.filter((i) => i.status === "reservado").length,
+    total: deHoje.length,
+    amanha: itens.length - deHoje.length,
+    ateAs:
+      abertasHoje.length > 0
+        ? horaMinutoSP(abertasHoje[abertasHoje.length - 1])
+        : null,
   };
 }
 
@@ -370,6 +415,12 @@ export interface PedidoPorCodigo {
   status: PedidoStatus;
   /** Set when the code is valid but can't be delivered right now. */
   impedimento: string | null;
+  /**
+   * Set when the pickup is not for today. NOT an impedimento: a customer may
+   * come early and the shop may be glad to hand it over. It just shouldn't
+   * happen by accident, which is what a queue spanning two days invites.
+   */
+  aviso: string | null;
 }
 
 interface CodigoRow {
@@ -435,6 +486,10 @@ export async function getPedidoPorCodigo(
   else if (o.status === "nao_retirado")
     impedimento = "A janela deste pedido já encerrou (não retirado).";
 
+  const aviso = ehHojeSP(o.listing.janela_inicio)
+    ? null
+    : `Esta sacola é para ${diaRelativoSP(o.listing.janela_inicio)}, ${horaMinutoSP(o.listing.janela_inicio)}.`;
+
   return {
     id: o.id,
     codigo: o.codigo,
@@ -445,6 +500,7 @@ export async function getPedidoPorCodigo(
     janela: `${horaMinutoSP(o.listing.janela_inicio)} – ${horaMinutoSP(o.listing.janela_fim)}`,
     status: o.status,
     impedimento,
+    aviso,
   };
 }
 

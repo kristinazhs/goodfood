@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { hojeSP, timestampSP } from "./datas";
+import { amanhaSP, hojeSP, timestampSP } from "./datas";
 import { createSupabaseServerClient } from "./supabase-server";
 
 export type PublishState = { error?: string };
@@ -59,10 +59,24 @@ export async function publicarSacola(
   if (!janelaInicio || !janelaFim)
     return { error: "Defina a janela de retirada." };
 
-  const inicio = timestampSP(janelaInicio);
-  const fim = timestampSP(janelaFim);
+  // Today or tomorrow — nothing further out. Surplus food is unpredictable,
+  // and a shop promising a bag four days ahead will cancel; cancellations are
+  // what destroy trust in this category.
+  const paraAmanha = String(formData.get("dia") ?? "hoje") === "amanha";
+  const data = paraAmanha ? amanhaSP() : hojeSP();
+
+  const inicio = timestampSP(janelaInicio, data);
+  const fim = timestampSP(janelaFim, data);
   if (new Date(fim) <= new Date(inicio))
     return { error: "O fim da janela deve ser depois do início." };
+
+  // The form disables "Hoje" once the window has passed, but the check lives
+  // here too: this is the bug that let a 22h publish create an 07h00 window
+  // in the past, and a form can be bypassed.
+  if (!paraAmanha && new Date(fim).getTime() <= Date.now())
+    return {
+      error: "Essa janela já passou hoje. Publique para amanhã.",
+    };
 
   const supabase = await createSupabaseServerClient();
   const {
@@ -122,11 +136,11 @@ export async function publicarSacola(
     bagIdFinal = bag.id;
   }
 
-  // 2. The listing (today's offer of that bag).
+  // 2. The listing (this bag's offer for the chosen day).
   const { error: listErr } = await supabase.from("listings").insert({
     bag_id: bagIdFinal,
     establishment_id: est.id,
-    data: hojeSP(),
+    data,
     janela_inicio: inicio,
     janela_fim: fim,
     quantidade_total: quantidade,

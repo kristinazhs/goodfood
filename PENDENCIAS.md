@@ -34,7 +34,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | --- | --- | --- |
 | 🔵 | **Distâncias e tempo a pé** | Agora medidas do endereço que a pessoa salvou e marcou como principal (C7). Quem está deslogado ou não salvou nenhum cai no endereço padrão do Bom Fim — e o rótulo na tela diz qual endereço está sendo usado. Tempo a pé assume 80 m/min. |
 | 🟡 | **Fotos das sacolas** | Placeholder listrado quando a loja não subiu foto. O upload já funciona (P3). |
-| 🔴 | **"Disponível hoje" é texto fixo** | A janela pode ser de amanhã (a migration 0008 empurra para o dia seguinte). O app pode dizer "hoje" para comida que só sai amanhã. |
+| ✅ | **"Disponível hoje" era texto fixo** | O feed agora separa Hoje e Amanhã, e cada tela lê o dia real da janela. Destaque ("última unidade") é só de hoje. |
 
 ## C1a / C1b — Busca
 
@@ -65,14 +65,14 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | 🟡 | **Pagamento** | Nada é cobrado. O método escolhido é gravado (`orders.metodo_pagamento`) para a integração futura. A tela avisa isso. |
 | 🟣 | Provedor de pagamento | Mercado Pago × Pagar.me ainda não decidido. |
 | ✅ | **Reservar deslogado perde a sacola** | Corrigido. A causa estava no middleware, que apagava a query string em todo redirecionamento. O destino agora viaja como `?next=`, pelo login e pelo cadastro. |
-| 🔴 | "Hoje, 18h40 – 19h00" | Texto fixo, mesmo problema do C1. |
+| ✅ | "Hoje, 18h40 – 19h00" | Lê o dia real da janela. |
 
 ## C5 — Código de retirada
 
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
 | ⚪ | **QR code** | Removido de propósito: o antigo era falso (não codificava nada) e o P2 ainda não lê. Volta junto com a câmera. |
-| 🔴 | **"pago hoje, 14h20"** | Diz "hoje" mesmo em pedido de semanas atrás. |
+| ✅ | **"pago hoje, 14h20"** | Lê a data da reserva; pedido de semanas atrás mostra "28 jul, 14h20". |
 | 🟡 | **"Peça pra um amigo"** | Compartilha mensagem com código e endereço de verdade — mas **não transfere o pedido** para outra conta. |
 | 🔴 | Compartilhar pode falhar em silêncio | Sem share sheet e sem clipboard, o toque não faz nada visível. |
 | 🔵 | "aberto até HH:MM" | Extraído de texto já formatado em vez do horário original. Funciona, mas é frágil. |
@@ -115,7 +115,8 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
 | ⚪ | **Faixa de preço recomendada** | Removida de propósito — não há dados de venda para sustentar uma recomendação. |
-| ⚪ | **Horário não é validado** | A tela diz que a janela fica dentro do horário da loja, mas nada impede publicar para as 22h se a loja fecha 19h30. |
+| 🟡 | **Horário não é validado no formulário** | Nada impede publicar para as 22h se a loja fecha 19h30 — mas o P1 avisa depois ("sacola fora do seu horário"). Publicar para uma janela que já passou hoje **é** bloqueado: o formulário desabilita "Hoje" e a action recusa. |
+| ⚪ | **Publicar para depois de amanhã** | Só hoje e amanhã, de propósito: comida excedente é imprevisível e uma loja que promete sacola para daqui a quatro dias cancela. |
 
 ## P4 — Desempenho e avaliações
 
@@ -150,7 +151,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | 🔴 | **Erro de consulta vira tela vazia** | Ainda vale para a maioria das funções: leem `const { data } = await …` e nunca olham o `error`, então uma falha aparece como "nada disponível". As novas (`getEnderecos`, `getAvaliacoes`, `getDadosBancarios`, `getLojaPublica`) já lançam erro em vez de mentir. Falta varrer as antigas. |
 | ✅ | **Foto do estabelecimento** | Coluna `establishments.foto_url` + bucket `lojas` (0019). Falta usar no topo do C3. |
 | 🟡 | **Página de loja** | Existe: `/loja/[id]`. Ligada no detalhe da sacola. Falta ligar na busca (C1b) e no histórico (C6). |
-| 🔴 | **Mesma sacola publicada duas vezes no mesmo dia** | O feed mostra "Cute dog" duas vezes, com a mesma janela e o mesmo preço. A migration 0017 limpou duplicatas e o P5 tem a trava "já publicada hoje", mas o formulário de publicar (P3) não confere. Precisa de uma trava lá — ou de um índice único em `listings (bag_id, data, janela_inicio)`. |
+| ✅ | **Mesma sacola publicada duas vezes no mesmo dia** | Resolvido pela migration 0022: índice único parcial em `listings (bag_id, data, janela_inicio) where status = 'ativa'`. Nada foi apagado. |
 | 🟡 | Catálogo de demonstração | As quatro lojas e suas sacolas são fictícias. A migration 0008 renova (as janelas expiram e o feed esvazia). |
 | 🟡 | `/painel` (desktop do parceiro) | Totalmente em dados fictícios. Não fez parte do redesenho. |
 | 🟡 | `/admin` (painel interno) | Totalmente em dados fictícios. Não fez parte do redesenho. |

@@ -73,6 +73,31 @@ export function CriarSacolaForm({
   const [quantidade, setQuantidade] = useState(5);
   const [inicio, setInicio] = useState("18:00");
   const [fim, setFim] = useState("19:00");
+  const [dia, setDia] = useState<"hoje" | "amanha">("hoje");
+  // Whether the chosen window has already ended today. Computed in an effect
+  // rather than during render: reading the clock while rendering would make
+  // the server and the browser disagree.
+  const [janelaPassou, setJanelaPassou] = useState(false);
+
+  useEffect(() => {
+    const [h, m] = fim.split(":").map(Number);
+    if (!Number.isFinite(h) || !Number.isFinite(m)) return;
+    const agora = new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    })
+      .format(new Date())
+      .split(":")
+      .map(Number);
+
+    const passou = h * 60 + m <= agora[0] * 60 + agora[1];
+    setJanelaPassou(passou);
+    // Move the choice for them when today stops being possible. Not the other
+    // way round: if today becomes available again they may still want tomorrow.
+    if (passou) setDia("amanha");
+  }, [fim]);
   const [conteudos, setConteudos] = useState<Conteudo[]>([]);
   const [alergenos, setAlergenos] = useState<string[]>([]);
   const [fotoUrl, setFotoUrl] = useState("");
@@ -139,6 +164,7 @@ export function CriarSacolaForm({
   const camposOcultos = (
     <>
       <input type="hidden" name="bagId" value={bagId} />
+      <input type="hidden" name="dia" value={dia} />
       <input type="hidden" name="fotoUrl" value={fotoUrl} />
       <input type="hidden" name="conteudos" value={JSON.stringify(conteudos)} />
       <input type="hidden" name="categoria" value={categoria} />
@@ -360,6 +386,42 @@ export function CriarSacolaForm({
           </label>
 
           <div>
+            <span className={ROTULO}>Dia da retirada</span>
+            <div className="mb-3 flex gap-2">
+              {(
+                [
+                  { id: "hoje" as const, label: "Hoje" },
+                  { id: "amanha" as const, label: "Amanhã" },
+                ]
+              ).map((d) => {
+                const bloqueado = d.id === "hoje" && janelaPassou;
+                return (
+                  <button
+                    key={d.id}
+                    type="button"
+                    disabled={bloqueado}
+                    onClick={() => setDia(d.id)}
+                    aria-pressed={dia === d.id}
+                    className={`h-11 flex-1 rounded-xl text-[13.5px] font-bold disabled:opacity-40 ${
+                      dia === d.id
+                        ? "bg-brand text-white"
+                        : "border-[1.5px] border-sage-line bg-white text-[#4a4a44]"
+                    }`}
+                  >
+                    {d.label}
+                  </button>
+                );
+              })}
+            </div>
+            {/* The reason "Hoje" is unavailable, said where the button is —
+                this is exactly the case that used to create a window in the
+                past without a word. */}
+            {janelaPassou && (
+              <p className="mb-3 text-[12px] font-semibold leading-[1.35] text-terracotta-dark">
+                Essa janela já passou hoje. Publicando para amanhã.
+              </p>
+            )}
+
             <span className={ROTULO}>Janela de retirada</span>
             <div className="flex gap-3">
               <input

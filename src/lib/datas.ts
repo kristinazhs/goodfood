@@ -11,9 +11,27 @@ export function hojeSP(): string {
   }).format(new Date());
 }
 
-// "18:40" -> an ISO timestamp for today at that São Paulo local time.
-export function timestampSP(hora: string): string {
-  return new Date(`${hojeSP()}T${hora}:00-03:00`).toISOString();
+/** Tomorrow's date in São Paulo as "YYYY-MM-DD". */
+export function amanhaSP(): string {
+  const d = new Date(Date.now() + 86_400_000);
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+}
+
+/**
+ * "18:40" -> an ISO timestamp at that São Paulo local time, on `data`
+ * (default today).
+ *
+ * The date used to be hardcoded to today, which is why a shop publishing at
+ * 22h for an 07h00 window silently created a window in the PAST. Passing the
+ * day is what lets tomorrow's breakfast surplus exist at all.
+ */
+export function timestampSP(hora: string, data: string = hojeSP()): string {
+  return new Date(`${data}T${hora}:00-03:00`).toISOString();
 }
 
 // ISO timestamp -> "18h40" in São Paulo time.

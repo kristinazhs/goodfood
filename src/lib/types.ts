@@ -74,6 +74,9 @@ export interface SacolaLoja {
   retirada: number;
   naoRetirada: number;
   receita: number;
+  /** "hoje" | "amanhã" — which day this offer's window falls on. */
+  dia: string;
+  ehHoje: boolean;
   alerta?: boolean;
   /** True when this window falls outside the shop's registered hours. */
   foraDoHorario?: boolean;

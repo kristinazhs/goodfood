@@ -107,6 +107,15 @@ export default async function Retirada({
               </div>
             </dl>
 
+            {/* Not a blocker: someone may genuinely turn up a day early and
+                the shop may be happy to hand it over. It just shouldn't
+                happen without the counter noticing. */}
+            {!pedido.impedimento && pedido.aviso && (
+              <p className="mt-4 rounded-xl border-[1.5px] border-[#e8c37a] bg-[#faf1dc] px-3.5 py-3 text-[13px] font-semibold leading-[1.4] text-[#8a6a14]">
+                {pedido.aviso} Confirme só se for entregar agora.
+              </p>
+            )}
+
             {pedido.impedimento ? (
               <p className="mt-4 rounded-xl bg-amber-bg px-3.5 py-3 text-[13px] font-semibold text-amber-ink">
                 {pedido.impedimento}
