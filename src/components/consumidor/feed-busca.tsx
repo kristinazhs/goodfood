@@ -166,7 +166,7 @@ export function BuscaC1({
                     Sacolas · {sacolas.length}
                   </div>
                   {sacolas.map((s) => (
-                    <BagCardCompacto key={s.listingId ?? s.id} sacola={s} termo={q} />
+                    <BagCardCompacto key={s.id} sacola={s} termo={q} />
                   ))}
                 </>
               )}

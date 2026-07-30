@@ -168,7 +168,11 @@ export async function publicarSacola(
     bagIdFinal = bag.id;
   }
 
-  // 2. The listing (this bag's offer for the chosen day).
+  // 2. The listing — the OFFER, carrying its own terms (0024).
+  //
+  // The terms are copied, not referenced: an offer is a promise made at a
+  // moment, so editing the model afterwards must never change what someone
+  // already saw, filtered by, or paid.
   const { error: listErr } = await supabase.from("listings").insert({
     bag_id: bagIdFinal,
     establishment_id: est.id,
@@ -178,6 +182,7 @@ export async function publicarSacola(
     quantidade_total: quantidade,
     quantidade_disponivel: quantidade,
     status: "ativa",
+    ...campos,
   });
   if (listErr) {
     // 23505 is the unique index from 0022: this bag is already on sale for
@@ -348,10 +353,13 @@ export async function publicarModeloHoje(formData: FormData) {
     .maybeSingle();
   if (!est) redirect("/parceiro/perfil?erro=1");
 
-  // The bag must belong to this shop.
+  // The bag must belong to this shop. Its fields come along as the offer's
+  // own terms (0024) — the model is a starting point, not a live reference.
   const { data: bag } = await supabase
     .from("bags")
-    .select("id")
+    .select(
+      "id, nome, descricao, categoria, preco, preco_original, conteudos, alergenos, foto_url, peso_kg",
+    )
     .eq("id", bagId)
     .eq("establishment_id", est.id)
     .maybeSingle();
@@ -399,6 +407,15 @@ export async function publicarModeloHoje(formData: FormData) {
     quantidade_total: quantidade,
     quantidade_disponivel: quantidade,
     status: "ativa",
+    nome: bag.nome,
+    descricao: bag.descricao,
+    categoria: bag.categoria,
+    preco: bag.preco,
+    preco_original: bag.preco_original,
+    conteudos: bag.conteudos,
+    alergenos: bag.alergenos,
+    foto_url: bag.foto_url,
+    peso_kg: bag.peso_kg,
   });
   // Same unique index: the one-tap path lands on the existing "duplicada"
   // message, which already says to use the full form for a second batch.

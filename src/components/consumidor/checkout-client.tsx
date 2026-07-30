@@ -42,7 +42,7 @@ export function CheckoutClient({
 
   return (
     <form action={action} className="flex flex-1 flex-col">
-      <input type="hidden" name="bagId" value={sacola.id} />
+      <input type="hidden" name="listingId" value={sacola.id} />
       <input type="hidden" name="qtd" value={qtd} />
       <input type="hidden" name="metodo" value={metodo} />
 

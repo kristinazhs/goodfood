@@ -34,11 +34,21 @@ interface EstablishmentRow {
 
 interface ListingRow {
   id: string;
+  bag_id: string;
   janela_inicio: string;
   janela_fim: string;
   quantidade_disponivel: number;
   quantidade_total: number;
   status: string;
+  // The offer's own terms, frozen when it was published (0024).
+  nome: string;
+  descricao: string | null;
+  categoria: string | null;
+  preco: string | number;
+  preco_original: string | number | null;
+  conteudos: ConteudoSacola[] | null;
+  alergenos: string[] | null;
+  foto_url: string | null;
 }
 
 interface ListingWithRelations extends ListingRow {
@@ -77,57 +87,65 @@ function hora(iso: string): string {
 }
 
 // Turn a bag + its establishment + (optional) today's listing into the
-// Sacola shape the UI already knows how to render.
+/**
+ * Sacola shape the UI already knows how to render.
+ *
+ * Everything a customer is shown comes from the LISTING, not the bag: the
+ * offer keeps the terms it was published with (0024), so editing the model
+ * afterwards cannot change a price someone has already paid or an allergen
+ * list someone relied on. `bag` is left for decoration only.
+ */
 function toSacola(
   bag: BagRow,
   est: EstablishmentRow,
-  listing: ListingRow | null,
+  listing: ListingRow,
   nota?: NotaLoja,
   origem: Origem = ORIGEM_PADRAO,
 ): Sacola {
-  const preco = Number(bag.preco);
+  const preco = Number(listing.preco);
   const precoOriginal =
-    bag.preco_original != null ? Number(bag.preco_original) : preco;
+    listing.preco_original != null ? Number(listing.preco_original) : preco;
   const pct =
     precoOriginal > preco ? Math.round((1 - preco / precoOriginal) * 100) : 0;
-  const disp = listing?.quantidade_disponivel ?? 0;
+  const disp = listing.quantidade_disponivel ?? 0;
 
   return {
-    id: bag.id,
-    listingId: listing?.id ?? null,
-    nome: bag.nome,
+    // The OFFER is what the customer is looking at, so it is what the URL
+    // and the reservation key on. Keying on the bag meant two live windows
+    // of the same sacola resolved to whichever one the lookup picked —
+    // invisible while they were identical, wrong as soon as they aren't.
+    id: listing.id,
+    bagId: listing.bag_id,
+    nome: listing.nome,
     loja: est.nome,
     lojaId: est.id,
     lojaFotoUrl: est.foto_url ?? null,
     distancia: distanciaAte(est.lat, est.lng, origem),
     emoji: bag.emoji ?? "🛍️",
     corThumb: bag.cor_thumb ?? "#E4EDE3",
-    fotoUrl: bag.foto_url,
+    fotoUrl: listing.foto_url,
     precoOriginal,
     preco,
     desconto: pct > 0 ? `${pct}% off` : "Oferta",
-    janela: listing
-      ? `${horaMinuto(listing.janela_inicio)} – ${horaMinuto(listing.janela_fim)}`
-      : "",
-    dia: listing ? diaRelativoSP(listing.janela_inicio) : "",
-    ehHoje: listing ? ehHojeSP(listing.janela_inicio) : false,
-    janelaNota: listing
-      ? `Restam ${disp} ${disp === 1 ? "unidade" : "unidades"}`
-      : "",
-    timer: listing ? `até ${hora(listing.janela_fim)}h` : "hoje",
+    janela: `${horaMinuto(listing.janela_inicio)} – ${horaMinuto(listing.janela_fim)}`,
+    dia: diaRelativoSP(listing.janela_inicio),
+    ehHoje: ehHojeSP(listing.janela_inicio),
+    janelaNota: `Restam ${disp} ${disp === 1 ? "unidade" : "unidades"}`,
+    timer: `até ${hora(listing.janela_fim)}h`,
     disponivel: disp,
-    total: listing?.quantidade_total ?? 0,
-    janelaInicio: listing?.janela_inicio ?? null,
-    janelaFim: listing?.janela_fim ?? null,
+    total: listing.quantidade_total,
+    janelaInicio: listing.janela_inicio,
+    janelaFim: listing.janela_fim,
     // Real average, or null when the shop has no reviews yet — the UI shows
     // no star rather than inventing one.
     avaliacao: nota ? nota.media : null,
     avaliacoesTotal: nota ? nota.total : 0,
     endereco: [est.endereco, est.bairro].filter(Boolean).join(" — "),
-    descricao: bag.descricao ?? "",
-    conteudos: bag.conteudos ?? [],
-    alergenos: bag.alergenos ?? [],
-    categoria: (bag.categoria as Exclude<CategoriaId, "tudo">) ?? "padaria",
+    descricao: listing.descricao ?? "",
+    conteudos: listing.conteudos ?? [],
+    alergenos: listing.alergenos ?? [],
+    categoria:
+      (listing.categoria as Exclude<CategoriaId, "tudo">) ?? "padaria",
     lat: est.lat ?? null,
     lng: est.lng ?? null,
   };
@@ -141,8 +159,9 @@ export async function getSacolasDisponiveis(
   const { data, error } = await supabase
     .from("listings")
     .select(
-      `id, janela_inicio, janela_fim, quantidade_disponivel, quantidade_total, status,
-       bag:bags!inner ( id, nome, descricao, categoria, preco, preco_original, emoji, cor_thumb, conteudos, alergenos, foto_url ),
+      `id, bag_id, janela_inicio, janela_fim, quantidade_disponivel, quantidade_total, status,
+       nome, descricao, categoria, preco, preco_original, conteudos, alergenos, foto_url,
+       bag:bags!inner ( id, nome, emoji, cor_thumb ),
        establishment:establishments!inner ( id, nome, endereco, bairro, lat, lng, foto_url )`,
     )
     .eq("status", "ativa")
@@ -219,6 +238,14 @@ export function escolherDestaque(
 }
 
 // One sacola for the detail / checkout / payment screens, by bag id.
+/**
+ * One published offer, by its own id.
+ *
+ * This used to take a BAG id and then guess which of that bag's listings the
+ * customer meant — "the active one closing soonest". While two listings of a
+ * bag were identical that guess was harmless. Now that each offer carries its
+ * own price and window, guessing would show one offer and sell another.
+ */
 export async function getSacolaPorId(
   id: string,
   origem: Origem = ORIGEM_PADRAO,
@@ -227,11 +254,12 @@ export async function getSacolaPorId(
 
   const supabase = createSupabaseClient();
   const { data, error } = await supabase
-    .from("bags")
+    .from("listings")
     .select(
-      `id, nome, descricao, categoria, preco, preco_original, emoji, cor_thumb, conteudos, alergenos, foto_url,
-       establishment:establishments!inner ( id, nome, endereco, bairro, lat, lng, foto_url ),
-       listings ( id, janela_inicio, janela_fim, quantidade_disponivel, quantidade_total, status )`,
+      `id, bag_id, janela_inicio, janela_fim, quantidade_disponivel, quantidade_total, status,
+       nome, descricao, categoria, preco, preco_original, conteudos, alergenos, foto_url,
+       bag:bags!inner ( id, nome, emoji, cor_thumb ),
+       establishment:establishments!inner ( id, nome, endereco, bairro, lat, lng, foto_url )`,
     )
     .eq("id", id)
     .maybeSingle();
@@ -239,25 +267,9 @@ export async function getSacolaPorId(
   if (error) throw error;
   if (!data) return undefined;
 
-  const bag = data as unknown as BagWithRelations;
-  const ativa =
-    (bag.listings ?? [])
-      .filter((l) => l.status === "ativa")
-      .sort(
-        (a, b) =>
-          new Date(a.janela_fim).getTime() - new Date(b.janela_fim).getTime(),
-      )[0] ??
-    (bag.listings ?? [])[0] ??
-    null;
-
-  const notas = await getNotasPorLoja([bag.establishment.id]);
-  return toSacola(
-    bag,
-    bag.establishment,
-    ativa,
-    notas.get(bag.establishment.id),
-    origem,
-  );
+  const l = data as unknown as ListingWithRelations;
+  const notas = await getNotasPorLoja([l.establishment.id]);
+  return toSacola(l.bag, l.establishment, l, notas.get(l.establishment.id), origem);
 }
 
 // ---- H: the public page of one shop -------------------------------------

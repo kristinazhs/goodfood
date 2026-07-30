@@ -62,7 +62,7 @@ export interface Loja {
   distancia: string;
   sacolas: number;
   /** Somewhere to go — there's no store page yet, so the shop's own sacola. */
-  sacolaId: string;
+  lojaId: string;
 }
 
 /**
@@ -81,7 +81,7 @@ export function lojasDe(sacolas: Sacola[]): Loja[] {
         avaliacao: s.avaliacao,
         distancia: s.distancia,
         sacolas: 1,
-        sacolaId: s.id,
+        lojaId: s.lojaId,
       });
   }
   return [...porLoja.values()];

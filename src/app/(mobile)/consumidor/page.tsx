@@ -132,7 +132,7 @@ export default async function ConsumidorHome({
                       </div>
                       <div className="flex flex-col gap-3 px-5 pb-[18px]">
                         {doDia.map((s) => (
-                          <BagCard key={s.listingId ?? s.id} sacola={s} />
+                          <BagCard key={s.id} sacola={s} />
                         ))}
                       </div>
                     </div>

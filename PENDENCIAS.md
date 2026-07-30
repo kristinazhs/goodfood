@@ -41,7 +41,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
 | 🔵 | Buscas recentes | Ficam no `localStorage` do aparelho. Não seguem o usuário entre celulares. |
-| ⚪ | Página de loja na busca | A página existe agora (`/loja/[id]`) e o nome da loja no detalhe da sacola leva até ela. Falta ligar os resultados de busca "Lojas" nela. |
+| ✅ | Página de loja na busca | Os resultados "Lojas" abrem `/loja/[id]`. |
 
 ## C2 — Descobrir (mapa)
 
@@ -56,7 +56,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
 | 🟡 | **Foto da loja (topo)** | A coluna existe (`establishments.foto_url`, migration 0019) e a loja sobe a foto no Perfil público. Falta usá-la no topo do C3, que ainda mostra o padrão listrado. |
-| 🔴 | **Pode mostrar janela vencida** | Se a sacola não tem oferta ativa, a tela cai para qualquer oferta antiga e mostra o horário de ontem como se fosse hoje. O botão recusa, mas só depois. |
+| ✅ | **Podia mostrar janela vencida** | A tela agora resolve uma OFERTA pelo id dela, não "alguma oferta desta sacola". Não há mais para onde cair. |
 
 ## C4 — Reserva + pagamento
 
@@ -131,7 +131,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
-| 🔴 | **Editar um modelo muda sacolas já publicadas** | A oferta lê nome e preço da `bag`, então "Salvar modelo" sobre um modelo aplicado altera o que uma sacola já à venda mostra — inclusive o preço, para quem já reservou. O caminho acidental foi fechado (publicar não reescreve mais o modelo); este é o explícito e continua assim. A correção de verdade é a oferta guardar seu próprio nome e preço. |
+| ✅ | **Editar um modelo muda sacolas já publicadas** | Resolvido pela migration 0024: a oferta guarda nome, preço, conteúdo, alérgenos e foto no momento em que é publicada. Editar o modelo agora só vale para a próxima. |
 | ✅ | **Perfil público** | Feito: foto, descrição e horários, com página pública em `/loja/[id]`. |
 | 🟡 | **Repasse e dados bancários** | A tela existe e salva (tabela `dados_bancarios`, só a própria loja lê). Nenhum repasse acontece — depende do provedor. |
 
@@ -151,7 +151,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | --- | --- | --- |
 | 🔴 | **Erro de consulta vira tela vazia** | Ainda vale para a maioria das funções: leem `const { data } = await …` e nunca olham o `error`, então uma falha aparece como "nada disponível". As novas (`getEnderecos`, `getAvaliacoes`, `getDadosBancarios`, `getLojaPublica`) já lançam erro em vez de mentir. Falta varrer as antigas. |
 | ✅ | **Foto do estabelecimento** | Coluna `establishments.foto_url` + bucket `lojas` (0019). Falta usar no topo do C3. |
-| 🟡 | **Página de loja** | Existe: `/loja/[id]`. Ligada no detalhe da sacola. Falta ligar na busca (C1b) e no histórico (C6). |
+| ✅ | **Página de loja** | `/loja/[id]`, ligada no detalhe da sacola, na busca e no histórico. |
 | ✅ | **Mesma sacola publicada duas vezes no mesmo dia** | Resolvido pela migration 0022: índice único parcial em `listings (bag_id, data, janela_inicio) where status = 'ativa'`. Nada foi apagado. |
 | 🟡 | Catálogo de demonstração | As quatro lojas e suas sacolas são fictícias. A migration 0008 renova (as janelas expiram e o feed esvazia). |
 | 🟡 | `/painel` (desktop do parceiro) | Totalmente em dados fictícios. Não fez parte do redesenho. |

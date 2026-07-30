@@ -12,14 +12,16 @@ export interface ConteudoSacola {
 }
 
 export interface Sacola {
-  /** The BAG id — what /consumidor/sacola/[id] resolves. */
-  id: string;
   /**
-   * Today's offer of that bag. NOT the same as `id`: a shop can publish the
-   * same bag for two windows, which made two cards share one React key and
-   * silently drop one of them. Use this wherever a list needs identity.
+   * The LISTING id — one published offer. This is what /consumidor/sacola/[id]
+   * resolves and what a reservation keys on. It used to be the bag id, which
+   * meant two live windows of the same sacola both resolved to whichever the
+   * lookup picked: invisible while they showed the same thing, wrong the
+   * moment their prices differ.
    */
-  listingId: string | null;
+  id: string;
+  /** The template it was published from — for "publicar de novo". */
+  bagId: string;
   nome: string;
   loja: string;
   distancia: string;

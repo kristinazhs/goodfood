@@ -9,7 +9,7 @@ export async function reservar(
   _prev: ReservaState,
   formData: FormData,
 ): Promise<ReservaState> {
-  const bagId = String(formData.get("bagId") ?? "");
+  const listingId = String(formData.get("listingId") ?? "");
   const qtd = Math.max(1, Math.floor(Number(formData.get("qtd") ?? 1)));
   const metodoBruto = String(formData.get("metodo") ?? "pix");
   const metodo = metodoBruto === "cartao" ? "cartao" : "pix";
@@ -22,19 +22,20 @@ export async function reservar(
   // them to login and then back to the feed threw that away and asked them to
   // find it again; the destination rides along instead.
   if (!user) {
-    const volta = `/consumidor/checkout?sacola=${bagId}&qtd=${qtd}`;
+    const volta = `/consumidor/checkout?sacola=${listingId}&qtd=${qtd}`;
     redirect(`/consumidor/entrar?next=${encodeURIComponent(volta)}`);
   }
 
-  // Which listing (today's active offer) does this bag map to?
+  // The offer the customer was actually looking at. This used to search for
+  // "an active listing of this bag", which could reserve a different window
+  // — and, now that offers carry their own price, a different price — from
+  // the one on screen.
   const { data: listing } = await supabase
     .from("listings")
     .select("id")
-    .eq("bag_id", bagId)
+    .eq("id", listingId)
     .eq("status", "ativa")
     .gt("quantidade_disponivel", 0)
-    .order("janela_fim", { ascending: true })
-    .limit(1)
     .maybeSingle();
   if (!listing) return { error: "Esta sacola não está mais disponível." };
 

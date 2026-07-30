@@ -143,7 +143,7 @@ export default async function PaginaLoja({
       ) : (
         <div className="flex flex-col gap-2.5 px-5">
           {loja.sacolas.map((s) => (
-            <BagCard key={s.listingId ?? s.id} sacola={s} />
+            <BagCard key={s.id} sacola={s} />
           ))}
         </div>
       )}

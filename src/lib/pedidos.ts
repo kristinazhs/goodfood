@@ -11,6 +11,7 @@ export interface PedidoDetalhe {
   qtd: number;
   total: number;
   bagId: string;
+  lojaId: string;
   nomeSacola: string;
   emoji: string;
   corThumb: string;
@@ -34,6 +35,7 @@ export interface PedidoResumo {
   qtd: number;
   total: number;
   bagId: string;
+  lojaId: string;
   nomeSacola: string;
   emoji: string;
   loja: string;
@@ -72,6 +74,7 @@ interface OrderRow {
       peso_kg: string | number | null;
     };
     establishment: {
+      id: string;
       nome: string;
       endereco: string | null;
       bairro: string | null;
@@ -84,7 +87,7 @@ interface OrderRow {
 const SELECT = `id, codigo, status, quantidade, total, reserved_at, metodo_pagamento,
   listing:listings!inner ( bag_id, janela_inicio, janela_fim,
     bag:bags!inner ( nome, emoji, cor_thumb, foto_url, preco, preco_original, peso_kg ),
-    establishment:establishments!inner ( nome, endereco, bairro, lat, lng ) )`;
+    establishment:establishments!inner ( id, nome, endereco, bairro, lat, lng ) )`;
 
 // One order (RLS lets the buyer — or the listing's establishment — read it).
 export async function getPedidoDetalhe(
@@ -106,6 +109,7 @@ export async function getPedidoDetalhe(
     qtd: o.quantidade,
     total: Number(o.total),
     bagId: o.listing.bag_id,
+    lojaId: o.listing.establishment.id,
     nomeSacola: o.listing.bag.nome,
     emoji: o.listing.bag.emoji ?? "🛍️",
     corThumb: o.listing.bag.cor_thumb ?? "#E4EDE3",
@@ -154,6 +158,7 @@ export async function getMeusPedidos(
       qtd: o.quantidade,
       total: Number(o.total),
       bagId: o.listing.bag_id,
+      lojaId: o.listing.establishment.id,
       nomeSacola: o.listing.bag.nome,
       emoji: o.listing.bag.emoji ?? "🛍️",
       loja: o.listing.establishment.nome,

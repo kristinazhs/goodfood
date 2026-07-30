@@ -75,20 +75,19 @@ export function LojaRow({
   avaliacao,
   distancia,
   sacolas,
-  sacolaId,
+  lojaId,
   termo = "",
 }: {
   nome: string;
   avaliacao: number | null;
   distancia: string;
   sacolas: number;
-  sacolaId: string;
+  lojaId: string;
   termo?: string;
 }) {
   return (
     <Link
-      // No store page exists yet, so this opens the shop's sacola.
-      href={`/consumidor/sacola/${sacolaId}`}
+      href={`/loja/${lojaId}`}
       className="flex items-center gap-2.5 rounded-[14px] border-[1.5px] border-sage-line bg-white p-2 transition-transform active:scale-[0.98]"
     >
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sage font-mono text-[9px] text-muted">

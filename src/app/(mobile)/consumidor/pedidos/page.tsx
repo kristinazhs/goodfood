@@ -183,11 +183,13 @@ export default async function Pedidos({
                   {doMes.map((p) => {
                     const st = statusHistorico[p.status];
                     return (
-                      // No "pedir novamente": the history can't promise today's
-                      // stock. It leads to the sacola, where the truth lives.
+                      // No "pedir novamente": the history can't promise
+                      // today's stock. It leads to the SHOP, where the truth
+                      // lives — that offer is long closed, and its id would
+                      // now resolve to a sacola nobody can buy.
                       <Link
                         key={p.id}
-                        href={`/consumidor/sacola/${p.bagId}`}
+                        href={`/loja/${p.lojaId}`}
                         className="flex gap-3 rounded-2xl border-[1.5px] border-sage-line bg-white p-3 transition-transform active:scale-[0.98]"
                       >
                         <FotoSacola size={56} radius={12} alt={p.nomeSacola} />
