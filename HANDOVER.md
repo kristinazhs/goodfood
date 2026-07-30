@@ -211,6 +211,7 @@ Reintroduce these only when the data exists to support them:
 | 0024 | `listings` carries its own nome/preço/categoria/conteúdos/alérgenos/foto/peso |
 | 0025 | `reservar_sacola()` charges the OFFER's price, not the model's |
 | 0026 | Deliberate reset: test data cleared, demo catalog restored |
+| 0027 | Storage scoped per shop: photos live under `{establishment_id}/` |
 
 All have been run against the live database.
 
@@ -242,8 +243,11 @@ When a value moves table, the RPCs move with it, not just the queries.
   is still what the live site shows.
 - Write real `/termos`, `/privacidade` and `/contrato-parceria` — all three
   are placeholders saying the documents are being prepared.
-- Tighten the storage policy: any signed-in user can currently upload to the
-  `sacolas` bucket. Scope it per shop.
+- ~~Tighten the storage policy~~ — done, migration 0027. Note the ordering it
+  required: the code that files photos under `{establishment_id}/` had to be
+  **deployed first**, because the tightened policy rejects the old flat paths.
+  That is the reverse of the usual migration-before-code rule, and the reason
+  is worth keeping: the old policy accepted both shapes, the new one does not.
 - `/painel` and `/admin` (desktop surfaces) are still on mock data and were
   not part of this redesign.
 - Decide the commission rate.

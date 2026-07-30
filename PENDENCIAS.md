@@ -167,7 +167,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | --- | --- |
 | Textos jurídicos | `/termos`, `/privacidade` e `/contrato-parceria` são placeholders. |
 | Confirmação de e-mail | Desligada no Supabase por conveniência. Religar. |
-| Política do Storage | Qualquer usuário logado pode subir arquivo no bucket `sacolas`. Restringir por loja. |
+| Política do Storage | ✅ Resolvido (migration 0027). As fotos vão para `{establishment_id}/{uuid}.{ext}` e a política só aceita a pasta de uma loja que você é dono — o caminho **é** a permissão. Os buckets também passaram a recusar arquivo acima de 5 MB e qualquer coisa que não seja imagem, no servidor e não só no formulário. Leitura continua pública nos dois: essas fotos aparecem no feed aberto. |
 | Contas de teste | ✅ Limpas em 30/07. Ficaram `kristina.teste` (consumidor), `kristina.parceira` (parceira, dona da Domenica), `oksanapteste` e `varvarazteste`. Apagar todas antes do lançamento real. |
 | ~~`design-v2` nunca foi para o ar~~ | ✅ Fundido no `main` em 30/07 (`f854f8c`). O redesenho **é** o site publicado — os placeholders desta lista estão no ar. |
 | Comissão e provedor | As duas decisões que travam pagamentos. |
