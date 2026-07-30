@@ -49,6 +49,8 @@ export interface ReservaLoja {
 
 export interface ListingDetalhe {
   id: string;
+  /** The template behind it — "Editar o modelo" needs it. */
+  bagId: string;
   nome: string;
   emoji: string;
   janela: string;
@@ -177,6 +179,7 @@ export async function getPainelParceiro(): Promise<PainelParceiro> {
 
 interface ListingDetalheRow {
   id: string;
+  bag_id: string;
   janela_inicio: string;
   janela_fim: string;
   quantidade_total: number;
@@ -198,7 +201,7 @@ export async function getListingDetalhe(
   const { data } = await supabase
     .from("listings")
     .select(
-      `id, janela_inicio, janela_fim, quantidade_total, quantidade_disponivel,
+      `id, bag_id, janela_inicio, janela_fim, quantidade_total, quantidade_disponivel,
        bag:bags!inner ( nome, emoji ),
        establishment:establishments!inner ( owner_id )`,
     )
@@ -233,6 +236,7 @@ export async function getListingDetalhe(
 
   return {
     id: l.id,
+    bagId: l.bag_id,
     nome: l.bag.nome,
     emoji: l.bag.emoji ?? "🛍️",
     janela: `${horaMinutoSP(l.janela_inicio)} – ${horaMinutoSP(l.janela_fim)}`,

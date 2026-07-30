@@ -29,10 +29,12 @@ export default async function ParceiroHoje({
     entregue?: string;
     publicada?: string;
     cadastrado?: string;
+    encerrada?: string;
+    apagada?: string;
   }>;
 }) {
   const [
-    { entregue, publicada, cadastrado },
+    { entregue, publicada, cadastrado, encerrada, apagada },
     { establishment, sacolas },
     fila,
   ] = await Promise.all([
@@ -108,6 +110,19 @@ export default async function ParceiroHoje({
                 Loja
               </Link>
               . Publique sua primeira sacola para começar a vender.
+            </p>
+          </div>
+        )}
+
+        {(encerrada === "1" || apagada === "1") && (
+          <div className="mx-5 mt-4 rounded-xl bg-sage px-3.5 py-3">
+            <p className="text-[13px] font-bold leading-[1.3] text-brand-dark">
+              {apagada === "1" ? "Publicação apagada" : "Vendas encerradas"}
+            </p>
+            <p className="mt-1 text-[12.5px] font-medium leading-[1.4] text-brand-dark">
+              {apagada === "1"
+                ? "Ela saiu do app. O modelo continua salvo em Loja."
+                : "Ela saiu do app. Quem já pagou continua na fila abaixo — essas ainda precisam ser entregues."}
             </p>
           </div>
         )}
@@ -190,13 +205,12 @@ export default async function ParceiroHoje({
           <div className="mx-5 max-h-[280px] overflow-y-auto rounded-[16px] border-[1.5px] border-sage-line bg-white">
             {fila.itens.map((i, idx) => {
               const aguardando = i.status === "reservado";
-              return (
-                <div
-                  key={i.id}
-                  className={`flex items-center gap-3 px-3.5 py-3 ${
-                    idx > 0 ? "border-t border-sage-line" : ""
-                  }`}
-                >
+              const classe = `flex items-center gap-3 px-3.5 py-3 ${
+                idx > 0 ? "border-t border-sage-line" : ""
+              }`;
+
+              const conteudo = (
+                <>
                   <span
                     className={`w-[62px] shrink-0 font-display text-[13px] font-bold tracking-[0.5px] ${
                       aguardando ? "text-charcoal" : "text-[#b5b5a8]"
@@ -217,8 +231,6 @@ export default async function ParceiroHoje({
                       {i.retiradoAs ? ` · ${i.retiradoAs}` : ""}
                     </span>
                   </span>
-                  {/* Collected rows stay visible for auditing, marked only by
-                      the plaque — never a button you can tap by mistake. */}
                   <span
                     className={`inline-flex h-6 shrink-0 items-center rounded-[7px] px-2 text-[11px] font-bold leading-none ${
                       aguardando
@@ -234,6 +246,33 @@ export default async function ParceiroHoje({
                         ? "Retirado"
                         : "Não retirado"}
                   </span>
+                </>
+              );
+
+              // A waiting row IS the pickup: tapping it opens the same screen
+              // as "Escanear código" with the code already in it, so the
+              // counter never retypes what is already on screen.
+              //
+              // Collected and no-show rows stay visible for auditing but are
+              // NOT links — there is nothing left to do to them, and a row
+              // that reacts to a tap invites one by mistake.
+              return aguardando ? (
+                <Link
+                  key={i.id}
+                  href={`/parceiro/retirada?codigo=${encodeURIComponent(i.codigo)}`}
+                  className={`${classe} transition-colors active:bg-sage/40`}
+                >
+                  {conteudo}
+                  <span
+                    aria-hidden="true"
+                    className="shrink-0 text-base font-bold leading-none text-[#8d8d84]"
+                  >
+                    ›
+                  </span>
+                </Link>
+              ) : (
+                <div key={i.id} className={classe}>
+                  {conteudo}
                 </div>
               );
             })}

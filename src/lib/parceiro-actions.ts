@@ -472,3 +472,58 @@ export async function salvarDadosBancarios(
 
   redirect("/parceiro/perfil?repasse=1");
 }
+
+/**
+ * E/I — remove a published sacola, or stop selling it.
+ *
+ * Deleting is only allowed while nobody has reserved. orders.listing_id is
+ * ON DELETE RESTRICT (0001), so Postgres refuses it anyway — but we check
+ * first, because a foreign-key error is not something to show a shop owner.
+ *
+ * Once there is a reservation the honest action is "encerrar": stop new
+ * sales and take it off the feed, while the people who already paid keep
+ * their bags and their codes. Deleting under them would take food someone
+ * paid for, with no refund path wired up.
+ */
+export async function encerrarOuApagarListing(formData: FormData) {
+  const listingId = String(formData.get("listingId") ?? "");
+  if (!listingId) redirect("/parceiro");
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/parceiro/entrar");
+
+  // Ownership is checked here rather than trusted from the form.
+  const { data: listing } = await supabase
+    .from("listings")
+    .select("id, establishment:establishments!inner ( owner_id )")
+    .eq("id", listingId)
+    .maybeSingle();
+
+  const dono = (
+    listing as unknown as { establishment: { owner_id: string | null } } | null
+  )?.establishment?.owner_id;
+  if (!listing || dono !== user.id) redirect("/parceiro");
+
+  const { count } = await supabase
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .eq("listing_id", listingId);
+
+  if ((count ?? 0) > 0) {
+    // Someone is holding one: close it instead of deleting it.
+    const { error } = await supabase
+      .from("listings")
+      .update({ status: "encerrada", quantidade_disponivel: 0 })
+      .eq("id", listingId);
+    redirect(error ? `/parceiro/sacolas/${listingId}?erro=1` : "/parceiro?encerrada=1");
+  }
+
+  const { error } = await supabase
+    .from("listings")
+    .delete()
+    .eq("id", listingId);
+  redirect(error ? `/parceiro/sacolas/${listingId}?erro=1` : "/parceiro?apagada=1");
+}
