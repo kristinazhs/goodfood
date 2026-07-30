@@ -153,6 +153,11 @@ export async function publicarSacola(
       .insert({
         establishment_id: est.id,
         ...campos,
+        // Not a model: this row exists because a listing needs something to
+        // point at, not because anyone asked to keep it. "Salvar modelo" is
+        // what makes one, and it looked like it did nothing while publishing
+        // quietly did the same thing.
+        modelo: false,
         emoji: emojiPorCategoria[categoria] ?? "🛍️",
         cor_thumb: "#E4EDE3",
       })
@@ -292,9 +297,13 @@ export async function salvarModelo(
   };
 
   if (bagId) {
+    // The explicit "edit this model" path. NOTE: a listing reads its name and
+    // price from the bag, so editing a model still changes what an offer
+    // already on sale displays. Deliberate here (you asked to change it) but
+    // worth knowing — logged in PENDENCIAS.
     const { error } = await supabase
       .from("bags")
-      .update(campos)
+      .update({ ...campos, modelo: true })
       .eq("id", bagId)
       .eq("establishment_id", est.id);
     if (error) return { error: "Falha ao salvar o modelo: " + error.message };
@@ -302,6 +311,7 @@ export async function salvarModelo(
     const { error } = await supabase.from("bags").insert({
       establishment_id: est.id,
       ...campos,
+      modelo: true, // this is the act that makes a model
       emoji: emojiPorCategoria[categoria] ?? "🛍️",
       cor_thumb: "#E4EDE3",
     });
@@ -603,4 +613,40 @@ export async function encerrarOuApagarListing(formData: FormData) {
   }
 
   redirect(error ? `/parceiro/sacolas/${listingId}?erro=1` : "/parceiro?apagada=1");
+}
+
+/**
+ * "Remover dos modelos" — takes a bag out of Loja's list without deleting it.
+ *
+ * Deleting the bag is never right: bags -> listings is ON DELETE CASCADE, so
+ * it would silently remove the offers published from that model, and fail
+ * outright once any of those had an order. Clearing the flag touches nothing
+ * else — published offers, their reservations and the history all stand.
+ */
+export async function removerModelo(formData: FormData) {
+  const bagId = String(formData.get("bagId") ?? "");
+  if (!bagId) redirect("/parceiro/perfil");
+
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/parceiro/entrar");
+
+  const { data: est } = await supabase
+    .from("establishments")
+    .select("id")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!est) redirect("/parceiro/perfil?erro=1");
+
+  const { error } = await supabase
+    .from("bags")
+    .update({ modelo: false })
+    .eq("id", bagId)
+    .eq("establishment_id", est.id); // never touch another shop's model
+
+  redirect(error ? "/parceiro/perfil?erro=1" : "/parceiro/perfil?removido=1");
 }

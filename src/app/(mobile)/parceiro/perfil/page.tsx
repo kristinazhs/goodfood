@@ -5,7 +5,7 @@ import { signOut } from "@/lib/auth-actions";
 import { brl } from "@/lib/format";
 import { navParceiro } from "@/lib/nav";
 import { getDadosBancarios, getLoja, getModelos } from "@/lib/parceiro";
-import { publicarModeloHoje } from "@/lib/parceiro-actions";
+import { publicarModeloHoje, removerModelo } from "@/lib/parceiro-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -28,9 +28,10 @@ export default async function Loja({
     salvo?: string;
     perfil?: string;
     repasse?: string;
+    removido?: string;
   }>;
 }) {
-  const [{ erro, salvo, perfil, repasse }, loja, modelos, banco] =
+  const [{ erro, salvo, perfil, repasse, removido }, loja, modelos, banco] =
     await Promise.all([
       searchParams,
       getLoja(),
@@ -67,6 +68,18 @@ export default async function Loja({
             </p>
             <p className="mt-1 text-[12.5px] font-medium leading-[1.4] text-brand-dark">
               Ficam guardados até os repasses começarem. Só a sua loja vê.
+            </p>
+          </div>
+        )}
+
+        {removido === "1" && (
+          <div className="mx-5 mt-4 rounded-xl bg-sage px-3.5 py-3">
+            <p className="text-[13px] font-bold leading-[1.3] text-brand-dark">
+              Modelo removido
+            </p>
+            <p className="mt-1 text-[12.5px] font-medium leading-[1.4] text-brand-dark">
+              Ele saiu desta lista. As sacolas já publicadas a partir dele
+              continuam no ar, com as reservas que já têm.
             </p>
           </div>
         )}
@@ -172,6 +185,18 @@ export default async function Loja({
                   >
                     Editar
                   </Link>
+                  {/* Takes it out of this list; the offers already published
+                      from it, and their reservations, all stand. */}
+                  <form action={removerModelo} className="shrink-0">
+                    <input type="hidden" name="bagId" value={m.bagId} />
+                    <button
+                      type="submit"
+                      aria-label={`Remover ${m.nome} dos modelos`}
+                      className="h-11 rounded-xl border-[1.5px] border-sage-line bg-white px-3 text-[13.5px] font-bold text-muted"
+                    >
+                      Remover
+                    </button>
+                  </form>
                 </div>
               </div>
             ))

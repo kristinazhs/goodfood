@@ -131,6 +131,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
+| 🔴 | **Editar um modelo muda sacolas já publicadas** | A oferta lê nome e preço da `bag`, então "Salvar modelo" sobre um modelo aplicado altera o que uma sacola já à venda mostra — inclusive o preço, para quem já reservou. O caminho acidental foi fechado (publicar não reescreve mais o modelo); este é o explícito e continua assim. A correção de verdade é a oferta guardar seu próprio nome e preço. |
 | ✅ | **Perfil público** | Feito: foto, descrição e horários, com página pública em `/loja/[id]`. |
 | 🟡 | **Repasse e dados bancários** | A tela existe e salva (tabela `dados_bancarios`, só a própria loja lê). Nenhum repasse acontece — depende do provedor. |
 

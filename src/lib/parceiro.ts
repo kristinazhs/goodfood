@@ -579,6 +579,9 @@ export async function getModelos(): Promise<Modelo[]> {
     )
     .eq("establishment_id", est.id)
     .eq("ativo", true)
+    // Only what the shop chose to keep. Publishing creates a bag because a
+    // listing needs one; that never meant "save this as a model".
+    .eq("modelo", true)
     .order("created_at", { ascending: false });
 
   const rows = (data ?? []) as unknown as ModeloRow[];
