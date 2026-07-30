@@ -72,7 +72,7 @@ export function CheckoutClient({
         </div>
         <div className="rounded-2xl border-[1.5px] border-sage-line bg-white p-[13px]">
           <div className="text-sm font-bold leading-[1.3]">
-            Hoje, {sacola.janela}
+            <span className="capitalize">{sacola.dia}</span>, {sacola.janela}
           </div>
           <div className="mt-0.5 text-[12.5px] font-medium leading-[1.35] text-muted">
             {sacola.endereco}

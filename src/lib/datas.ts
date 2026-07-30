@@ -109,3 +109,45 @@ export function haQuanto(iso: string): string {
   const meses = Math.floor(dias / 30);
   return meses <= 1 ? "há 1 mês" : `há ${meses} meses`;
 }
+
+/**
+ * Which day a pickup window falls on, from the person's point of view:
+ * "hoje", "amanhã", or a short date for anything further out.
+ *
+ * The app used to write "hoje" into the markup as a constant. That was
+ * accidentally true while a shop could only publish for the current day —
+ * but the demo data rolls windows forward, and once shops can publish for
+ * tomorrow it becomes a claim that is wrong for a real customer. The worst
+ * case is the "peça pra um amigo" message: it goes to someone else's phone,
+ * and a wrong day sends them on the wrong evening.
+ */
+export function diaRelativoSP(iso: string): string {
+  const dias = diasDeDiferenca(iso);
+  if (dias === 0) return "hoje";
+  if (dias === 1) return "amanhã";
+  if (dias === -1) return "ontem";
+  return diaMes(iso);
+}
+
+/** True when this timestamp falls on today's date in Porto Alegre. */
+export function ehHojeSP(iso: string): boolean {
+  return diasDeDiferenca(iso) === 0;
+}
+
+/**
+ * Whole days between today and the date of `iso`, both read as calendar dates
+ * in Porto Alegre. Comparing dates rather than subtracting milliseconds is
+ * what makes 23h50 -> 00h10 count as one day and not as twenty minutes.
+ */
+function diasDeDiferenca(iso: string): number {
+  const dia = (d: Date) =>
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: TZ,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(d);
+  const alvo = new Date(`${dia(new Date(iso))}T12:00:00Z`).getTime();
+  const hoje = new Date(`${dia(new Date())}T12:00:00Z`).getTime();
+  return Math.round((alvo - hoje) / 86_400_000);
+}

@@ -32,8 +32,10 @@ export function BagCard({ sacola }: { sacola: Sacola }) {
         </div>
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-[9px]">
+          {/* The day only when it isn't today: "hoje 18h40" would be noise
+              on every card, but a missing "amanhã" is a wrong promise. */}
           <span className="inline-flex h-[26px] shrink-0 items-center rounded-lg bg-sage px-[9px] text-xs font-bold leading-none text-brand-dark">
-            {sacola.janela}
+            {sacola.ehHoje ? sacola.janela : `${sacola.dia} · ${sacola.janela}`}
           </span>
           <div className="shrink-0 text-right">
             {temDesconto && (

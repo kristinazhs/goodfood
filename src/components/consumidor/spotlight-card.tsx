@@ -49,7 +49,7 @@ export function SpotlightCard({ sacola }: { sacola: Sacola }) {
           </div>
           <div className="mt-[9px] inline-flex h-[27px] items-center gap-1.5 whitespace-nowrap rounded-lg bg-white/[0.14] px-2.5 text-xs font-bold leading-none text-white">
             <IconClock />
-            Retirar {sacola.janela}
+            Retirar {sacola.ehHoje ? sacola.janela : `${sacola.dia} · ${sacola.janela}`}
           </div>
         </div>
 

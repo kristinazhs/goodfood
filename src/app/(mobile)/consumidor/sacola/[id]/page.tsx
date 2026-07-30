@@ -135,6 +135,12 @@ export default async function SacolaDetalhe({
               <div className="mt-1.5 text-[15px] font-bold leading-[1.2]">
                 {sacola.janela || "—"}
               </div>
+              {/* Said once, at the top of the card that decides the purchase. */}
+              {sacola.janela && !sacola.ehHoje && (
+                <div className="mt-[3px] text-[12.5px] font-bold capitalize leading-[1.3] text-brand-dark">
+                  {sacola.dia}
+                </div>
+              )}
               {corte && (
                 <div className="mt-[3px] text-[12.5px] font-medium leading-[1.3] text-terracotta-dark">
                   {fechada ? "reservas encerradas" : `reservas até ${corte}`}
@@ -151,7 +157,7 @@ export default async function SacolaDetalhe({
                   : `${sacola.disponivel} ${sacola.disponivel === 1 ? "sacola" : "sacolas"}`}
               </div>
               <div className="mt-[3px] text-[12.5px] font-medium leading-[1.3] text-muted">
-                de {sacola.total} hoje
+                de {sacola.total} {sacola.dia}
               </div>
             </div>
           </div>

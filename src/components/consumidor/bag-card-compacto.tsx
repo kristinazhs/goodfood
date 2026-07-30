@@ -102,7 +102,9 @@ export function LojaRow({
         <div className="mt-0.5 truncate text-xs font-medium leading-[1.3] text-muted">
           {avaliacao != null ? `★ ${avaliacao.toFixed(1).replace(".", ",")} · ` : ""}
           {distancia ? `${distancia} · ` : ""}
-          {sacolas === 1 ? "1 sacola hoje" : `${sacolas} sacolas hoje`}
+          {/* No "hoje": this counts everything the shop has on sale, and
+              some of it may be for tomorrow. */}
+          {sacolas === 1 ? "1 sacola" : `${sacolas} sacolas`}
         </div>
       </div>
 

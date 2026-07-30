@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BottomNav } from "@/components/ui/bottom-nav";
 import { CompartilharPedido } from "@/components/consumidor/compartilhar-pedido";
-import { contagemRetirada, horaMinutoSP } from "@/lib/datas";
+import { contagemRetirada, diaRelativoSP, horaMinutoSP } from "@/lib/datas";
 import { minutosAPe } from "@/lib/distancia";
 import { getOrigem } from "@/lib/enderecos";
 import { brl } from "@/lib/format";
@@ -37,6 +37,10 @@ export default async function PedidoConfirmacao({
   const origem = await getOrigem();
   const minutos = minutosAPe(pedido.lat, pedido.lng, origem);
   const pagoAs = horaMinutoSP(pedido.reservadoEm);
+  // Both days are read from the order, not assumed. An order from three weeks
+  // ago used to say the pickup and the payment both happened "hoje".
+  const diaRetirada = diaRelativoSP(pedido.janelaInicio);
+  const diaPagamento = diaRelativoSP(pedido.reservadoEm);
 
   // Free cancellation runs for 15 minutes from the reservation.
   const limite =
@@ -56,7 +60,7 @@ export default async function PedidoConfirmacao({
             Pedido confirmado!
           </h1>
           <p className="mt-1.5 text-[13px] font-medium leading-[1.45] text-muted">
-            Retire hoje entre {pedido.janela}
+            Retire {diaRetirada} entre {pedido.janela}
             {contagem ? ` · ${contagem}` : ""}
           </p>
           <p className="mt-0.5 text-[12.5px] font-medium leading-[1.4] text-muted">
@@ -112,8 +116,8 @@ export default async function PedidoConfirmacao({
               Total pago
             </div>
             <div className="mt-0.5 truncate text-[12.5px] font-medium leading-[1.3] text-muted">
-              {pedido.metodo ? NOME_METODO[pedido.metodo] : "Pagamento"} · hoje,{" "}
-              {pagoAs}
+              {pedido.metodo ? NOME_METODO[pedido.metodo] : "Pagamento"} ·{" "}
+              {diaPagamento}, {pagoAs}
             </div>
           </div>
           <span className="shrink-0 font-display text-lg font-bold">
@@ -124,6 +128,7 @@ export default async function PedidoConfirmacao({
         {/* With payment at reservation, handing the pickup to someone else is
             the only path that still saves the money — so it leads. */}
         <CompartilharPedido
+          dia={diaRetirada}
           codigo={pedido.codigo}
           nomeSacola={pedido.nomeSacola}
           loja={pedido.loja}

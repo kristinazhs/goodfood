@@ -292,7 +292,7 @@ export function MapView({
               <div className="mt-auto flex items-center gap-[7px] pt-[9px]">
                 {loja.esgotada ? (
                   <span className="inline-flex h-[26px] items-center whitespace-nowrap rounded-lg bg-[#f2efe8] px-[9px] text-xs font-bold leading-none text-muted">
-                    esgotada hoje
+                    esgotada
                   </span>
                 ) : (
                   <span className="inline-flex h-[26px] items-center whitespace-nowrap rounded-lg bg-sage px-[9px] text-xs font-bold leading-none text-brand-dark">
@@ -305,7 +305,7 @@ export function MapView({
 
           {loja.esgotada ? (
             <p className="mt-2.5 text-[12.5px] font-medium leading-[1.4] text-muted">
-              Tudo reservado nesta loja hoje. Toque em outro pin para ver o que
+              Tudo reservado nesta loja. Toque em outro pin para ver o que
               ainda tem perto de você.
             </p>
           ) : (

@@ -35,6 +35,10 @@ export interface Sacola {
   preco: number;
   desconto: string;
   janela: string;
+  /** "hoje" | "amanhã" | "02 ago" — which day the window falls on. */
+  dia: string;
+  /** True when the pickup is today. Urgency and "hoje" labels depend on it. */
+  ehHoje: boolean;
   janelaNota: string;
   timer: string;
   /** Units on the shelf right now (drives the stock plaque on the card). */

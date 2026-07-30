@@ -9,12 +9,16 @@ import { useState } from "react";
 export function CompartilharPedido({
   codigo,
   nomeSacola,
+  dia,
   loja,
   endereco,
   janela,
 }: {
   codigo: string;
   nomeSacola: string;
+  /** "hoje" | "amanhã" | "02 ago" — this message lands on someone else's
+      phone, so the wrong day sends them on the wrong evening. */
+  dia: string;
   loja: string;
   endereco: string;
   janela: string;
@@ -25,7 +29,7 @@ export function CompartilharPedido({
     `Pode retirar minha sacola do GoodFood?`,
     ``,
     `${nomeSacola} — ${loja}`,
-    `Retirada hoje entre ${janela}`,
+    `Retirada ${dia} entre ${janela}`,
     `${endereco}`,
     ``,
     `Código para mostrar no balcão: ${codigo}`,

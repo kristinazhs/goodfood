@@ -1,4 +1,5 @@
 import { getNotasPorLoja, type NotaLoja } from "@/lib/avaliacoes";
+import { diaRelativoSP, ehHojeSP } from "@/lib/datas";
 import { distanciaAte, ORIGEM_PADRAO, type Origem } from "@/lib/distancia";
 import type { Horarios } from "@/lib/horarios";
 import { createSupabaseClient } from "@/lib/supabase";
@@ -108,6 +109,8 @@ function toSacola(
     janela: listing
       ? `${horaMinuto(listing.janela_inicio)} – ${horaMinuto(listing.janela_fim)}`
       : "",
+    dia: listing ? diaRelativoSP(listing.janela_inicio) : "",
+    ehHoje: listing ? ehHojeSP(listing.janela_inicio) : false,
     janelaNota: listing
       ? `Restam ${disp} ${disp === 1 ? "unidade" : "unidades"}`
       : "",
@@ -190,6 +193,9 @@ export function escolherDestaque(
   agora: number = Date.now(),
 ): Destaque | null {
   const candidatas = sacolas.filter((s) => {
+    // Today only: "última unidade" on something you collect tomorrow is a
+    // false alarm, and it would take the most prominent slot on the feed.
+    if (!s.ehHoje) return false;
     const min = minutosAteFechar(s, agora);
     return min <= JANELA_URGENTE_MIN || s.disponivel <= ESTOQUE_URGENTE;
   });
