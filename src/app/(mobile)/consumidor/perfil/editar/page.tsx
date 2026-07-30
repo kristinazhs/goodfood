@@ -25,6 +25,7 @@ export default async function EditarPerfil() {
         <PerfilEditForm
           nome={sessao.profile?.nome ?? ""}
           telefone={sessao.profile?.telefone ?? ""}
+          cpf={sessao.profile?.cpf ?? ""}
           email={sessao.email ?? ""}
         />
       </main>

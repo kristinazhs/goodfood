@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { apenasDigitos, cpfValido, telefoneValido } from "./cpf";
 import { geocodarEndereco } from "./geocode";
 import { createSupabaseServerClient } from "./supabase-server";
 
@@ -61,25 +62,46 @@ export async function signUpConsumer(
   const nome = String(formData.get("nome") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const senha = String(formData.get("senha") ?? "");
+  const cpf = apenasDigitos(String(formData.get("cpf") ?? ""));
+  const telefone = apenasDigitos(String(formData.get("telefone") ?? ""));
   const aceite = formData.get("aceite") === "on";
 
   if (!nome) return { error: "Informe seu nome." };
   if (!email) return { error: "Informe seu e-mail." };
+  if (!cpfValido(cpf)) return { error: "CPF inválido. Confira os números." };
+  if (!telefoneValido(telefone))
+    return { error: "Telefone inválido. Inclua o DDD." };
   if (senha.length < 8)
     return { error: "A senha precisa ter ao menos 8 caracteres." };
   if (!aceite)
     return { error: "Aceite os termos de uso para criar sua conta." };
 
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password: senha,
-    // Passed to the profile-creation trigger as user metadata. Phone is no
-    // longer asked for at signup — the shop only needs it to warn about a
-    // specific order, so it's collected then, not upfront.
-    options: { data: { role: "consumer", nome } },
+    // role/nome/telefone are read by the profile-creation trigger (0002).
+    options: { data: { role: "consumer", nome, telefone } },
   });
   if (error) return { error: traduzErro(error.message) };
+
+  // The trigger predates the CPF column, so it doesn't copy it. Written here
+  // instead of changing the trigger, which would mean another migration.
+  if (data.user?.id) {
+    const { error: cpfErr } = await supabase
+      .from("profiles")
+      .update({ cpf })
+      .eq("id", data.user.id);
+    // A duplicate CPF is the one worth naming: the unique index in 0021 means
+    // somebody already has an account with it.
+    if (cpfErr) {
+      return {
+        error: cpfErr.code === "23505"
+          ? "Já existe uma conta com esse CPF. Tente entrar."
+          : "Conta criada, mas não conseguimos salvar seu CPF. Complete em Perfil › Dados pessoais.",
+      };
+    }
+  }
 
   redirect(destinoSeguro(formData.get("next")));
 }
@@ -229,8 +251,12 @@ export async function atualizarPerfil(
   formData: FormData,
 ): Promise<AuthState> {
   const nome = String(formData.get("nome") ?? "").trim();
-  const telefone = String(formData.get("telefone") ?? "").trim();
+  const telefone = apenasDigitos(String(formData.get("telefone") ?? ""));
+  const cpf = apenasDigitos(String(formData.get("cpf") ?? ""));
   if (!nome) return { error: "Informe seu nome." };
+  if (!cpfValido(cpf)) return { error: "CPF inválido. Confira os números." };
+  if (!telefoneValido(telefone))
+    return { error: "Telefone inválido. Inclua o DDD." };
 
   const supabase = await createSupabaseServerClient();
   const {
@@ -240,9 +266,16 @@ export async function atualizarPerfil(
 
   const { error } = await supabase
     .from("profiles")
-    .update({ nome, telefone: telefone || null })
+    .update({ nome, telefone, cpf })
     .eq("id", user.id);
-  if (error) return { error: "Não foi possível salvar. Tente novamente." };
+  if (error) {
+    return {
+      error:
+        error.code === "23505"
+          ? "Já existe uma conta com esse CPF."
+          : "Não foi possível salvar. Tente novamente.",
+    };
+  }
 
   redirect("/consumidor/perfil");
 }

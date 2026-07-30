@@ -48,7 +48,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
 | ⚪ | **Filtro de raio** | O filtro tem janela, preço e categoria. Falta o raio. Agora é possível: o endereço do usuário existe (C7). |
-| 🔴 | **"Meu local" não atualiza as distâncias** | Centraliza o mapa e marca sua posição, mas os "310m" continuam medidos do endereço fixo. |
+| 🔴 | **"Meu local" não atualiza as distâncias** | Centraliza o mapa e marca sua posição, mas as distâncias saem do endereço salvo, não do GPS. |
 | 🟣 | Mapa (CARTO) | Camada gratuita com atribuição. Conferir os termos antes de uso comercial. |
 
 ## C3 — Detalhe da sacola
@@ -137,7 +137,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
-| 🔴 | **CNPJ não é conferido** | Não valida formato, não consulta a Receita, não impede duplicado — duas lojas podem usar o mesmo. |
+| 🔴 | **CNPJ não é conferido** | Não valida formato, não consulta a Receita, não impede duplicado — duas lojas podem usar o mesmo. O CPF do consumidor já é validado (dígitos verificadores) e é único; vale fazer o mesmo aqui. |
 | 🟣 | **Comissão** | Retirada da tela até você definir a taxa. Pagamentos não conseguem dividir sem ela. |
 | 🟡 | Contrato de parceria | Página placeholder. |
 
@@ -150,6 +150,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | 🔴 | **Erro de consulta vira tela vazia** | Ainda vale para a maioria das funções: leem `const { data } = await …` e nunca olham o `error`, então uma falha aparece como "nada disponível". As novas (`getEnderecos`, `getAvaliacoes`, `getDadosBancarios`, `getLojaPublica`) já lançam erro em vez de mentir. Falta varrer as antigas. |
 | ✅ | **Foto do estabelecimento** | Coluna `establishments.foto_url` + bucket `lojas` (0019). Falta usar no topo do C3. |
 | 🟡 | **Página de loja** | Existe: `/loja/[id]`. Ligada no detalhe da sacola. Falta ligar na busca (C1b) e no histórico (C6). |
+| 🔴 | **Mesma sacola publicada duas vezes no mesmo dia** | O feed mostra "Cute dog" duas vezes, com a mesma janela e o mesmo preço. A migration 0017 limpou duplicatas e o P5 tem a trava "já publicada hoje", mas o formulário de publicar (P3) não confere. Precisa de uma trava lá — ou de um índice único em `listings (bag_id, data, janela_inicio)`. |
 | 🟡 | Catálogo de demonstração | As quatro lojas e suas sacolas são fictícias. A migration 0008 renova (as janelas expiram e o feed esvazia). |
 | 🟡 | `/painel` (desktop do parceiro) | Totalmente em dados fictícios. Não fez parte do redesenho. |
 | 🟡 | `/admin` (painel interno) | Totalmente em dados fictícios. Não fez parte do redesenho. |

@@ -5,6 +5,8 @@ export interface Profile {
   role: "consumer" | "establishment";
   nome: string | null;
   telefone: string | null;
+  /** Digits only. Null on accounts created before 0021. */
+  cpf: string | null;
 }
 
 // Returns the logged-in user's profile (or null if signed out).
@@ -21,7 +23,7 @@ export async function getCurrentProfile(): Promise<{
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, role, nome, telefone")
+    .select("id, role, nome, telefone, cpf")
     .eq("id", user.id)
     .maybeSingle();
 

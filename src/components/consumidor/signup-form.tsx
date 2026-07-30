@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState, useState } from "react";
+import { formatarCPF, formatarTelefone } from "@/lib/cpf";
 import {
   signInWithGoogle,
   signUpConsumer,
@@ -42,6 +43,45 @@ function Campo({
       />
       {ajuda && (
         <span className="mt-1.5 block text-xs font-medium leading-[1.4] text-muted">
+          {ajuda}
+        </span>
+      )}
+    </label>
+  );
+}
+
+// Digits typed, punctuation added: a CPF field that fights the person is the
+// fastest way to lose them at the last step of signup.
+function CampoMascarado({
+  label,
+  name,
+  placeholder,
+  mascara,
+  ajuda,
+}: {
+  label: string;
+  name: string;
+  placeholder: string;
+  mascara: (v: string) => string;
+  ajuda?: string;
+}) {
+  const [valor, setValor] = useState("");
+  return (
+    <label className="block">
+      <span className="mb-[7px] block text-[13px] font-bold leading-none text-[#4a4a44]">
+        {label}
+      </span>
+      <input
+        name={name}
+        required
+        inputMode="numeric"
+        value={valor}
+        onChange={(e) => setValor(mascara(e.target.value))}
+        placeholder={placeholder}
+        className="h-[50px] w-full rounded-[14px] border-[1.5px] border-sage-line bg-white px-3.5 text-[14.5px] font-medium outline-none focus:border-brand"
+      />
+      {ajuda && (
+        <span className="mt-[5px] block text-[12px] font-medium leading-[1.35] text-muted">
           {ajuda}
         </span>
       )}
@@ -95,6 +135,20 @@ export function SignupForm({ next }: { next?: string }) {
             name="nome"
             placeholder="ex. Kristina Z."
             autoComplete="name"
+          />
+          <CampoMascarado
+            label="CPF"
+            name="cpf"
+            placeholder="000.000.000-00"
+            mascara={formatarCPF}
+            ajuda="Necessário para emitir a nota da sua compra"
+          />
+          <CampoMascarado
+            label="Telefone"
+            name="telefone"
+            placeholder="(51) 99999-9999"
+            mascara={formatarTelefone}
+            ajuda="A loja usa se precisar avisar algo sobre a sua sacola"
           />
           <Campo
             label="E-mail"
