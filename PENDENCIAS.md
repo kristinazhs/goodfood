@@ -41,6 +41,7 @@ Nada pendente. A animação foi refeita em 2026-07-29 (ver *Já corrigido*).
 | Tipo | Item | Detalhe |
 | --- | --- | --- |
 | 🔵 | Buscas recentes | Ficam no `localStorage` do aparelho. Não seguem o usuário entre celulares. |
+| 🔴 | **Resultado de busca não diz quando é a retirada** | O card compacto mostra nome, loja e preço — e mais nada. Com várias janelas da mesma sacola (migration 0028), a busca lista "Sacola Doces da Estrela · Panificadora Estrela · R$ 16,90" **três vezes**, sem nada que as diferencie: uma é hoje 16h30, as outras amanhã 07h30 e 09h30. Não é problema de layout — o card não tem onde quebrar; falta o dado. |
 | ✅ | Página de loja na busca | Os resultados "Lojas" abrem `/loja/[id]`. |
 
 ## C2 — Descobrir (mapa)
