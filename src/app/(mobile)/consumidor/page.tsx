@@ -5,7 +5,11 @@ import { BottomNav } from "@/components/ui/bottom-nav";
 import { getCurrentProfile } from "@/lib/auth";
 import { getEnderecos, getOrigem } from "@/lib/enderecos";
 import { navConsumidor } from "@/lib/nav";
-import { escolherDestaque, getSacolasDisponiveis } from "@/lib/sacolas";
+import {
+  agruparPorDia,
+  escolherDestaque,
+  getSacolasDisponiveis,
+} from "@/lib/sacolas";
 import type { CategoriaId } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -48,14 +52,7 @@ export default async function ConsumidorHome({
     ? sacolas.filter((s) => s !== destaque.sacola)
     : sacolas;
 
-  // Day groups in the order they already come in (janela_fim ascending), so
-  // "hoje" leads and "amanhã" follows without a second sort.
-  const porDia: [string, typeof demais][] = [];
-  for (const s of demais) {
-    const grupo = porDia.find(([d]) => d === s.dia);
-    if (grupo) grupo[1].push(s);
-    else porDia.push([s.dia, [s]]);
-  }
+  const porDia = agruparPorDia(demais);
 
   const vazio =
     cat === "tudo"
@@ -130,9 +127,12 @@ export default async function ConsumidorHome({
                       <div className="px-5 pb-2 pt-1 text-[12.5px] font-bold capitalize leading-none text-muted">
                         {dia} · {doDia.length}
                       </div>
+                      {/* mostrarDia={false}: the heading right above already
+                          says the day, and repeating it in every pill pushed
+                          the price off the card on a 390px screen. */}
                       <div className="flex flex-col gap-3 px-5 pb-[18px]">
                         {doDia.map((s) => (
-                          <BagCard key={s.id} sacola={s} />
+                          <BagCard key={s.id} sacola={s} mostrarDia={false} />
                         ))}
                       </div>
                     </div>

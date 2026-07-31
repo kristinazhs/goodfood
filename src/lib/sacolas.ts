@@ -321,3 +321,23 @@ export async function getLojaPublica(
     sacolas: todas.filter((s) => s.lojaId === est.id),
   };
 }
+
+/**
+ * Group sacolas by the day of their pickup window, keeping the order they
+ * arrive in (janela_fim ascending), so "hoje" leads and "amanhã" follows
+ * without a second sort.
+ *
+ * Shared by the feed and the shop page so that both can print the day ONCE,
+ * as a heading, and let the cards drop it from their pill. Repeating it in
+ * every card cost ~61px on a 390px screen — enough to push the price off an
+ * iPhone 12, and enough to clip the closing time once the price was pinned.
+ */
+export function agruparPorDia(lista: Sacola[]): [string, Sacola[]][] {
+  const grupos: [string, Sacola[]][] = [];
+  for (const s of lista) {
+    const grupo = grupos.find(([d]) => d === s.dia);
+    if (grupo) grupo[1].push(s);
+    else grupos.push([s.dia, [s]]);
+  }
+  return grupos;
+}

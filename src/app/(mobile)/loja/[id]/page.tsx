@@ -4,7 +4,7 @@ import { FotoSacola } from "@/components/consumidor/foto-sacola";
 import { BackButton } from "@/components/ui/back-button";
 import { comHora, diaSemanaSP, estadoDaLoja } from "@/lib/horarios";
 import { getOrigem } from "@/lib/enderecos";
-import { getLojaPublica } from "@/lib/sacolas";
+import { agruparPorDia, getLojaPublica } from "@/lib/sacolas";
 
 export const dynamic = "force-dynamic";
 
@@ -141,11 +141,23 @@ export default async function PaginaLoja({
           Volte mais tarde 🌙
         </p>
       ) : (
-        <div className="flex flex-col gap-2.5 px-5">
-          {loja.sacolas.map((s) => (
-            <BagCard key={s.id} sacola={s} />
-          ))}
-        </div>
+        /* Grouped by day, like the feed. A shop with sacolas on both days
+           listed them flat, so every tomorrow card had to carry "amanhã ·"
+           in its own pill — which on a 390px screen left no room and clipped
+           the closing time to "amanhã · 06h30 – 0…". Said once as a heading,
+           the pill has room for the whole window again. */
+        agruparPorDia(loja.sacolas).map(([dia, doDia]) => (
+          <div key={dia}>
+            <div className="px-5 pb-2 pt-1 text-[12.5px] font-bold capitalize leading-none text-muted">
+              {dia} · {doDia.length}
+            </div>
+            <div className="flex flex-col gap-2.5 px-5 pb-3">
+              {doDia.map((s) => (
+                <BagCard key={s.id} sacola={s} mostrarDia={false} />
+              ))}
+            </div>
+          </div>
+        ))
       )}
     </main>
   );

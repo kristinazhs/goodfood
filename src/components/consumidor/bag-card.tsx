@@ -8,8 +8,25 @@ import type { Sacola } from "@/lib/types";
 // price. The name gets a whole line and never wraps; the price is the single
 // dominant element in the bottom-right.
 
-export function BagCard({ sacola }: { sacola: Sacola }) {
+export function BagCard({
+  sacola,
+  mostrarDia = true,
+}: {
+  sacola: Sacola;
+  /**
+   * Set false where the list is ALREADY grouped under a day heading — the
+   * feed prints "Amanhã · 8" and then every card repeated "amanhã ·" inside
+   * its own pill. Saying it twice cost about 61px on a 390px screen, which
+   * was enough to push the price off the card on an iPhone 12.
+   *
+   * Defaults to true because the shop page (/loja/[id]) lists a shop's
+   * sacolas with no grouping at all, and there a missing "amanhã" is a wrong
+   * promise rather than tidy design.
+   */
+  mostrarDia?: boolean;
+}) {
   const temDesconto = sacola.precoOriginal > sacola.preco;
+  const comDia = mostrarDia && !sacola.ehHoje;
 
   return (
     <Link
@@ -33,9 +50,17 @@ export function BagCard({ sacola }: { sacola: Sacola }) {
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-[9px]">
           {/* The day only when it isn't today: "hoje 18h40" would be noise
-              on every card, but a missing "amanhã" is a wrong promise. */}
-          <span className="inline-flex h-[26px] shrink-0 items-center rounded-lg bg-sage px-[9px] text-xs font-bold leading-none text-brand-dark">
-            {sacola.ehHoje ? sacola.janela : `${sacola.dia} · ${sacola.janela}`}
+              on every card, but a missing "amanhã" is a wrong promise.
+
+              The pill may shrink; the price may not. Both used to be
+              shrink-0, so when the two together outgrew the row nothing
+              could give and the price simply spilled over the card edge.
+              Between the two, the price is the one that must never move —
+              it is the whole point of the card. */}
+          <span className="flex h-[26px] min-w-0 items-center rounded-lg bg-sage px-[9px] text-xs font-bold leading-none text-brand-dark">
+            <span className="truncate">
+              {comDia ? `${sacola.dia} · ${sacola.janela}` : sacola.janela}
+            </span>
           </span>
           <div className="shrink-0 text-right">
             {temDesconto && (
