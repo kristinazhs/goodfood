@@ -213,6 +213,7 @@ Reintroduce these only when the data exists to support them:
 | 0026 | Deliberate reset: test data cleared, demo catalog restored |
 | 0027 | Storage scoped per shop: photos live under `{establishment_id}/` |
 | 0028 | Four more demo sacolas, several windows each, today and tomorrow |
+| 0029 | 14 extra windows on the existing sacolas, filling today and tomorrow |
 
 All have been run against the live database.
 
